@@ -4,30 +4,23 @@ machine:
 
 backend:
   type: bmad
-  lattice_file: fodo.bmad
+  init_file: tao.init
 
 variables:
-  discover:
-    include:
-      - "Q*:K1"
-      - "BPM*:X"
-      - "BPM*:Y"
-    exclude: []
-
   definitions:
-    "QF:K1":
+    "ele::QF[K1]":
       description: "Focusing quadrupole integrated strength"
-      units: "1/m^2"
+      units: "1/m"
       limits: [-5.0, 5.0]
-    "QD:K1":
+    "ele::QD[K1]":
       description: "Defocusing quadrupole integrated strength"
-      units: "1/m^2"
+      units: "1/m"
       limits: [-5.0, 5.0]
-    "BPM1:X":
+    "lat::orbit.x[BPM1]":
       description: "Horizontal beam position at BPM 1"
       units: "mm"
       read_only: true
-    "BPM1:Y":
+    "lat::orbit.y[BPM1]":
       description: "Vertical beam position at BPM 1"
       units: "mm"
       read_only: true
