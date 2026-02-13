@@ -1,0 +1,33 @@
+machine:
+  name: FODO Cell
+  description: Simple FODO lattice for testing and demonstration
+
+backend:
+  type: bmad
+  lattice_file: fodo.bmad
+
+variables:
+  discover:
+    include:
+      - "Q*:K1"
+      - "BPM*:X"
+      - "BPM*:Y"
+    exclude: []
+
+  definitions:
+    "QF:K1":
+      description: "Focusing quadrupole integrated strength"
+      units: "1/m^2"
+      limits: [-5.0, 5.0]
+    "QD:K1":
+      description: "Defocusing quadrupole integrated strength"
+      units: "1/m^2"
+      limits: [-5.0, 5.0]
+    "BPM1:X":
+      description: "Horizontal beam position at BPM 1"
+      units: "mm"
+      read_only: true
+    "BPM1:Y":
+      description: "Vertical beam position at BPM 1"
+      units: "mm"
+      read_only: true

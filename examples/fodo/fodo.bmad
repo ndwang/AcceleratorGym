@@ -1,0 +1,17 @@
+! Simple FODO lattice
+! A basic focusing-defocusing cell used for testing
+
+parameter[geometry] = open
+parameter[particle] = electron
+parameter[p0c] = 1e9  ! 1 GeV
+
+D1: drift, L = 1.0
+QF: quadrupole, L = 0.5, K1 = 0.5
+D2: drift, L = 2.0
+QD: quadrupole, L = 0.5, K1 = -0.5
+D3: drift, L = 1.0
+
+BPM1: monitor, L = 0.0
+
+FODO: line = (D1, QF, D2, QD, D3, BPM1)
+use, FODO

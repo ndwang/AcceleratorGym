@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=64", "setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "accelerator-gym"
+version = "0.1.0"
+description = "Unified interface for AI agents to monitor and control particle accelerators"
+readme = "DESIGN.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+dependencies = [
+    "pyyaml>=6.0",
+    "numpy>=1.24",
+]
+
+[project.optional-dependencies]
+bmad = ["pytao"]
+epics = ["pyepics"]
+test = ["pytest>=7.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
