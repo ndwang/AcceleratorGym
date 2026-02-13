@@ -29,17 +29,16 @@ class TestLoadConfig:
               type: bmad
               lattice_file: test.bmad
             variables:
-              definitions:
-                "Q1:K1":
-                  description: Quad 1
-                  limits: [-5.0, 5.0]
+              "Q1:K1":
+                description: Quad 1
+                limits: [-5.0, 5.0]
         """)
         cfg = load_config(path)
         assert cfg.name == "Test"
         assert cfg.description == "A test machine"
         assert cfg.backend_type == "bmad"
         assert cfg.backend_settings == {"lattice_file": "test.bmad"}
-        assert "Q1:K1" in cfg.definitions
+        assert "Q1:K1" in cfg.variables
 
     def test_minimal_config(self, tmp_yaml):
         path = tmp_yaml("""\
@@ -48,13 +47,12 @@ class TestLoadConfig:
             backend:
               type: mock
             variables:
-              definitions:
-                "X":
-                  description: Just X
+              "X":
+                description: Just X
         """)
         cfg = load_config(path)
         assert cfg.name == "Minimal"
-        assert "X" in cfg.definitions
+        assert "X" in cfg.variables
 
     def test_empty_config(self, tmp_yaml):
         path = tmp_yaml("""\
@@ -65,7 +63,7 @@ class TestLoadConfig:
         cfg = load_config(path)
         assert cfg.name == ""
         assert cfg.backend_type == "mock"
-        assert cfg.definitions == {}
+        assert cfg.variables == {}
 
     def test_missing_file(self):
         with pytest.raises(FileNotFoundError):

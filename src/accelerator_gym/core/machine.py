@@ -17,7 +17,7 @@ class Machine:
     def __init__(self, backend: Backend, config: MachineConfig) -> None:
         self._backend = backend
         self._config = config
-        self._variables = build_variables(config.definitions)
+        self._variables = build_variables(config.variables)
 
     @classmethod
     def from_config(cls, config_path: str) -> Machine:

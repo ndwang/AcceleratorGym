@@ -7,8 +7,7 @@ backend:
   init_file: tao.init
 
 variables:
-  definitions:
-    "ele::QF[K1]":
+  "ele::QF[K1]":
       description: "Focusing quadrupole integrated strength"
       units: "1/m"
       limits: [-5.0, 5.0]

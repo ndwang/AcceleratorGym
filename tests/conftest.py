@@ -62,7 +62,7 @@ def basic_config():
         name="Test Machine",
         description="A test machine",
         backend_type="mock",
-        definitions={
+        variables={
             "QF:K1": {
                 "description": "Focusing quad strength",
                 "units": "1/m",
