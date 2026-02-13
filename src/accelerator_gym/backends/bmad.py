@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any
 
 from accelerator_gym.backends.base import Backend
-from accelerator_gym.core.variable import Variable
 
 
 class BmadBackend(Backend):
@@ -35,7 +34,4 @@ class BmadBackend(Backend):
         raise NotImplementedError
 
     def reset(self) -> None:
-        raise NotImplementedError
-
-    def discover_variables(self) -> list[Variable]:
         raise NotImplementedError

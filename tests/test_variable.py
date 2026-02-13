@@ -8,7 +8,6 @@ class TestVariable:
         v = Variable(name="Q1:K1")
         assert v.name == "Q1:K1"
         assert v.description == ""
-        assert v.dtype == "float"
         assert v.units is None
         assert v.read_only is False
         assert v.limits is None
@@ -17,7 +16,6 @@ class TestVariable:
         v = Variable(
             name="Q1:K1",
             description="Quad strength",
-            dtype="float",
             units="1/m^2",
             read_only=False,
             limits=(-5.0, 5.0),
@@ -60,3 +58,17 @@ class TestVariable:
         v.validate_value(0.0)  # should not raise
         with pytest.raises(ValueError):
             v.validate_value(0.1)
+
+    def test_validate_rejects_bool(self):
+        v = Variable(name="Q1:K1")
+        with pytest.raises(TypeError, match="expected numeric value"):
+            v.validate_value(True)
+
+    def test_validate_rejects_string(self):
+        v = Variable(name="Q1:K1")
+        with pytest.raises(TypeError, match="expected numeric value"):
+            v.validate_value("1.0")
+
+    def test_validate_accepts_int(self):
+        v = Variable(name="Q1:K1", limits=(-5.0, 5.0))
+        v.validate_value(3)  # int within limits, should not raise

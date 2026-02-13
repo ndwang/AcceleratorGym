@@ -34,12 +34,12 @@ class TestGetTools:
             assert "description" in tool["function"]
             assert "parameters" in tool["function"]
 
-    def test_set_variable_excludes_read_only(self, llm):
+    def test_schemas_do_not_enumerate_variables(self, llm):
         tools = llm.get_tools()
-        set_tool = next(t for t in tools if t["function"]["name"] == "set_variable")
-        enum = set_tool["function"]["parameters"]["properties"]["name"]["enum"]
-        assert "QF:K1" in enum
-        assert "BPM1:X" not in enum
+        for tool in tools:
+            props = tool["function"]["parameters"].get("properties", {})
+            for prop in props.values():
+                assert "enum" not in prop, f"Tool {tool['function']['name']} should not enumerate variables"
 
 
 class TestExecuteListVariables:

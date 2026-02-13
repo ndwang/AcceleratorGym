@@ -13,36 +13,9 @@ class TestMachineRegistry:
         assert "BPM1:X" in variables
         assert "BPM1:Y" in variables
 
-    def test_variables_with_discovery(self, mock_backend):
-        """Discovery + filtering + definitions overlay."""
-        mock_backend.set_discoverable([
-            Variable(name="QF:K1", description="from backend"),
-            Variable(name="QD:K1", description="from backend"),
-            Variable(name="BPM1:X", description="from backend"),
-            Variable(name="SEXT:K2", description="should be filtered out"),
-        ])
-        config = MachineConfig(
-            discover_include=["Q*:K1", "BPM*:X"],
-            discover_exclude=[],
-            definitions={
-                "QF:K1": {"description": "overridden", "limits": [-3.0, 3.0]},
-            },
-        )
-        m = Machine(mock_backend, config)
-        variables = m.variables
-
-        # QF:K1 should have overridden description + limits from definitions
-        assert variables["QF:K1"].description == "overridden"
-        assert variables["QF:K1"].limits == (-3.0, 3.0)
-
-        # QD:K1 should keep backend description
-        assert variables["QD:K1"].description == "from backend"
-
-        # BPM1:X from discovery
-        assert "BPM1:X" in variables
-
-        # SEXT:K2 should be filtered out
-        assert "SEXT:K2" not in variables
+    def test_variables_sorted(self, machine):
+        keys = list(machine.variables.keys())
+        assert keys == sorted(keys)
 
     def test_variables_returns_copy(self, machine):
         v1 = machine.variables

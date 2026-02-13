@@ -3,12 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from accelerator_gym.backends.base import Backend
-from accelerator_gym.core.config import (
-    MachineConfig,
-    filter_variables,
-    load_config,
-    merge_definitions,
-)
+from accelerator_gym.core.config import MachineConfig, build_variables, load_config
 from accelerator_gym.core.variable import Variable
 
 
@@ -22,7 +17,7 @@ class Machine:
     def __init__(self, backend: Backend, config: MachineConfig) -> None:
         self._backend = backend
         self._config = config
-        self._variables = self._build_registry()
+        self._variables = build_variables(config.definitions)
 
     @classmethod
     def from_config(cls, config_path: str) -> Machine:
@@ -34,21 +29,6 @@ class Machine:
         backend = backend_cls(**config.backend_settings)
         backend.connect()
         return cls(backend, config)
-
-    def _build_registry(self) -> dict[str, Variable]:
-        """Build the variable registry from discovery + config definitions."""
-        discovered: dict[str, Variable] = {}
-
-        if self._config.discovery_enabled:
-            raw = self._backend.discover_variables()
-            filtered = filter_variables(
-                raw,
-                self._config.discover_include,
-                self._config.discover_exclude,
-            )
-            discovered = {v.name: v for v in filtered}
-
-        return merge_definitions(discovered, self._config.definitions)
 
     @property
     def variables(self) -> dict[str, Variable]:
@@ -69,11 +49,11 @@ class Machine:
         self._backend.set(name, value)
 
     def get_many(self, names: list[str]) -> dict[str, Any]:
-        """Read multiple variables at once."""
-        result = {}
+        """Read multiple variables at once. Validates all names first."""
         for name in names:
-            result[name] = self.get(name)
-        return result
+            if name not in self._variables:
+                raise KeyError(f"Unknown variable: '{name}'")
+        return {name: self._backend.get(name) for name in names}
 
     def set_many(self, values: dict[str, Any]) -> None:
         """Write multiple variables. All-or-nothing validation."""

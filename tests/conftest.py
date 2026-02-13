@@ -7,7 +7,6 @@ import pytest
 from accelerator_gym.backends.base import Backend
 from accelerator_gym.core.config import MachineConfig
 from accelerator_gym.core.machine import Machine
-from accelerator_gym.core.variable import Variable
 
 
 class MockBackend(Backend):
@@ -17,11 +16,6 @@ class MockBackend(Backend):
         self._initial_state = dict(initial_state or {})
         self._state: dict[str, Any] = {}
         self._connected = False
-        self._discoverable: list[Variable] = []
-
-    def set_discoverable(self, variables: list[Variable]) -> None:
-        """Configure which variables discover_variables() returns."""
-        self._discoverable = list(variables)
 
     def connect(self) -> None:
         self._state = dict(self._initial_state)
@@ -40,9 +34,6 @@ class MockBackend(Backend):
 
     def reset(self) -> None:
         self._state = dict(self._initial_state)
-
-    def discover_variables(self) -> list[Variable]:
-        return list(self._discoverable)
 
     @property
     def connected(self) -> bool:
@@ -66,7 +57,7 @@ def mock_backend():
 
 @pytest.fixture
 def basic_config():
-    """A basic MachineConfig with no discovery."""
+    """A basic MachineConfig."""
     return MachineConfig(
         name="Test Machine",
         description="A test machine",
@@ -74,12 +65,12 @@ def basic_config():
         definitions={
             "QF:K1": {
                 "description": "Focusing quad strength",
-                "units": "1/m^2",
+                "units": "1/m",
                 "limits": [-5.0, 5.0],
             },
             "QD:K1": {
                 "description": "Defocusing quad strength",
-                "units": "1/m^2",
+                "units": "1/m",
                 "limits": [-5.0, 5.0],
             },
             "BPM1:X": {

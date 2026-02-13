@@ -18,30 +18,12 @@ class LLMInterface:
 
     def get_tools(self) -> list[dict]:
         """Return OpenAI-compatible tool/function schemas."""
-        variables = self._machine.variables
-        var_names = sorted(variables.keys())
-        var_descriptions = []
-        for name in var_names:
-            v = variables[name]
-            parts = [name]
-            if v.description:
-                parts.append(f"- {v.description}")
-            if v.units:
-                parts.append(f"({v.units})")
-            if v.read_only:
-                parts.append("[read-only]")
-            if v.limits:
-                parts.append(f"[{v.limits[0]}, {v.limits[1]}]")
-            var_descriptions.append(" ".join(parts))
-
-        var_list_text = "\n".join(var_descriptions) if var_descriptions else "No variables available."
-
         tools = [
             {
                 "type": "function",
                 "function": {
                     "name": "list_variables",
-                    "description": f"List available variables, optionally filtered by glob pattern.\n\nAvailable variables:\n{var_list_text}",
+                    "description": "List available variables with metadata (units, limits, read-only status), optionally filtered by glob pattern.",
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -65,7 +47,6 @@ class LLMInterface:
                             "name": {
                                 "type": "string",
                                 "description": "Variable name to read",
-                                "enum": var_names,
                             }
                         },
                         "required": ["name"],
@@ -82,7 +63,7 @@ class LLMInterface:
                         "properties": {
                             "names": {
                                 "type": "array",
-                                "items": {"type": "string", "enum": var_names},
+                                "items": {"type": "string"},
                                 "description": "List of variable names to read",
                             }
                         },
@@ -101,7 +82,6 @@ class LLMInterface:
                             "name": {
                                 "type": "string",
                                 "description": "Variable name to write",
-                                "enum": [n for n in var_names if not variables[n].read_only],
                             },
                             "value": {
                                 "type": "number",
@@ -123,6 +103,7 @@ class LLMInterface:
                             "values": {
                                 "type": "object",
                                 "description": "Mapping of variable names to values",
+                                "additionalProperties": {"type": "number"},
                             }
                         },
                         "required": ["values"],
@@ -148,9 +129,27 @@ class LLMInterface:
         ]
         return tools
 
+    # Required parameters for each tool.
+    _REQUIRED_PARAMS: dict[str, list[str]] = {
+        "get_variable": ["name"],
+        "get_variables": ["names"],
+        "set_variable": ["name", "value"],
+        "set_variables": ["values"],
+    }
+
     def execute(self, tool_name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         """Execute a tool call and return a structured result."""
         try:
+            missing = [
+                p for p in self._REQUIRED_PARAMS.get(tool_name, [])
+                if p not in arguments
+            ]
+            if missing:
+                return {
+                    "error": "validation_error",
+                    "message": f"Missing required parameter(s): {', '.join(missing)}",
+                }
+
             if tool_name == "list_variables":
                 return self._list_variables(arguments.get("filter"))
             elif tool_name == "get_variable":
@@ -173,10 +172,10 @@ class LLMInterface:
     def _list_variables(self, pattern: str | None) -> dict[str, Any]:
         variables = self._machine.variables
         items = []
-        for name, var in sorted(variables.items()):
+        for name, var in variables.items():
             if pattern and not fnmatch.fnmatch(name, pattern):
                 continue
-            info: dict[str, Any] = {"name": name, "dtype": var.dtype}
+            info: dict[str, Any] = {"name": name}
             if var.description:
                 info["description"] = var.description
             if var.units:
@@ -228,7 +227,7 @@ class LLMInterface:
 
     def _get_state(self) -> dict[str, Any]:
         variables = self._machine.variables
-        names = sorted(variables.keys())
+        names = list(variables.keys())
         values = self._machine.get_many(names)
         return {"variables": values}
 

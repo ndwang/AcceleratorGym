@@ -5,11 +5,13 @@ from dataclasses import dataclass
 
 @dataclass
 class Variable:
-    """A single named parameter that can be read and optionally written."""
+    """A single named parameter that can be read and optionally written.
+
+    All values are floats. Validation checks type, read-only status, and limits.
+    """
 
     name: str
     description: str = ""
-    dtype: str = "float"
     units: str | None = None
     read_only: bool = False
     limits: tuple[float, float] | None = None
@@ -23,7 +25,11 @@ class Variable:
                 )
 
     def validate_value(self, value: float | int) -> None:
-        """Raise ValueError if value violates this variable's constraints."""
+        """Raise TypeError/ValueError if *value* violates this variable's constraints."""
+        if not isinstance(value, (int, float)) or isinstance(value, bool):
+            raise TypeError(
+                f"Variable '{self.name}': expected numeric value, got {type(value).__name__}"
+            )
         if self.read_only:
             raise ValueError(f"Variable '{self.name}' is read-only")
         if self.limits is not None:

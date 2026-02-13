@@ -12,8 +12,7 @@ enabling LLM-based agents to interact with any accelerator through tool calling.
 - **Unified interface**: One API regardless of whether the backend is a simulation
   or a real machine.
 - **LLM-agent-first**: The primary consumer is an LLM agent using function/tool
-  calling. The interface must be discoverable, self-describing, and return
-  structured data.
+  calling. The interface must be self-describing and return structured data.
 - **Config-driven**: A YAML configuration file has final authority over what
   variables are exposed to the agent, their metadata, and their safety limits.
 - **Backend-swappable**: Switching from simulation to real hardware is a config
@@ -46,7 +45,7 @@ enabling LLM-based agents to interact with any accelerator through tool calling.
                         ▼
 ┌──────────────────────────────────────────────────┐
 │                   Machine                        │
-│  - Variable registry (config ∪ discovery)        │
+│  - Variable registry (from config definitions)   │
 │  - get / set / get_many / set_many / reset       │
 │  - Validates limits before delegating to backend │
 └──────────┬───────────────────────┬───────────────┘
@@ -56,7 +55,6 @@ enabling LLM-based agents to interact with any accelerator through tool calling.
 ┌────────────────────┐  ┌─────────────────────────┐
 │    YAML Config     │  │    Backend (abstract)   │
 │  - variable defs   │  │  ┌─ BmadBackend         │
-│  - discovery rules │  │  ├─ EPICSBackend        │
 │  - backend config  │  │  └─ ...                 │
 └────────────────────┘  └─────────────────────────┘
 ```
@@ -67,7 +65,7 @@ enabling LLM-based agents to interact with any accelerator through tool calling.
 |---|---|
 | **LLMInterface** | Translate between LLM tool-calling conventions and Machine methods. Generate self-describing tool schemas. Format responses. |
 | **Machine** | Central orchestrator. Owns the variable registry. Enforces safety limits. Routes reads/writes to the backend. |
-| **Config** | Declares which variables exist, their metadata, limits, and whether backend discovery is enabled. Final authority on what is exposed. |
+| **Config** | Declares which variables exist, their metadata, and limits. Final authority on what is exposed. |
 | **Backend** | Communicates with the actual accelerator (simulated or real). Handles physics computation, hardware I/O, and state management. |
 
 ## 3. Core Concepts
@@ -75,14 +73,13 @@ enabling LLM-based agents to interact with any accelerator through tool calling.
 ### 3.1 Variable
 
 A `Variable` describes a single named parameter that can be read and optionally
-written.
+written. All values are floats.
 
 ```python
 @dataclass
 class Variable:
     name: str                       # Unique identifier, e.g. "Q1:K1"
     description: str = ""           # Human-readable description
-    dtype: str = "float"            # "float", "int", "bool", "array"
     units: str | None = None        # Physical units, e.g. "1/m^2"
     read_only: bool = False         # True for observables (BPMs, etc.)
     limits: tuple[float, float] | None = None  # (min, max), enforced on write
@@ -106,32 +103,16 @@ class Backend(ABC):
         """Release resources and close connections."""
 
     @abstractmethod
-    def get(self, name: str) -> float | int | bool | np.ndarray:
-        """Read the current value of a variable.
-
-        The backend must return values consistent with the current state.
-        For simulations, this means re-computing if settings have changed
-        since the last read (e.g., re-tracking in Bmad).
-        """
+    def get(self, name: str) -> float:
+        """Read the current value of a variable."""
 
     @abstractmethod
-    def set(self, name: str, value: float | int | bool | np.ndarray) -> None:
-        """Write a value to a variable.
-
-        The backend may defer computation until the next get() call.
-        """
+    def set(self, name: str, value: float) -> None:
+        """Write a value to a variable."""
 
     @abstractmethod
     def reset(self) -> None:
         """Reset to the initial state."""
-
-    @abstractmethod
-    def discover_variables(self) -> list[Variable]:
-        """Return all variables the backend can provide.
-
-        Called only when discovery is enabled in config. The returned
-        variables provide baseline metadata that config can override.
-        """
 ```
 
 #### Backend Contract: Consistency on Read
@@ -164,16 +145,16 @@ class Machine:
     def variables(self) -> dict[str, Variable]:
         """All variables exposed to the agent."""
 
-    def get(self, name: str) -> float | int | bool | np.ndarray:
+    def get(self, name: str) -> float:
         """Read a variable value."""
 
-    def set(self, name: str, value: float | int | bool | np.ndarray) -> None:
+    def set(self, name: str, value: float) -> None:
         """Write a variable value. Validates limits before delegating."""
 
-    def get_many(self, names: list[str]) -> dict[str, Any]:
+    def get_many(self, names: list[str]) -> dict[str, float]:
         """Read multiple variables at once."""
 
-    def set_many(self, values: dict[str, Any]) -> None:
+    def set_many(self, values: dict[str, float]) -> None:
         """Write multiple variables. All-or-nothing validation."""
 
     def reset(self) -> None:
@@ -182,17 +163,11 @@ class Machine:
 
 #### Variable Registry Construction
 
-The variable registry is built at initialization time:
-
-1. Load config from YAML.
-2. If `variables.discover` is present in config, call
-   `backend.discover_variables()` and filter results through the include/exclude
-   patterns.
-3. Merge explicitly defined variables from `variables.definitions` on top of
-   discovered variables. Explicit definitions override discovered metadata.
-4. The resulting registry is the **complete and final** set of variables exposed
-   to the agent. Anything not in the registry does not exist from the agent's
-   perspective.
+The variable registry is built at initialization time from the config's
+`definitions` section. Each definition becomes a `Variable` object. The
+resulting registry is the **complete and final** set of variables exposed to
+the agent. Anything not in the registry does not exist from the agent's
+perspective.
 
 #### Limit Enforcement
 
@@ -232,9 +207,9 @@ class LLMInterface:
 | `get_state` | — | `{variables: {name: value, ...}}` | Snapshot of all readable variables |
 | `reset` | — | `{success}` | Reset machine to initial state |
 
-Tool schemas are generated dynamically from the Machine's variable registry,
-including descriptions, types, and valid ranges in the schema. This makes the
-tools self-documenting for the LLM.
+Tool schemas are lightweight and do not enumerate variable names, keeping
+context window usage constant regardless of the number of variables. The agent
+discovers variables by calling `list_variables`.
 
 #### Response Format
 
@@ -261,25 +236,12 @@ backend:
   # Backend-specific keys follow:
   # For bmad:
   lattice_file: str            # Path to .bmad lattice file
-  # For epics:
-  # prefix: str               # PV prefix
 
-# Variable configuration
+# Variable definitions
 variables:
-  # Optional: discover variables from the backend
-  discover:
-    include:                   # Glob patterns to include
-      - "Q*:K1"
-      - "BPM*:X"
-      - "BPM*:Y"
-    exclude:                   # Glob patterns to exclude (optional)
-      - "BPM0:*"
-
-  # Explicit variable definitions (override discovered metadata)
   definitions:
     "Q1:K1":
       description: "Quadrupole 1 integrated strength"
-      dtype: float             # optional, default "float"
       units: "1/m"            # optional
       read_only: false         # optional, default false
       limits: [-5.0, 5.0]     # optional
@@ -289,33 +251,12 @@ variables:
       units: "mm"
 ```
 
-### 4.2 Resolution Rules
-
-1. **No `discover` section**: only variables listed under `definitions` are
-   exposed. Backend discovery is never called.
-2. **`discover` with `include`**: `backend.discover_variables()` is called.
-   Only variables whose names match at least one `include` pattern are kept.
-3. **`discover` with `exclude`**: matched variables are removed after include
-   filtering.
-4. **`definitions` overlay**: for any variable that exists in both discovery
-   results and `definitions`, the `definitions` values take precedence
-   field-by-field. Fields not specified in `definitions` retain their
-   discovered values.
-5. **`definitions`-only variables**: a variable listed in `definitions` but
-   not found in discovery is still created, with the backend expected to
-   handle it. This allows defining variables that the discovery mechanism
-   misses.
-
 ## 5. Project Structure
 
 ```
 accelerator_gym/
 ├── pyproject.toml                 # Package metadata, dependencies
 ├── DESIGN.md                      # This document
-├── examples/
-│   └── fodo/
-│       ├── fodo.yaml              # Example machine config
-│       └── fodo.bmad              # Example Bmad lattice
 ├── src/
 │   └── accelerator_gym/
 │       ├── __init__.py            # Public API exports
@@ -327,8 +268,7 @@ accelerator_gym/
 │       ├── backends/
 │       │   ├── __init__.py        # Backend registry
 │       │   ├── base.py            # Abstract Backend base class
-│       │   ├── bmad.py            # Bmad/Tao backend
-│       │   └── epics.py           # EPICS Channel Access backend
+│       │   └── bmad.py            # Bmad/Tao backend
 │       └── agents/
 │           ├── __init__.py
 │           └── llm.py             # LLMInterface
@@ -336,9 +276,7 @@ accelerator_gym/
     ├── conftest.py
     ├── test_machine.py
     ├── test_config.py
-    ├── test_llm_interface.py
-    └── backends/
-        └── test_bmad.py
+    └── test_llm_interface.py
 ```
 
 Uses `src/` layout to avoid import ambiguity.
