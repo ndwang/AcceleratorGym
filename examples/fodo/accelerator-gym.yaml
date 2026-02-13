@@ -8,18 +8,18 @@ backend:
 
 variables:
   "ele::QF[K1]":
-      description: "Focusing quadrupole integrated strength"
-      units: "1/m"
-      limits: [-5.0, 5.0]
-    "ele::QD[K1]":
-      description: "Defocusing quadrupole integrated strength"
-      units: "1/m"
-      limits: [-5.0, 5.0]
-    "lat::orbit.x[BPM1]":
-      description: "Horizontal beam position at BPM 1"
-      units: "mm"
-      read_only: true
-    "lat::orbit.y[BPM1]":
-      description: "Vertical beam position at BPM 1"
-      units: "mm"
-      read_only: true
+    description: "Focusing quadrupole integrated strength"
+    units: "1/m"
+    limits: [-5.0, 5.0]
+  "ele::QD[K1]":
+    description: "Defocusing quadrupole integrated strength"
+    units: "1/m"
+    limits: [-5.0, 5.0]
+  "lat::orbit.x[BPM1]":
+    description: "Horizontal beam position at BPM 1"
+    units: "mm"
+    read_only: true
+  "lat::orbit.y[BPM1]":
+    description: "Vertical beam position at BPM 1"
+    units: "mm"
+    read_only: true

@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from accelerator_gym.backends.base import Backend
+
+logger = logging.getLogger(__name__)
 
 
 class BmadBackend(Backend):
@@ -19,20 +22,56 @@ class BmadBackend(Backend):
     """
 
     def __init__(self, **kwargs: Any) -> None:
+        logger.debug(f"Initializing BmadBackend with settings: {kwargs}")
+        logger.debug("Attempting to import pytao module...")
         try:
             import pytao  # noqa: F401
-        except ImportError:
+            logger.debug("pytao module imported successfully")
+        except ImportError as e:
+            logger.error(f"Failed to import pytao: {e}")
             raise ImportError(
                 "BmadBackend requires pytao. Install with: pip install accelerator-gym[bmad]"
-            )
+            ) from e
+        except Exception as e:
+            logger.exception(f"Unexpected error importing pytao: {e}")
+            raise
+        logger.debug("Storing backend settings...")
         self._settings = kwargs
         self._tao: Any = None
+        logger.debug("BmadBackend initialization complete")
 
     def connect(self) -> None:
+        from pathlib import Path
         from pytao import Tao
 
         init_file = self._settings.get("init_file", "tao.init")
-        self._tao = Tao(f"-init {init_file} -noplot")
+        init_path = Path(init_file)
+        
+        logger.info(f"Connecting to Tao with init_file: {init_file}")
+        logger.debug(f"Init file path (absolute): {init_path.resolve()}")
+        
+        if not init_path.exists():
+            error_msg = f"Tao init file not found: {init_path.resolve()}"
+            logger.error(error_msg)
+            raise FileNotFoundError(error_msg)
+        
+        try:
+            logger.debug(f"Creating Tao instance with args: -init {init_file} -noplot")
+            # Change to init file's directory so relative paths in init file work correctly
+            original_cwd = Path.cwd()
+            init_dir = init_path.parent
+            logger.debug(f"Changing working directory to: {init_dir}")
+            import os
+            os.chdir(init_dir)
+            try:
+                self._tao = Tao(f"-init {init_path.name} -noplot")
+                logger.info("Tao instance created successfully")
+            finally:
+                os.chdir(original_cwd)
+                logger.debug(f"Restored working directory to: {original_cwd}")
+        except Exception as e:
+            logger.exception(f"Failed to create Tao instance: {e}")
+            raise RuntimeError(f"Failed to connect to Tao backend: {e}") from e
 
     def disconnect(self) -> None:
         self._tao = None
