@@ -1,0 +1,20 @@
+# conda env create -f environment.yml
+# conda activate accgym
+
+name: accgym
+
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  - python>=3.10,<3.13
+  - pyyaml>=6.0
+  - numpy>=1.24
+  - pytest>=7.0
+  - bmad
+  - pytao
+  - pip
+  - pip:
+    - "mcp[cli]>=1.0"
+    - -e .
