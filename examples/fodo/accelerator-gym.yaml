@@ -10,11 +10,11 @@ variables:
   "ele::QF[K1]":
     description: "Focusing quadrupole integrated strength"
     units: "1/m"
-    limits: [-5.0, 5.0]
+    limits: [0.0, 5.0]
   "ele::QD[K1]":
     description: "Defocusing quadrupole integrated strength"
     units: "1/m"
-    limits: [-5.0, 5.0]
+    limits: [-5.0, 0.0]
   "lat::orbit.x[BPM1]":
     description: "Horizontal beam position at BPM 1"
     units: "mm"
@@ -22,4 +22,12 @@ variables:
   "lat::orbit.y[BPM1]":
     description: "Vertical beam position at BPM 1"
     units: "mm"
+    read_only: true
+  "lat::phase.a[BPM1]":
+    description: "Horizontal betatron phase at BPM 1"
+    units: "2pi"
+    read_only: true
+  "lat::phase.b[BPM1]":
+    description: "Vertical betatron phase at BPM 1"
+    units: "2pi"
     read_only: true

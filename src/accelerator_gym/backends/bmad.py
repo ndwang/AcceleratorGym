@@ -78,11 +78,19 @@ class BmadBackend(Backend):
 
     def get(self, name: str) -> float:
         result = self._tao.cmd(f"show value {name}")
-        # `show value` returns lines like "   <expr>  =  1.23456"
+        # `show value` may return "   <expr>  =  1.23456" or just "  0.0E+00" (no equals)
         for line in result:
             line = line.strip()
+            if not line:
+                continue
             if "=" in line:
-                return float(line.split("=")[-1].strip())
+                value_str = line.split("=")[-1].strip()
+            else:
+                value_str = line
+            try:
+                return float(value_str)
+            except ValueError:
+                continue
         raise ValueError(f"Could not parse Tao output for '{name}': {result}")
 
     def set(self, name: str, value: Any) -> None:
@@ -91,6 +99,24 @@ class BmadBackend(Backend):
         # ele::QF[K1] -> ele_name="QF", attr="K1"
         ele_name, attr = name[5:].rstrip("]").split("[", 1)
         self._tao.cmd(f"set element {ele_name} {attr} = {value}")
+
+    def set_many(self, values: dict[str, Any]) -> None:
+        """Batch set multiple element attributes.
+
+        More efficient than calling set() repeatedly as it validates all
+        variables upfront and can potentially batch commands to Tao.
+        """
+        # Validate all names first
+        for name in values:
+            if not name.startswith("ele::"):
+                raise ValueError(f"Cannot set lattice-level variable: {name}")
+
+        self._tao.cmd("set global lattice_calc_on = F")
+        # Execute all set commands
+        for name, value in values.items():
+            ele_name, attr = name[5:].rstrip("]").split("[", 1)
+            self._tao.cmd(f"set element {ele_name} {attr} = {value}")
+        self._tao.cmd("set global lattice_calc_on = T")
 
     def reset(self) -> None:
         self._tao.cmd("reinit tao")

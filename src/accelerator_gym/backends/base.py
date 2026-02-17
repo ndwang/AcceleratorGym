@@ -22,6 +22,18 @@ class Backend(ABC):
     def set(self, name: str, value: Any) -> None:
         """Write a value to a variable."""
 
+    def set_many(self, values: dict[str, Any]) -> None:
+        """Write multiple values at once.
+
+        Default implementation applies sets sequentially. Backends can override
+        this to provide optimized batch operations.
+
+        Args:
+            values: Dictionary mapping variable names to their new values.
+        """
+        for name, value in values.items():
+            self.set(name, value)
+
     @abstractmethod
     def reset(self) -> None:
         """Reset to the initial state."""

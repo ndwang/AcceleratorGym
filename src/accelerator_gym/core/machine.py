@@ -98,9 +98,8 @@ class Machine:
             if name not in self._variables:
                 raise KeyError(f"Unknown variable: '{name}'")
             self._variables[name].validate_value(value)
-        # Apply all
-        for name, value in values.items():
-            self._backend.set(name, value)
+        # Apply all using backend's batch operation
+        self._backend.set_many(values)
 
     def reset(self) -> None:
         """Reset the machine to its initial state."""

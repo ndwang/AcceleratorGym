@@ -1,7 +1,7 @@
 ! Simple FODO lattice
 ! A basic focusing-defocusing cell used for testing
 
-parameter[geometry] = open
+parameter[geometry] = closed
 parameter[particle] = electron
 parameter[p0c] = 1e9  ! 1 GeV
 
