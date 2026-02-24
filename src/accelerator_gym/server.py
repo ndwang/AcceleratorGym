@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import fnmatch
 import logging
 import sys
 from typing import Any
@@ -34,28 +33,41 @@ def _get_machine() -> Machine:
 
 
 @mcp.tool()
-def list_variables(filter: str | None = None) -> dict[str, Any]:
-    """List available variables with metadata (units, limits, read-only status), optionally filtered by glob pattern."""
+def browse_devices(path: str = "/", depth: int = 1) -> dict[str, Any]:
+    """Browse the device tree using filesystem-like paths.
+
+    Path levels: "/" -> systems, "/system" -> device types,
+    "/system/type" -> devices, "/system/type/device" -> attributes,
+    "/system/type/device/attr" -> attribute metadata.
+
+    Use depth > 1 to see multiple levels at once.
+    """
     try:
         machine = _get_machine()
-        items = []
-        for name, var in machine.variables.items():
-            if filter and not fnmatch.fnmatch(name, filter):
-                continue
-            info: dict[str, Any] = {"name": name}
-            if var.description:
-                info["description"] = var.description
-            if var.units:
-                info["units"] = var.units
-            if var.read_only:
-                info["read_only"] = True
-            if var.limits:
-                info["limits"] = list(var.limits)
-            items.append(info)
-        return {"variables": items}
-    except Exception as e:
-        logger.exception("Error in list_variables")
+        return machine.catalog.browse(path, depth)
+    except Exception:
+        logger.exception("Error in browse_devices")
         raise
+
+
+@mcp.tool()
+def query_devices(sql: str) -> dict[str, Any]:
+    """Run a read-only SQL query against the device metadata database.
+
+    Tables: systems(name), device_types(name, system),
+    devices(name, device_type, system, description),
+    attributes(device_name, device_type, system, attr_name, variable,
+    description, units, readable, writable, limit_low, limit_high).
+    """
+    try:
+        machine = _get_machine()
+        rows = machine.catalog.query(sql)
+        return {"rows": rows, "count": len(rows)}
+    except ValueError as e:
+        return {"error": "query_error", "message": str(e)}
+    except Exception as e:
+        logger.exception("Error in query_devices")
+        return {"error": "query_error", "message": str(e)}
 
 
 @mcp.tool()
@@ -71,7 +83,9 @@ def get_variable(name: str) -> dict[str, Any]:
         if var.units:
             result["units"] = var.units
         return result
-    except Exception as e:
+    except ValueError as e:
+        return {"error": "validation_error", "message": str(e)}
+    except Exception:
         logger.exception(f"Error in get_variable({name})")
         raise
 
@@ -81,13 +95,14 @@ def get_variables(names: list[str]) -> dict[str, Any]:
     """Read multiple variables at once."""
     try:
         machine = _get_machine()
-        values = {}
         for name in names:
             if name not in machine.variables:
                 return {"error": "not_found", "message": f"Unknown variable: '{name}'"}
-            values[name] = machine.get(name)
+        values = machine.get_many(names)
         return {"values": values}
-    except Exception as e:
+    except ValueError as e:
+        return {"error": "validation_error", "message": str(e)}
+    except Exception:
         logger.exception(f"Error in get_variables({names})")
         raise
 
@@ -113,7 +128,7 @@ def set_variable(name: str, value: float) -> dict[str, Any]:
             result["message"] = str(e)
             return result
         return {"success": True, "name": name, "value": value}
-    except Exception as e:
+    except Exception:
         logger.exception(f"Error in set_variable({name}, {value})")
         raise
 
@@ -131,7 +146,7 @@ def set_variables(values: dict[str, float]) -> dict[str, Any]:
         except ValueError as e:
             return {"error": "validation_error", "message": str(e)}
         return {"success": True, "values": values}
-    except Exception as e:
+    except Exception:
         logger.exception(f"Error in set_variables({values})")
         raise
 
@@ -142,10 +157,10 @@ def get_state() -> dict[str, Any]:
     try:
         machine = _get_machine()
         variables = machine.variables
-        names = list(variables.keys())
-        values = machine.get_many(names)
+        readable_names = [n for n, v in variables.items() if v.readable]
+        values = machine.get_many(readable_names)
         return {"variables": values}
-    except Exception as e:
+    except Exception:
         logger.exception("Error in get_state")
         raise
 
@@ -157,7 +172,7 @@ def reset() -> dict[str, Any]:
         machine = _get_machine()
         machine.reset()
         return {"success": True}
-    except Exception as e:
+    except Exception:
         logger.exception("Error in reset")
         raise
 
@@ -184,10 +199,10 @@ def main():
     parser.add_argument("--config", default=None, help="Path to machine config YAML (auto-detected if omitted)")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
     args = parser.parse_args()
-    
+
     if args.debug:
         logging.getLogger().setLevel(logging.DEBUG)
-    
+
     try:
         config_path = args.config or _find_config()
         logger.info(f"Loading machine configuration from: {config_path}")
@@ -203,9 +218,8 @@ def main():
         logger.error(f"Missing dependency: {e}")
         print(f"ERROR: {e}", file=sys.stderr)
         sys.exit(1)
-    except Exception as e:
+    except Exception:
         logger.exception("Failed to initialize MCP server")
-        print(f"ERROR: {e}", file=sys.stderr)
         sys.exit(1)
 
 

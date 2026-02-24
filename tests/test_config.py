@@ -3,8 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from accelerator_gym.core.config import MachineConfig, build_variables, load_config
-from accelerator_gym.core.variable import Variable
+from accelerator_gym.core.config import MachineConfig, load_config
 
 
 @pytest.fixture
@@ -27,18 +26,26 @@ class TestLoadConfig:
               description: A test machine
             backend:
               type: bmad
-              lattice_file: test.bmad
-            variables:
-              "Q1:K1":
-                description: Quad 1
-                limits: [-5.0, 5.0]
+              init_file: test.init
+            devices:
+              magnets:
+                quadrupole:
+                  QF:
+                    description: Focusing quad
+                    attributes:
+                      K1:
+                        description: Strength
+                        units: "1/m"
+                        limits: [-5.0, 5.0]
         """)
         cfg = load_config(path)
         assert cfg.name == "Test"
         assert cfg.description == "A test machine"
         assert cfg.backend_type == "bmad"
-        assert cfg.backend_settings == {"lattice_file": "test.bmad"}
-        assert "Q1:K1" in cfg.variables
+        assert cfg.backend_settings == {"init_file": "test.init"}
+        assert "magnets" in cfg.devices
+        assert "quadrupole" in cfg.devices["magnets"]
+        assert "QF" in cfg.devices["magnets"]["quadrupole"]
 
     def test_minimal_config(self, tmp_yaml):
         path = tmp_yaml("""\
@@ -46,15 +53,19 @@ class TestLoadConfig:
               name: Minimal
             backend:
               type: mock
-            variables:
-              "X":
-                description: Just X
+            devices:
+              systems:
+                device_type:
+                  X:
+                    attributes:
+                      val:
+                        description: Just X
         """)
         cfg = load_config(path)
         assert cfg.name == "Minimal"
-        assert "X" in cfg.variables
+        assert "systems" in cfg.devices
 
-    def test_empty_config(self, tmp_yaml):
+    def test_empty_devices(self, tmp_yaml):
         path = tmp_yaml("""\
             machine: {}
             backend:
@@ -63,38 +74,8 @@ class TestLoadConfig:
         cfg = load_config(path)
         assert cfg.name == ""
         assert cfg.backend_type == "mock"
-        assert cfg.variables == {}
+        assert cfg.devices == {}
 
     def test_missing_file(self):
         with pytest.raises(FileNotFoundError):
             load_config("/nonexistent/path.yaml")
-
-
-class TestBuildVariables:
-    def test_builds_from_definitions(self):
-        definitions = {
-            "Q1:K1": {"description": "Quad 1", "units": "1/m^2", "limits": [-5.0, 5.0]},
-            "BPM1:X": {"description": "Horizontal", "units": "mm", "read_only": True},
-        }
-        result = build_variables(definitions)
-        assert "Q1:K1" in result
-        assert result["Q1:K1"].description == "Quad 1"
-        assert result["Q1:K1"].units == "1/m^2"
-        assert result["Q1:K1"].limits == (-5.0, 5.0)
-        assert result["BPM1:X"].read_only is True
-
-    def test_defaults(self):
-        result = build_variables({"X": {}})
-        var = result["X"]
-        assert var.description == ""
-        assert var.units is None
-        assert var.read_only is False
-        assert var.limits is None
-
-    def test_empty(self):
-        assert build_variables({}) == {}
-
-    def test_sorted_output(self):
-        definitions = {"C": {}, "A": {}, "B": {}}
-        result = build_variables(definitions)
-        assert list(result.keys()) == ["A", "B", "C"]

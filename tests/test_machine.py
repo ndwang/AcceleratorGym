@@ -1,12 +1,11 @@
 import pytest
 
 from accelerator_gym.core.machine import Machine
-from accelerator_gym.core.config import MachineConfig
 from accelerator_gym.core.variable import Variable
 
 
 class TestMachineRegistry:
-    def test_variables_from_definitions(self, machine):
+    def test_variables_from_devices(self, machine):
         variables = machine.variables
         assert "QF:K1" in variables
         assert "QD:K1" in variables
@@ -21,6 +20,9 @@ class TestMachineRegistry:
         v1 = machine.variables
         v2 = machine.variables
         assert v1 is not v2
+
+    def test_catalog_available(self, machine):
+        assert machine.catalog is not None
 
 
 class TestMachineGetSet:
@@ -39,8 +41,8 @@ class TestMachineGetSet:
         with pytest.raises(KeyError, match="Unknown variable"):
             machine.set("NONEXISTENT", 1.0)
 
-    def test_set_read_only(self, machine):
-        with pytest.raises(ValueError, match="read-only"):
+    def test_set_not_writable(self, machine):
+        with pytest.raises(ValueError, match="not writable"):
             machine.set("BPM1:X", 1.0)
 
     def test_set_above_limit(self, machine):
@@ -79,8 +81,8 @@ class TestMachineMany:
         # QF:K1 should not have been changed
         assert machine.get("QF:K1") == 0.5
 
-    def test_set_many_read_only(self, machine):
-        with pytest.raises(ValueError, match="read-only"):
+    def test_set_many_not_writable(self, machine):
+        with pytest.raises(ValueError, match="not writable"):
             machine.set_many({"BPM1:X": 1.0})
 
     def test_set_many_unknown(self, machine):

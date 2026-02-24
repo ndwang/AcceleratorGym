@@ -1,7 +1,6 @@
 import pytest
 
 from accelerator_gym import server
-from accelerator_gym.core.machine import Machine
 
 
 @pytest.fixture
@@ -12,28 +11,81 @@ def mcp_machine(machine):
     server._machine = None
 
 
-class TestListVariables:
-    def test_list_all(self, mcp_machine):
-        result = server.list_variables()
-        assert "variables" in result
-        names = [v["name"] for v in result["variables"]]
-        assert "QF:K1" in names
-        assert "BPM1:X" in names
+class TestBrowseDevices:
+    def test_browse_root(self, mcp_machine):
+        result = server.browse_devices("/")
+        assert result["path"] == "/"
+        assert "diagnostics" in result["children"]
+        assert "magnets" in result["children"]
 
-    def test_list_with_filter(self, mcp_machine):
-        result = server.list_variables(filter="Q*")
-        names = [v["name"] for v in result["variables"]]
-        assert "QF:K1" in names
-        assert "QD:K1" in names
-        assert "BPM1:X" not in names
+    def test_browse_system(self, mcp_machine):
+        result = server.browse_devices("/magnets")
+        assert result["path"] == "/magnets"
+        assert "quadrupole" in result["children"]
 
-    def test_list_includes_metadata(self, mcp_machine):
-        result = server.list_variables()
-        qf = next(v for v in result["variables"] if v["name"] == "QF:K1")
-        assert qf["units"] == "1/m"
-        assert qf["limits"] == [-5.0, 5.0]
-        bpm = next(v for v in result["variables"] if v["name"] == "BPM1:X")
-        assert bpm["read_only"] is True
+    def test_browse_device_type(self, mcp_machine):
+        result = server.browse_devices("/magnets/quadrupole")
+        names = [d["name"] for d in result["children"]]
+        assert "QF" in names
+        assert "QD" in names
+
+    def test_browse_device(self, mcp_machine):
+        result = server.browse_devices("/magnets/quadrupole/QF")
+        assert "K1" in result["children"]
+
+    def test_browse_attribute(self, mcp_machine):
+        result = server.browse_devices("/magnets/quadrupole/QF/K1")
+        assert result["variable"] == "QF:K1"
+        assert result["units"] == "1/m"
+        assert result["limits"] == [-5.0, 5.0]
+        assert result["read"] is True
+        assert result["write"] is True
+
+    def test_browse_depth_2(self, mcp_machine):
+        result = server.browse_devices("/", depth=2)
+        # Children should be dicts with nested children
+        magnets = next(c for c in result["children"] if c["name"] == "magnets")
+        assert "children" in magnets
+        assert "quadrupole" in [c if isinstance(c, str) else c["name"] for c in magnets["children"]]
+
+    def test_browse_invalid_system(self, mcp_machine):
+        result = server.browse_devices("/nonexistent")
+        assert "error" in result
+
+    def test_browse_invalid_path(self, mcp_machine):
+        result = server.browse_devices("/a/b/c/d/e")
+        assert "error" in result
+
+
+class TestQueryDevices:
+    def test_query_systems(self, mcp_machine):
+        result = server.query_devices("SELECT name FROM systems ORDER BY name")
+        assert result["count"] == 2
+        names = [r["name"] for r in result["rows"]]
+        assert names == ["diagnostics", "magnets"]
+
+    def test_query_devices_by_type(self, mcp_machine):
+        result = server.query_devices(
+            "SELECT name FROM devices WHERE device_type='quadrupole' ORDER BY name"
+        )
+        names = [r["name"] for r in result["rows"]]
+        assert names == ["QD", "QF"]
+
+    def test_query_attributes(self, mcp_machine):
+        result = server.query_devices(
+            "SELECT variable, units FROM attributes WHERE writable=0"
+        )
+        assert result["count"] == 2
+        variables = {r["variable"] for r in result["rows"]}
+        assert variables == {"BPM1:X", "BPM1:Y"}
+
+    def test_query_rejects_insert(self, mcp_machine):
+        result = server.query_devices("INSERT INTO systems VALUES ('hack')")
+        assert result["error"] == "query_error"
+
+    def test_query_rejects_delete(self, mcp_machine):
+        result = server.query_devices("DELETE FROM systems")
+        assert result["error"] == "query_error"
 
 
 class TestGetVariable:
@@ -71,7 +123,7 @@ class TestSetVariable:
         assert result["variable"] == "QF:K1"
         assert result["limits"] == [-5.0, 5.0]
 
-    def test_set_read_only(self, mcp_machine):
+    def test_set_not_writable(self, mcp_machine):
         result = server.set_variable("BPM1:X", 1.0)
         assert "error" in result
 

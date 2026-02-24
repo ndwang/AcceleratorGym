@@ -5,15 +5,16 @@ from dataclasses import dataclass
 
 @dataclass
 class Variable:
-    """A single named parameter that can be read and optionally written.
+    """A single named parameter that can be read and/or written.
 
-    All values are floats. Validation checks type, read-only status, and limits.
+    All values are floats. Validation checks type, access permissions, and limits.
     """
 
     name: str
     description: str = ""
     units: str | None = None
-    read_only: bool = False
+    readable: bool = True
+    writable: bool = True
     limits: tuple[float, float] | None = None
 
     def __post_init__(self) -> None:
@@ -24,14 +25,19 @@ class Variable:
                     f"Variable '{self.name}': lower limit {lo} exceeds upper limit {hi}"
                 )
 
+    def validate_read(self) -> None:
+        """Raise ValueError if this variable is not readable."""
+        if not self.readable:
+            raise ValueError(f"Variable '{self.name}' is not readable")
+
     def validate_value(self, value: float | int) -> None:
         """Raise TypeError/ValueError if *value* violates this variable's constraints."""
         if not isinstance(value, (int, float)) or isinstance(value, bool):
             raise TypeError(
                 f"Variable '{self.name}': expected numeric value, got {type(value).__name__}"
             )
-        if self.read_only:
-            raise ValueError(f"Variable '{self.name}' is read-only")
+        if not self.writable:
+            raise ValueError(f"Variable '{self.name}' is not writable")
         if self.limits is not None:
             lo, hi = self.limits
             if value < lo or value > hi:

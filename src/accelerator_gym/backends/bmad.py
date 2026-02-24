@@ -118,6 +118,18 @@ class BmadBackend(Backend):
             self._tao.cmd(f"set element {ele_name} {attr} = {value}")
         self._tao.cmd("set global lattice_calc_on = T")
 
+    def resolve_variable_name(
+        self, system: str, device_type: str, device_name: str, attribute: str
+    ) -> str:
+        """Map tree coordinates to Tao variable names.
+
+        Monitor devices use ``lat::{attribute}[{device_name}]`` syntax.
+        All other devices use ``ele::{device_name}[{attribute}]`` syntax.
+        """
+        if device_type == "monitor":
+            return f"lat::{attribute}[{device_name}]"
+        return f"ele::{device_name}[{attribute}]"
+
     def reset(self) -> None:
         self._tao.cmd("reinit tao")
 

@@ -9,7 +9,8 @@ class TestVariable:
         assert v.name == "Q1:K1"
         assert v.description == ""
         assert v.units is None
-        assert v.read_only is False
+        assert v.readable is True
+        assert v.writable is True
         assert v.limits is None
 
     def test_create_full(self):
@@ -17,7 +18,8 @@ class TestVariable:
             name="Q1:K1",
             description="Quad strength",
             units="1/m^2",
-            read_only=False,
+            readable=True,
+            writable=True,
             limits=(-5.0, 5.0),
         )
         assert v.description == "Quad strength"
@@ -44,9 +46,9 @@ class TestVariable:
         with pytest.raises(ValueError, match="outside limits"):
             v.validate_value(6.0)
 
-    def test_validate_read_only(self):
-        v = Variable(name="BPM1:X", read_only=True)
-        with pytest.raises(ValueError, match="read-only"):
+    def test_validate_not_writable(self):
+        v = Variable(name="BPM1:X", writable=False)
+        with pytest.raises(ValueError, match="not writable"):
             v.validate_value(1.0)
 
     def test_validate_no_limits(self):
@@ -72,3 +74,12 @@ class TestVariable:
     def test_validate_accepts_int(self):
         v = Variable(name="Q1:K1", limits=(-5.0, 5.0))
         v.validate_value(3)  # int within limits, should not raise
+
+    def test_validate_read_readable(self):
+        v = Variable(name="Q1:K1", readable=True)
+        v.validate_read()  # should not raise
+
+    def test_validate_read_not_readable(self):
+        v = Variable(name="Q1:K1", readable=False)
+        with pytest.raises(ValueError, match="not readable"):
+            v.validate_read()

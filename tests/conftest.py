@@ -57,31 +57,60 @@ def mock_backend():
 
 @pytest.fixture
 def basic_config():
-    """A basic MachineConfig."""
+    """A basic MachineConfig using the devices tree format."""
     return MachineConfig(
         name="Test Machine",
         description="A test machine",
         backend_type="mock",
-        variables={
-            "QF:K1": {
-                "description": "Focusing quad strength",
-                "units": "1/m",
-                "limits": [-5.0, 5.0],
+        devices={
+            "magnets": {
+                "quadrupole": {
+                    "QF": {
+                        "description": "Focusing quad",
+                        "attributes": {
+                            "K1": {
+                                "description": "Focusing quad strength",
+                                "units": "1/m",
+                                "limits": [-5.0, 5.0],
+                                "read": True,
+                                "write": True,
+                            }
+                        },
+                    },
+                    "QD": {
+                        "description": "Defocusing quad",
+                        "attributes": {
+                            "K1": {
+                                "description": "Defocusing quad strength",
+                                "units": "1/m",
+                                "limits": [-5.0, 5.0],
+                                "read": True,
+                                "write": True,
+                            }
+                        },
+                    },
+                }
             },
-            "QD:K1": {
-                "description": "Defocusing quad strength",
-                "units": "1/m",
-                "limits": [-5.0, 5.0],
-            },
-            "BPM1:X": {
-                "description": "Horizontal position",
-                "units": "mm",
-                "read_only": True,
-            },
-            "BPM1:Y": {
-                "description": "Vertical position",
-                "units": "mm",
-                "read_only": True,
+            "diagnostics": {
+                "monitor": {
+                    "BPM1": {
+                        "description": "Beam position monitor 1",
+                        "attributes": {
+                            "X": {
+                                "description": "Horizontal position",
+                                "units": "mm",
+                                "read": True,
+                                "write": False,
+                            },
+                            "Y": {
+                                "description": "Vertical position",
+                                "units": "mm",
+                                "read": True,
+                                "write": False,
+                            },
+                        },
+                    }
+                }
             },
         },
     )

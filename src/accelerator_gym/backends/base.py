@@ -34,6 +34,16 @@ class Backend(ABC):
         for name, value in values.items():
             self.set(name, value)
 
+    def resolve_variable_name(
+        self, system: str, device_type: str, device_name: str, attribute: str
+    ) -> str:
+        """Map tree coordinates to a backend-native variable name.
+
+        Override in subclasses to implement backend-specific naming conventions.
+        Default returns ``device_name:attribute``.
+        """
+        return f"{device_name}:{attribute}"
+
     @abstractmethod
     def reset(self) -> None:
         """Reset to the initial state."""

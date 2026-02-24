@@ -6,28 +6,49 @@ backend:
   type: bmad
   init_file: tao.init
 
-variables:
-  "ele::QF[K1]":
-    description: "Focusing quadrupole integrated strength"
-    units: "1/m"
-    limits: [0.0, 5.0]
-  "ele::QD[K1]":
-    description: "Defocusing quadrupole integrated strength"
-    units: "1/m"
-    limits: [-5.0, 0.0]
-  "lat::orbit.x[BPM1]":
-    description: "Horizontal beam position at BPM 1"
-    units: "mm"
-    read_only: true
-  "lat::orbit.y[BPM1]":
-    description: "Vertical beam position at BPM 1"
-    units: "mm"
-    read_only: true
-  "lat::phase.a[BPM1]":
-    description: "Horizontal betatron phase at BPM 1"
-    units: "2pi"
-    read_only: true
-  "lat::phase.b[BPM1]":
-    description: "Vertical betatron phase at BPM 1"
-    units: "2pi"
-    read_only: true
+devices:
+  magnets:
+    quadrupole:
+      QF:
+        description: "Focusing quadrupole"
+        attributes:
+          K1:
+            description: "Integrated strength"
+            units: "1/m"
+            limits: [0.0, 5.0]
+            read: true
+            write: true
+      QD:
+        description: "Defocusing quadrupole"
+        attributes:
+          K1:
+            description: "Integrated strength"
+            units: "1/m"
+            limits: [-5.0, 0.0]
+            read: true
+            write: true
+  diagnostics:
+    monitor:
+      BPM1:
+        description: "Beam position monitor 1"
+        attributes:
+          orbit.x:
+            description: "Horizontal beam position"
+            units: "mm"
+            read: true
+            write: false
+          orbit.y:
+            description: "Vertical beam position"
+            units: "mm"
+            read: true
+            write: false
+          phase.a:
+            description: "Horizontal betatron phase"
+            units: "2pi"
+            read: true
+            write: false
+          phase.b:
+            description: "Vertical betatron phase"
+            units: "2pi"
+            read: true
+            write: false
