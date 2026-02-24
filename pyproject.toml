@@ -17,6 +17,7 @@ dependencies = [
 
 [project.scripts]
 accelerator-gym = "accelerator_gym.server:main"
+accelerator-gym-cli = "accelerator_gym.cli:main"
 
 [project.optional-dependencies]
 bmad = ["pytao"]
