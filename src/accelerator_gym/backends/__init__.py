@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 _BACKEND_REGISTRY: dict[str, str] = {
     "bmad": "accelerator_gym.backends.bmad:BmadBackend",
     "epics": "accelerator_gym.backends.epics:EPICSBackend",
+    "mock": "accelerator_gym.backends.mock:MockBackend",
 }
 
 
