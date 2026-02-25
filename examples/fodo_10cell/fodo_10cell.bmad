@@ -12,11 +12,12 @@ QD:  quadrupole, L = 0.5, K1 = -0.5
 D3:  drift,      L = 1.0
 
 BPM: monitor,   L = 0.0
+HK:  hkicker,   L = 0.0, kick = 0
+VK:  vkicker,   L = 0.0, kick = 0
 
-FODO: line = (D1, QF, D2, QD, D3, BPM)
+FODO: line = (D1, QF, HK, D2, QD, VK, D3, BPM)
 
-RING: line = (FODO, FODO, FODO, FODO, FODO,
-              FODO, FODO, FODO, FODO, FODO)
+RING: line = (10*FODO)
 
 use, RING
 

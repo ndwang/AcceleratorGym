@@ -189,6 +189,188 @@ devices:
             limits: [-5.0, 0.0]
             read: true
             write: true
+    hkicker:
+      HK_1:
+        description: "Horizontal kicker 1"
+        attributes:
+          kick:
+            description: "Horizontal kick angle"
+            units: "rad"
+            limits: [-0.001, 0.001]
+            read: true
+            write: true
+      HK_2:
+        description: "Horizontal kicker 2"
+        attributes:
+          kick:
+            description: "Horizontal kick angle"
+            units: "rad"
+            limits: [-0.001, 0.001]
+            read: true
+            write: true
+      HK_3:
+        description: "Horizontal kicker 3"
+        attributes:
+          kick:
+            description: "Horizontal kick angle"
+            units: "rad"
+            limits: [-0.001, 0.001]
+            read: true
+            write: true
+      HK_4:
+        description: "Horizontal kicker 4"
+        attributes:
+          kick:
+            description: "Horizontal kick angle"
+            units: "rad"
+            limits: [-0.001, 0.001]
+            read: true
+            write: true
+      HK_5:
+        description: "Horizontal kicker 5"
+        attributes:
+          kick:
+            description: "Horizontal kick angle"
+            units: "rad"
+            limits: [-0.001, 0.001]
+            read: true
+            write: true
+      HK_6:
+        description: "Horizontal kicker 6"
+        attributes:
+          kick:
+            description: "Horizontal kick angle"
+            units: "rad"
+            limits: [-0.001, 0.001]
+            read: true
+            write: true
+      HK_7:
+        description: "Horizontal kicker 7"
+        attributes:
+          kick:
+            description: "Horizontal kick angle"
+            units: "rad"
+            limits: [-0.001, 0.001]
+            read: true
+            write: true
+      HK_8:
+        description: "Horizontal kicker 8"
+        attributes:
+          kick:
+            description: "Horizontal kick angle"
+            units: "rad"
+            limits: [-0.001, 0.001]
+            read: true
+            write: true
+      HK_9:
+        description: "Horizontal kicker 9"
+        attributes:
+          kick:
+            description: "Horizontal kick angle"
+            units: "rad"
+            limits: [-0.001, 0.001]
+            read: true
+            write: true
+      HK_10:
+        description: "Horizontal kicker 10"
+        attributes:
+          kick:
+            description: "Horizontal kick angle"
+            units: "rad"
+            limits: [-0.001, 0.001]
+            read: true
+            write: true
+    vkicker:
+      VK_1:
+        description: "Vertical kicker 1"
+        attributes:
+          kick:
+            description: "Vertical kick angle"
+            units: "rad"
+            limits: [-0.001, 0.001]
+            read: true
+            write: true
+      VK_2:
+        description: "Vertical kicker 2"
+        attributes:
+          kick:
+            description: "Vertical kick angle"
+            units: "rad"
+            limits: [-0.001, 0.001]
+            read: true
+            write: true
+      VK_3:
+        description: "Vertical kicker 3"
+        attributes:
+          kick:
+            description: "Vertical kick angle"
+            units: "rad"
+            limits: [-0.001, 0.001]
+            read: true
+            write: true
+      VK_4:
+        description: "Vertical kicker 4"
+        attributes:
+          kick:
+            description: "Vertical kick angle"
+            units: "rad"
+            limits: [-0.001, 0.001]
+            read: true
+            write: true
+      VK_5:
+        description: "Vertical kicker 5"
+        attributes:
+          kick:
+            description: "Vertical kick angle"
+            units: "rad"
+            limits: [-0.001, 0.001]
+            read: true
+            write: true
+      VK_6:
+        description: "Vertical kicker 6"
+        attributes:
+          kick:
+            description: "Vertical kick angle"
+            units: "rad"
+            limits: [-0.001, 0.001]
+            read: true
+            write: true
+      VK_7:
+        description: "Vertical kicker 7"
+        attributes:
+          kick:
+            description: "Vertical kick angle"
+            units: "rad"
+            limits: [-0.001, 0.001]
+            read: true
+            write: true
+      VK_8:
+        description: "Vertical kicker 8"
+        attributes:
+          kick:
+            description: "Vertical kick angle"
+            units: "rad"
+            limits: [-0.001, 0.001]
+            read: true
+            write: true
+      VK_9:
+        description: "Vertical kicker 9"
+        attributes:
+          kick:
+            description: "Vertical kick angle"
+            units: "rad"
+            limits: [-0.001, 0.001]
+            read: true
+            write: true
+      VK_10:
+        description: "Vertical kicker 10"
+        attributes:
+          kick:
+            description: "Vertical kick angle"
+            units: "rad"
+            limits: [-0.001, 0.001]
+            read: true
+            write: true
   diagnostics:
     monitor:
       BPM_1:
