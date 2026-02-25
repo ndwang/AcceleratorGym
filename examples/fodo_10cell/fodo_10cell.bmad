@@ -1,0 +1,22 @@
+! FODO cell repeated 10 times in a ring
+
+parameter[geometry] = closed
+parameter[particle] = electron
+parameter[p0c] = 1e9  ! 1 GeV
+
+! Single FODO cell definition (same as base example)
+D1:  drift,      L = 1.0
+QF:  quadrupole, L = 0.5, K1 = 0.5
+D2:  drift,      L = 2.0
+QD:  quadrupole, L = 0.5, K1 = -0.5
+D3:  drift,      L = 1.0
+
+BPM: monitor,   L = 0.0
+
+FODO: line = (D1, QF, D2, QD, D3, BPM)
+
+RING: line = (FODO, FODO, FODO, FODO, FODO,
+              FODO, FODO, FODO, FODO, FODO)
+
+use, RING
+

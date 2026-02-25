@@ -1,0 +1,424 @@
+machine:
+  name: FODO 10 Cell
+  description: Simple FODO lattice repeated 10 times
+
+backend:
+  type: bmad
+  init_file: tao.init
+
+devices:
+  magnets:
+    quadrupole:
+      QF_1:
+        description: "Focusing quadrupole 1"
+        attributes:
+          K1:
+            description: "Normalized quadrupole strength"
+            units: "1/m^2"
+            limits: [0.0, 5.0]
+            read: true
+            write: true
+      QF_2:
+        description: "Focusing quadrupole 2"
+        attributes:
+          K1:
+            description: "Normalized quadrupole strength"
+            units: "1/m^2"
+            limits: [0.0, 5.0]
+            read: true
+            write: true
+      QF_3:
+        description: "Focusing quadrupole 3"
+        attributes:
+          K1:
+            description: "Normalized quadrupole strength"
+            units: "1/m^2"
+            limits: [0.0, 5.0]
+            read: true
+            write: true
+      QF_4:
+        description: "Focusing quadrupole 4"
+        attributes:
+          K1:
+            description: "Normalized quadrupole strength"
+            units: "1/m^2"
+            limits: [0.0, 5.0]
+            read: true
+            write: true
+      QF_5:
+        description: "Focusing quadrupole 5"
+        attributes:
+          K1:
+            description: "Normalized quadrupole strength"
+            units: "1/m^2"
+            limits: [0.0, 5.0]
+            read: true
+            write: true
+      QF_6:
+        description: "Focusing quadrupole 6"
+        attributes:
+          K1:
+            description: "Normalized quadrupole strength"
+            units: "1/m^2"
+            limits: [0.0, 5.0]
+            read: true
+            write: true
+      QF_7:
+        description: "Focusing quadrupole 7"
+        attributes:
+          K1:
+            description: "Normalized quadrupole strength"
+            units: "1/m^2"
+            limits: [0.0, 5.0]
+            read: true
+            write: true
+      QF_8:
+        description: "Focusing quadrupole 8"
+        attributes:
+          K1:
+            description: "Normalized quadrupole strength"
+            units: "1/m^2"
+            limits: [0.0, 5.0]
+            read: true
+            write: true
+      QF_9:
+        description: "Focusing quadrupole 9"
+        attributes:
+          K1:
+            description: "Normalized quadrupole strength"
+            units: "1/m^2"
+            limits: [0.0, 5.0]
+            read: true
+            write: true
+      QF_10:
+        description: "Focusing quadrupole 10"
+        attributes:
+          K1:
+            description: "Normalized quadrupole strength"
+            units: "1/m^2"
+            limits: [0.0, 5.0]
+            read: true
+            write: true
+      QD_1:
+        description: "Defocusing quadrupole 1"
+        attributes:
+          K1:
+            description: "Normalized quadrupole strength"
+            units: "1/m^2"
+            limits: [-5.0, 0.0]
+            read: true
+            write: true
+      QD_2:
+        description: "Defocusing quadrupole 2"
+        attributes:
+          K1:
+            description: "Normalized quadrupole strength"
+            units: "1/m^2"
+            limits: [-5.0, 0.0]
+            read: true
+            write: true
+      QD_3:
+        description: "Defocusing quadrupole 3"
+        attributes:
+          K1:
+            description: "Normalized quadrupole strength"
+            units: "1/m^2"
+            limits: [-5.0, 0.0]
+            read: true
+            write: true
+      QD_4:
+        description: "Defocusing quadrupole 4"
+        attributes:
+          K1:
+            description: "Normalized quadrupole strength"
+            units: "1/m^2"
+            limits: [-5.0, 0.0]
+            read: true
+            write: true
+      QD_5:
+        description: "Defocusing quadrupole 5"
+        attributes:
+          K1:
+            description: "Normalized quadrupole strength"
+            units: "1/m^2"
+            limits: [-5.0, 0.0]
+            read: true
+            write: true
+      QD_6:
+        description: "Defocusing quadrupole 6"
+        attributes:
+          K1:
+            description: "Normalized quadrupole strength"
+            units: "1/m^2"
+            limits: [-5.0, 0.0]
+            read: true
+            write: true
+      QD_7:
+        description: "Defocusing quadrupole 7"
+        attributes:
+          K1:
+            description: "Normalized quadrupole strength"
+            units: "1/m^2"
+            limits: [-5.0, 0.0]
+            read: true
+            write: true
+      QD_8:
+        description: "Defocusing quadrupole 8"
+        attributes:
+          K1:
+            description: "Normalized quadrupole strength"
+            units: "1/m^2"
+            limits: [-5.0, 0.0]
+            read: true
+            write: true
+      QD_9:
+        description: "Defocusing quadrupole 9"
+        attributes:
+          K1:
+            description: "Normalized quadrupole strength"
+            units: "1/m^2"
+            limits: [-5.0, 0.0]
+            read: true
+            write: true
+      QD_10:
+        description: "Defocusing quadrupole 10"
+        attributes:
+          K1:
+            description: "Normalized quadrupole strength"
+            units: "1/m^2"
+            limits: [-5.0, 0.0]
+            read: true
+            write: true
+  diagnostics:
+    monitor:
+      BPM_1:
+        description: "Beam position monitor at end of cell 1"
+        attributes:
+          orbit.x:
+            description: "Horizontal beam position"
+            units: "mm"
+            read: true
+            write: false
+          orbit.y:
+            description: "Vertical beam position"
+            units: "mm"
+            read: true
+            write: false
+          phase.a:
+            description: "Horizontal betatron phase"
+            units: "2pi"
+            read: true
+            write: false
+          phase.b:
+            description: "Vertical betatron phase"
+            units: "2pi"
+            read: true
+            write: false
+      BPM_2:
+        description: "Beam position monitor at end of cell 2"
+        attributes:
+          orbit.x:
+            description: "Horizontal beam position"
+            units: "mm"
+            read: true
+            write: false
+          orbit.y:
+            description: "Vertical beam position"
+            units: "mm"
+            read: true
+            write: false
+          phase.a:
+            description: "Horizontal betatron phase"
+            units: "2pi"
+            read: true
+            write: false
+          phase.b:
+            description: "Vertical betatron phase"
+            units: "2pi"
+            read: true
+            write: false
+      BPM_3:
+        description: "Beam position monitor at end of cell 3"
+        attributes:
+          orbit.x:
+            description: "Horizontal beam position"
+            units: "mm"
+            read: true
+            write: false
+          orbit.y:
+            description: "Vertical beam position"
+            units: "mm"
+            read: true
+            write: false
+          phase.a:
+            description: "Horizontal betatron phase"
+            units: "2pi"
+            read: true
+            write: false
+          phase.b:
+            description: "Vertical betatron phase"
+            units: "2pi"
+            read: true
+            write: false
+      BPM_4:
+        description: "Beam position monitor at end of cell 4"
+        attributes:
+          orbit.x:
+            description: "Horizontal beam position"
+            units: "mm"
+            read: true
+            write: false
+          orbit.y:
+            description: "Vertical beam position"
+            units: "mm"
+            read: true
+            write: false
+          phase.a:
+            description: "Horizontal betatron phase"
+            units: "2pi"
+            read: true
+            write: false
+          phase.b:
+            description: "Vertical betatron phase"
+            units: "2pi"
+            read: true
+            write: false
+      BPM_5:
+        description: "Beam position monitor at end of cell 5"
+        attributes:
+          orbit.x:
+            description: "Horizontal beam position"
+            units: "mm"
+            read: true
+            write: false
+          orbit.y:
+            description: "Vertical beam position"
+            units: "mm"
+            read: true
+            write: false
+          phase.a:
+            description: "Horizontal betatron phase"
+            units: "2pi"
+            read: true
+            write: false
+          phase.b:
+            description: "Vertical betatron phase"
+            units: "2pi"
+            read: true
+            write: false
+      BPM_6:
+        description: "Beam position monitor at end of cell 6"
+        attributes:
+          orbit.x:
+            description: "Horizontal beam position"
+            units: "mm"
+            read: true
+            write: false
+          orbit.y:
+            description: "Vertical beam position"
+            units: "mm"
+            read: true
+            write: false
+          phase.a:
+            description: "Horizontal betatron phase"
+            units: "2pi"
+            read: true
+            write: false
+          phase.b:
+            description: "Vertical betatron phase"
+            units: "2pi"
+            read: true
+            write: false
+      BPM_7:
+        description: "Beam position monitor at end of cell 7"
+        attributes:
+          orbit.x:
+            description: "Horizontal beam position"
+            units: "mm"
+            read: true
+            write: false
+          orbit.y:
+            description: "Vertical beam position"
+            units: "mm"
+            read: true
+            write: false
+          phase.a:
+            description: "Horizontal betatron phase"
+            units: "2pi"
+            read: true
+            write: false
+          phase.b:
+            description: "Vertical betatron phase"
+            units: "2pi"
+            read: true
+            write: false
+      BPM_8:
+        description: "Beam position monitor at end of cell 8"
+        attributes:
+          orbit.x:
+            description: "Horizontal beam position"
+            units: "mm"
+            read: true
+            write: false
+          orbit.y:
+            description: "Vertical beam position"
+            units: "mm"
+            read: true
+            write: false
+          phase.a:
+            description: "Horizontal betatron phase"
+            units: "2pi"
+            read: true
+            write: false
+          phase.b:
+            description: "Vertical betatron phase"
+            units: "2pi"
+            read: true
+            write: false
+      BPM_9:
+        description: "Beam position monitor at end of cell 9"
+        attributes:
+          orbit.x:
+            description: "Horizontal beam position"
+            units: "mm"
+            read: true
+            write: false
+          orbit.y:
+            description: "Vertical beam position"
+            units: "mm"
+            read: true
+            write: false
+          phase.a:
+            description: "Horizontal betatron phase"
+            units: "2pi"
+            read: true
+            write: false
+          phase.b:
+            description: "Vertical betatron phase"
+            units: "2pi"
+            read: true
+            write: false
+      BPM_10:
+        description: "Beam position monitor at end of cell 10"
+        attributes:
+          orbit.x:
+            description: "Horizontal beam position"
+            units: "mm"
+            read: true
+            write: false
+          orbit.y:
+            description: "Vertical beam position"
+            units: "mm"
+            read: true
+            write: false
+          phase.a:
+            description: "Horizontal betatron phase"
+            units: "2pi"
+            read: true
+            write: false
+          phase.b:
+            description: "Vertical betatron phase"
+            units: "2pi"
+            read: true
+            write: false
+
