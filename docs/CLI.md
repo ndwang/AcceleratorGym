@@ -7,13 +7,13 @@ Interactive command-line tool for manually testing accelerator-gym tools against
 From a directory containing `accelerator-gym.yaml`:
 
 ```
-accelerator-gym-cli
+ag-cli
 ```
 
 Or point to a config file explicitly:
 
 ```
-accelerator-gym-cli --config path/to/accelerator-gym.yaml
+ag-cli --config path/to/accelerator-gym.yaml
 ```
 
 You can also run the module directly:
