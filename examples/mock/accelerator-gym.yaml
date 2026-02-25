@@ -12,8 +12,8 @@ devices:
         description: "Focusing quadrupole"
         attributes:
           K1:
-            description: "Integrated strength"
-            units: "1/m"
+            description: "Normalized quadrupole strength"
+            units: "1/m^2"
             limits: [0.0, 5.0]
             read: true
             write: true
@@ -21,8 +21,8 @@ devices:
         description: "Defocusing quadrupole"
         attributes:
           K1:
-            description: "Integrated strength"
-            units: "1/m"
+            description: "Normalized quadrupole strength"
+            units: "1/m^2"
             limits: [-5.0, 0.0]
             read: true
             write: true
