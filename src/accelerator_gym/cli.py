@@ -408,7 +408,8 @@ def main() -> None:
         print(f"ERROR: Failed to initialize machine: {e}", file=sys.stderr)
         sys.exit(1)
 
-    CLI(machine).run()
+    with machine:
+        CLI(machine).run()
 
 
 if __name__ == "__main__":

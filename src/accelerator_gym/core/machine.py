@@ -56,7 +56,11 @@ class Machine:
             logger.exception("Backend connection failed")
             raise
 
-        machine = cls(backend, config)
+        try:
+            machine = cls(backend, config)
+        except Exception:
+            backend.disconnect()
+            raise
         logger.info(f"Machine created with {len(machine.variables)} variables")
         return machine
 
@@ -69,6 +73,16 @@ class Machine:
     def variables(self) -> dict[str, Variable]:
         """All variables exposed to the agent."""
         return dict(self._variables)
+
+    def get_variable(self, name: str) -> Variable:
+        """Look up a single variable by name.
+
+        Raises KeyError if the variable does not exist.
+        """
+        try:
+            return self._variables[name]
+        except KeyError:
+            raise KeyError(f"Unknown variable: '{name}'")
 
     def get(self, name: str) -> Any:
         """Read a variable value."""
@@ -105,3 +119,13 @@ class Machine:
     def reset(self) -> None:
         """Reset the machine to its initial state."""
         self._backend.reset()
+
+    def close(self) -> None:
+        """Disconnect the backend and release resources."""
+        self._backend.disconnect()
+
+    def __enter__(self) -> Machine:
+        return self
+
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        self.close()

@@ -98,9 +98,6 @@ def get_variables(names: list[str], output_file: str | None = None) -> str:
     """
     try:
         machine = _get_machine()
-        for name in names:
-            if name not in machine.variables:
-                return f"Error: Unknown variable '{name}'"
         values = machine.get_many(names)
 
         if output_file is not None:
@@ -108,7 +105,7 @@ def get_variables(names: list[str], output_file: str | None = None) -> str:
                 {
                     "name": name,
                     "value": values[name],
-                    "units": machine.variables[name].units or "",
+                    "units": machine.get_variable(name).units or "",
                 }
                 for name in names
             ]
@@ -117,13 +114,13 @@ def get_variables(names: list[str], output_file: str | None = None) -> str:
 
         lines = []
         for name in names:
-            var = machine.variables[name]
+            var = machine.get_variable(name)
             if var.units:
                 lines.append(f"{name} = {values[name]} ({var.units})")
             else:
                 lines.append(f"{name} = {values[name]}")
         return "\n".join(lines)
-    except ValueError as e:
+    except (KeyError, ValueError) as e:
         return f"Error: {e}"
     except Exception:
         logger.exception(f"Error in get_variables({names})")
@@ -137,15 +134,11 @@ def set_variables(values: dict[str, float]) -> str:
     """
     try:
         machine = _get_machine()
-        for name in values:
-            if name not in machine.variables:
-                return f"Error: Unknown variable '{name}'"
-        try:
-            machine.set_many(values)
-        except ValueError as e:
-            return f"Error: {e}"
+        machine.set_many(values)
         lines = [f"{name} set to {v}" for name, v in values.items()]
         return "\n".join(lines)
+    except (KeyError, ValueError, TypeError) as e:
+        return f"Error: {e}"
     except Exception:
         logger.exception(f"Error in set_variables({values})")
         raise
@@ -195,7 +188,11 @@ def main():
         _machine = Machine.from_config(config_path)
         logger.info(f"Machine initialized successfully: {_machine._config.name}")
         logger.info(f"Available variables: {len(_machine.variables)}")
-        mcp.run()
+        try:
+            mcp.run()
+        finally:
+            _machine.close()
+            _machine = None
     except FileNotFoundError as e:
         logger.error(f"Configuration file not found: {e}")
         print(f"ERROR: {e}", file=sys.stderr)

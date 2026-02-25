@@ -23,6 +23,7 @@ CREATE TABLE devices (
 CREATE TABLE attributes (
     device_id      TEXT NOT NULL REFERENCES devices(device_id),
     attribute_name TEXT NOT NULL,
+    description    TEXT NOT NULL DEFAULT '',
     value          REAL,
     unit           TEXT,
     readable       INTEGER NOT NULL DEFAULT 1,
@@ -48,6 +49,8 @@ class Catalog:
         self._backend = backend
         self._create_tables()
         self._populate(devices, backend)
+        # Lock the database to read-only now that population is complete
+        self._conn.execute("PRAGMA query_only = ON")
         # Cache the tree structure for browsing
         self._tree = devices
 
@@ -80,12 +83,13 @@ class Catalog:
                         limits = attr_def.get("limits")
                         self._conn.execute(
                             "INSERT INTO attributes "
-                            "(device_id, attribute_name, value, unit, readable, writable, "
+                            "(device_id, attribute_name, description, value, unit, readable, writable, "
                             "lower_limit, upper_limit, variable) "
-                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                             (
                                 dev_name,
                                 attr_name,
+                                attr_def.get("description", ""),
                                 None,
                                 attr_def.get("units"),
                                 int(attr_def.get("read", True)),
@@ -101,7 +105,7 @@ class Catalog:
     def build_variables(self) -> dict[str, Variable]:
         """Generate a flat variable dict from the catalog for get/set operations."""
         rows = self._conn.execute(
-            "SELECT variable, unit, readable, writable, lower_limit, upper_limit FROM attributes"
+            "SELECT variable, description, unit, readable, writable, lower_limit, upper_limit FROM attributes"
         ).fetchall()
         variables: dict[str, Variable] = {}
         for row in rows:
@@ -110,7 +114,7 @@ class Catalog:
                 limits = (row["lower_limit"], row["upper_limit"])
             variables[row["variable"]] = Variable(
                 name=row["variable"],
-                description="",
+                description=row["description"],
                 units=row["unit"],
                 readable=bool(row["readable"]),
                 writable=bool(row["writable"]),
