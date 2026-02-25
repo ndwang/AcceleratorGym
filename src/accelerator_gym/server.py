@@ -34,11 +34,17 @@ def _get_machine() -> Machine:
 
 @mcp.tool()
 def browse_devices(path: str = "/", depth: int = 1) -> dict[str, Any]:
-    """Browse the device tree using filesystem-like paths.
+    """Browse the device tree to discover devices using filesystem-like paths.
+    Use this to discover what you can read/write. The catalog is tree-shaped.
 
     Path levels: "/" -> systems, "/system" -> device types,
     "/system/type" -> devices, "/system/type/device" -> attributes,
     "/system/type/device/attr" -> attribute metadata.
+
+    When you browse to an attribute (or use depth so attributes are included), each
+    attribute has a "variable" field: that is the exact string to pass to get_variable
+    and set_variable. Example: browsing /magnets/quadrupole/QF may show K1 with
+    variable "QF:K1" — use name "QF:K1" in get_variable("QF:K1") and set_variable("QF:K1", value).
 
     Use depth > 1 to see multiple levels at once.
     """
@@ -54,10 +60,10 @@ def browse_devices(path: str = "/", depth: int = 1) -> dict[str, Any]:
 def query_devices(sql: str) -> dict[str, Any]:
     """Run a read-only SQL query against the device metadata database.
 
-    Tables: systems(name), device_types(name, system),
-    devices(name, device_type, system, description),
-    attributes(device_name, device_type, system, attr_name, variable,
-    description, units, readable, writable, limit_low, limit_high).
+    Tables: devices(device_id, system, device_type, s_position, tree_path),
+    attributes(device_id, attribute_name, value, unit, readable, writable, lower_limit, upper_limit, variable).
+    JOIN attributes with devices on device_id to filter by system/device_type.
+    Example: SELECT a.variable, a.unit FROM attributes a JOIN devices d ON a.device_id = d.device_id WHERE d.system = 'magnets';
     """
     try:
         machine = _get_machine()
@@ -72,7 +78,11 @@ def query_devices(sql: str) -> dict[str, Any]:
 
 @mcp.tool()
 def get_variable(name: str) -> dict[str, Any]:
-    """Read a single variable value."""
+    """Read a single variable value. Use a variable name.
+
+    Variable names are flat strings like "QF:K1", "BPM1:X". Get them from browse_devices
+    (see the "variable" field when you browse to an attribute) or by querying the metadata database.
+    """
     try:
         machine = _get_machine()
         var = machine.variables.get(name)
@@ -92,7 +102,7 @@ def get_variable(name: str) -> dict[str, Any]:
 
 @mcp.tool()
 def get_variables(names: list[str]) -> dict[str, Any]:
-    """Read multiple variables at once."""
+    """Read multiple variables at once. Each name must be a variable name (e.g. "QF:K1")."""
     try:
         machine = _get_machine()
         for name in names:
@@ -109,7 +119,7 @@ def get_variables(names: list[str]) -> dict[str, Any]:
 
 @mcp.tool()
 def set_variable(name: str, value: float) -> dict[str, Any]:
-    """Write a single variable value."""
+    """Write a single variable value. Use a variable name (e.g. "QF:K1")."""
     try:
         machine = _get_machine()
         var = machine.variables.get(name)
@@ -135,7 +145,9 @@ def set_variable(name: str, value: float) -> dict[str, Any]:
 
 @mcp.tool()
 def set_variables(values: dict[str, float]) -> dict[str, Any]:
-    """Write multiple variables atomically. All-or-nothing: if any value violates limits, none are applied."""
+    """Write multiple variables atomically. Keys must be variable names (e.g. "QF:K1"). 
+    All-or-nothing: if any value violates limits, none are applied.
+    """
     try:
         machine = _get_machine()
         for name in values:
@@ -153,7 +165,11 @@ def set_variables(values: dict[str, float]) -> dict[str, Any]:
 
 @mcp.tool()
 def get_state() -> dict[str, Any]:
-    """Get a snapshot of all readable variable values."""
+    """Get a snapshot of all readable variable names and their current values.
+
+    Returns a "variables" dict mapping variable name -> value. Use these names
+    in get_variable, set_variable, get_variables, and set_variables.
+    """
     try:
         machine = _get_machine()
         variables = machine.variables
