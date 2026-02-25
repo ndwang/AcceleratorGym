@@ -41,20 +41,23 @@ class TestBuildVariables:
 
 class TestQuery:
     def test_select_systems(self, catalog):
-        rows = catalog.query("SELECT name FROM systems ORDER BY name")
-        names = [r["name"] for r in rows]
+        rows = catalog.query(
+            "SELECT DISTINCT system FROM devices ORDER BY system"
+        )
+        names = [r["system"] for r in rows]
         assert names == ["diagnostics", "magnets"]
 
     def test_select_devices(self, catalog):
         rows = catalog.query(
-            "SELECT name FROM devices WHERE device_type='quadrupole' ORDER BY name"
+            "SELECT device_id FROM devices WHERE device_type='quadrupole' ORDER BY device_id"
         )
-        names = [r["name"] for r in rows]
+        names = [r["device_id"] for r in rows]
         assert names == ["QD", "QF"]
 
     def test_select_attributes(self, catalog):
         rows = catalog.query(
-            "SELECT variable, units FROM attributes WHERE system='magnets'"
+            "SELECT a.variable, a.unit FROM attributes a "
+            "JOIN devices d ON a.device_id = d.device_id WHERE d.system='magnets'"
         )
         variables = {r["variable"] for r in rows}
         assert variables == {"QF:K1", "QD:K1"}

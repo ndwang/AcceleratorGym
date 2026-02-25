@@ -12,39 +12,25 @@ from accelerator_gym.core.variable import Variable
 logger = logging.getLogger(__name__)
 
 _SCHEMA = """\
-CREATE TABLE systems (
-    name TEXT PRIMARY KEY
-);
-
-CREATE TABLE device_types (
-    name   TEXT NOT NULL,
-    system TEXT NOT NULL REFERENCES systems(name),
-    PRIMARY KEY (name, system)
-);
-
 CREATE TABLE devices (
-    name        TEXT NOT NULL,
-    device_type TEXT NOT NULL,
+    device_id   TEXT PRIMARY KEY,
     system      TEXT NOT NULL,
-    description TEXT DEFAULT '',
-    PRIMARY KEY (name, device_type, system),
-    FOREIGN KEY (device_type, system) REFERENCES device_types(name, system)
+    device_type TEXT NOT NULL,
+    s_position  REAL,
+    tree_path   TEXT NOT NULL
 );
 
 CREATE TABLE attributes (
-    device_name TEXT NOT NULL,
-    device_type TEXT NOT NULL,
-    system      TEXT NOT NULL,
-    attr_name   TEXT NOT NULL,
-    variable    TEXT NOT NULL UNIQUE,
-    description TEXT DEFAULT '',
-    units       TEXT,
-    readable    INTEGER DEFAULT 1,
-    writable    INTEGER DEFAULT 1,
-    limit_low   REAL,
-    limit_high  REAL,
-    PRIMARY KEY (device_name, device_type, system, attr_name),
-    FOREIGN KEY (device_name, device_type, system) REFERENCES devices(name, device_type, system)
+    device_id      TEXT NOT NULL REFERENCES devices(device_id),
+    attribute_name TEXT NOT NULL,
+    value          REAL,
+    unit           TEXT,
+    readable       INTEGER NOT NULL DEFAULT 1,
+    writable       INTEGER NOT NULL DEFAULT 1,
+    lower_limit    REAL,
+    upper_limit    REAL,
+    variable       TEXT UNIQUE,
+    PRIMARY KEY (device_id, attribute_name)
 );
 """
 
@@ -59,6 +45,7 @@ class Catalog:
         self._conn = sqlite3.connect(":memory:")
         self._conn.row_factory = sqlite3.Row
         self._conn.execute("PRAGMA foreign_keys = ON")
+        self._backend = backend
         self._create_tables()
         self._populate(devices, backend)
         # Cache the tree structure for browsing
@@ -69,20 +56,22 @@ class Catalog:
 
     def _populate(self, devices: dict[str, Any], backend: Backend) -> None:
         for system_name, device_types in devices.items():
-            self._conn.execute(
-                "INSERT INTO systems (name) VALUES (?)", (system_name,)
-            )
             for dtype_name, instances in device_types.items():
-                self._conn.execute(
-                    "INSERT INTO device_types (name, system) VALUES (?, ?)",
-                    (dtype_name, system_name),
-                )
                 for dev_name, dev_def in instances.items():
-                    description = dev_def.get("description", "")
+                    tree_path = dev_def.get("tree_path") or (
+                        f"{system_name}/{dtype_name}/{dev_name}"
+                    )
                     self._conn.execute(
-                        "INSERT INTO devices (name, device_type, system, description) "
-                        "VALUES (?, ?, ?, ?)",
-                        (dev_name, dtype_name, system_name, description),
+                        "INSERT INTO devices "
+                        "(device_id, system, device_type, s_position, tree_path) "
+                        "VALUES (?, ?, ?, ?, ?)",
+                        (
+                            dev_name,
+                            system_name,
+                            dtype_name,
+                            dev_def.get("s_position"),
+                            tree_path,
+                        ),
                     )
                     for attr_name, attr_def in dev_def.get("attributes", {}).items():
                         variable = backend.resolve_variable_name(
@@ -91,21 +80,19 @@ class Catalog:
                         limits = attr_def.get("limits")
                         self._conn.execute(
                             "INSERT INTO attributes "
-                            "(device_name, device_type, system, attr_name, variable, "
-                            "description, units, readable, writable, limit_low, limit_high) "
-                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                            "(device_id, attribute_name, value, unit, readable, writable, "
+                            "lower_limit, upper_limit, variable) "
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                             (
                                 dev_name,
-                                dtype_name,
-                                system_name,
                                 attr_name,
-                                variable,
-                                attr_def.get("description", ""),
+                                None,
                                 attr_def.get("units"),
                                 int(attr_def.get("read", True)),
                                 int(attr_def.get("write", True)),
                                 limits[0] if limits else None,
                                 limits[1] if limits else None,
+                                variable,
                             ),
                         )
         self._conn.commit()
@@ -114,18 +101,17 @@ class Catalog:
     def build_variables(self) -> dict[str, Variable]:
         """Generate a flat variable dict from the catalog for get/set operations."""
         rows = self._conn.execute(
-            "SELECT variable, description, units, readable, writable, "
-            "limit_low, limit_high FROM attributes"
+            "SELECT variable, unit, readable, writable, lower_limit, upper_limit FROM attributes"
         ).fetchall()
         variables: dict[str, Variable] = {}
         for row in rows:
             limits = None
-            if row["limit_low"] is not None and row["limit_high"] is not None:
-                limits = (row["limit_low"], row["limit_high"])
+            if row["lower_limit"] is not None and row["upper_limit"] is not None:
+                limits = (row["lower_limit"], row["upper_limit"])
             variables[row["variable"]] = Variable(
                 name=row["variable"],
-                description=row["description"],
-                units=row["units"],
+                description="",
+                units=row["unit"],
                 readable=bool(row["readable"]),
                 writable=bool(row["writable"]),
                 limits=limits,
@@ -171,9 +157,9 @@ class Catalog:
 
     def _browse_root(self, depth: int) -> dict[str, Any]:
         rows = self._conn.execute(
-            "SELECT name FROM systems ORDER BY name"
+            "SELECT DISTINCT system FROM devices ORDER BY system"
         ).fetchall()
-        children: list[Any] = [row["name"] for row in rows]
+        children: list[Any] = [row["system"] for row in rows]
         if depth > 1:
             children = [
                 {"name": name, "children": self._browse_system(name, depth - 1)["children"]}
@@ -183,12 +169,12 @@ class Catalog:
 
     def _browse_system(self, system: str, depth: int) -> dict[str, Any]:
         rows = self._conn.execute(
-            "SELECT name FROM device_types WHERE system = ? ORDER BY name",
+            "SELECT DISTINCT device_type FROM devices WHERE system = ? ORDER BY device_type",
             (system,),
         ).fetchall()
         if not rows:
             return {"error": "not_found", "message": f"System not found: {system}"}
-        children: list[Any] = [row["name"] for row in rows]
+        children: list[Any] = [row["device_type"] for row in rows]
         if depth > 1:
             children = [
                 {"name": name, "children": self._browse_device_type(system, name, depth - 1)["children"]}
@@ -200,8 +186,8 @@ class Catalog:
         self, system: str, device_type: str, depth: int
     ) -> dict[str, Any]:
         rows = self._conn.execute(
-            "SELECT name, description FROM devices "
-            "WHERE system = ? AND device_type = ? ORDER BY name",
+            "SELECT device_id FROM devices "
+            "WHERE system = ? AND device_type = ? ORDER BY device_id",
             (system, device_type),
         ).fetchall()
         if not rows:
@@ -209,9 +195,7 @@ class Catalog:
                 "error": "not_found",
                 "message": f"Device type not found: {system}/{device_type}",
             }
-        children: list[Any] = [
-            {"name": row["name"], "description": row["description"]} for row in rows
-        ]
+        children: list[Any] = [{"name": row["device_id"]} for row in rows]
         if depth > 1:
             children = [
                 {
@@ -225,62 +209,63 @@ class Catalog:
         return {"path": f"/{system}/{device_type}", "children": children}
 
     def _browse_device(
-        self, system: str, device_type: str, device_name: str, depth: int
+        self, system: str, device_type: str, device_id: str, depth: int
     ) -> dict[str, Any]:
         rows = self._conn.execute(
-            "SELECT attr_name, description, units, readable, writable, "
-            "limit_low, limit_high, variable FROM attributes "
-            "WHERE system = ? AND device_type = ? AND device_name = ? "
-            "ORDER BY attr_name",
-            (system, device_type, device_name),
+            "SELECT a.attribute_name, a.unit, a.readable, a.writable, a.lower_limit, a.upper_limit, "
+            "a.variable FROM attributes a "
+            "JOIN devices d ON a.device_id = d.device_id "
+            "WHERE d.system = ? AND d.device_type = ? AND d.device_id = ? "
+            "ORDER BY a.attribute_name",
+            (system, device_type, device_id),
         ).fetchall()
         if not rows:
             return {
                 "error": "not_found",
-                "message": f"Device not found: {system}/{device_type}/{device_name}",
+                "message": f"Device not found: {system}/{device_type}/{device_id}",
             }
-        children: list[Any] = [row["attr_name"] for row in rows]
+        children: list[Any] = [row["attribute_name"] for row in rows]
         if depth > 1:
             children = [
                 {
-                    "name": row["attr_name"],
+                    "name": row["attribute_name"],
                     **self._attr_row_to_metadata(row),
                 }
                 for row in rows
             ]
         return {
-            "path": f"/{system}/{device_type}/{device_name}",
+            "path": f"/{system}/{device_type}/{device_id}",
             "children": children,
         }
 
     def _browse_attribute(
-        self, system: str, device_type: str, device_name: str, attr_name: str
+        self, system: str, device_type: str, device_id: str, attr_name: str
     ) -> dict[str, Any]:
         row = self._conn.execute(
-            "SELECT attr_name, description, units, readable, writable, "
-            "limit_low, limit_high, variable FROM attributes "
-            "WHERE system = ? AND device_type = ? AND device_name = ? AND attr_name = ?",
-            (system, device_type, device_name, attr_name),
+            "SELECT a.attribute_name, a.unit, a.readable, a.writable, a.lower_limit, a.upper_limit, "
+            "a.variable FROM attributes a "
+            "JOIN devices d ON a.device_id = d.device_id "
+            "WHERE d.system = ? AND d.device_type = ? AND d.device_id = ? AND a.attribute_name = ?",
+            (system, device_type, device_id, attr_name),
         ).fetchone()
         if row is None:
             return {
                 "error": "not_found",
-                "message": f"Attribute not found: {system}/{device_type}/{device_name}/{attr_name}",
+                "message": f"Attribute not found: {system}/{device_type}/{device_id}/{attr_name}",
             }
         return {
-            "path": f"/{system}/{device_type}/{device_name}/{attr_name}",
+            "path": f"/{system}/{device_type}/{device_id}/{attr_name}",
             **self._attr_row_to_metadata(row),
         }
 
     @staticmethod
     def _attr_row_to_metadata(row: sqlite3.Row) -> dict[str, Any]:
         meta: dict[str, Any] = {
-            "description": row["description"],
-            "units": row["units"],
+            "units": row["unit"],
             "read": bool(row["readable"]),
             "write": bool(row["writable"]),
             "variable": row["variable"],
         }
-        if row["limit_low"] is not None and row["limit_high"] is not None:
-            meta["limits"] = [row["limit_low"], row["limit_high"]]
+        if row["lower_limit"] is not None and row["upper_limit"] is not None:
+            meta["limits"] = [row["lower_limit"], row["upper_limit"]]
         return meta

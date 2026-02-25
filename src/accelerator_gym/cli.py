@@ -265,6 +265,21 @@ class CLI:
                 break
             if not line:
                 continue
+
+            # Special-case SQL so that quoted string literals are preserved.
+            # Using shlex.split strips quotes, which breaks queries like:
+            #   query SELECT ... WHERE system = 'magnets'
+            if line.startswith("query "):
+                sql = line[len("query ") :].strip()
+                if not sql:
+                    print(f"Usage: query {_dim('<sql>')}")
+                    continue
+                try:
+                    self.cmd_query([sql])
+                except Exception as e:
+                    print(_red(f"Error: {e}"))
+                continue
+
             try:
                 parts = shlex.split(line)
             except ValueError as e:

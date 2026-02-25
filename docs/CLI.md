@@ -40,34 +40,33 @@ ag> browse
 |-- diagnostics
 `-- magnets
 
-ag> browse / 2
+ag> browse / 2                                 
 /
-|-- diagnostics
-|   `-- monitor
-`-- magnets
-    `-- quadrupole
+├── diagnostics
+│   └── monitor
+└── magnets
+    └── quadrupole
 
 ag> browse /magnets 2
 /magnets
-`-- quadrupole
-    |-- QD  Defocusing quadrupole
-    `-- QF  Focusing quadrupole
+└── quadrupole
+    ├── QD
+    └── QF
 
 ag> browse /magnets/quadrupole 2
 /magnets/quadrupole
-|-- QD  Defocusing quadrupole
-|   `-- K1
-`-- QF  Focusing quadrupole
-    `-- K1
+├── QD
+│   └── K1
+└── QF
+    └── K1
 
 ag> browse /magnets/quadrupole/QF 2
 /magnets/quadrupole/QF
-`-- K1  RW  [1/m]  Integrated strength
+└── K1  RW  [1/m]
 
 ag> browse /magnets/quadrupole/QF/K1
 /magnets/quadrupole/QF/K1
   variable:  QF:K1
-  desc:      Integrated strength
   units:     1/m
   read:      yes
   write:     yes
@@ -78,26 +77,36 @@ Directory nodes are shown in bold (on supported terminals). Browsing a leaf attr
 
 #### `query <sql>`
 
-Run a read-only SQL query against the device metadata database. Only SELECT statements are allowed. Results are displayed as an aligned table.
+Run a read-only SQL query against the device catalog. Only SELECT statements are allowed. Results are displayed as an aligned table.
 
 Available tables:
 
 | Table | Columns |
 |---|---|
-| `systems` | `name` |
-| `device_types` | `name`, `system` |
-| `devices` | `name`, `device_type`, `system`, `description` |
-| `attributes` | `device_name`, `device_type`, `system`, `attr_name`, `variable`, `description`, `units`, `readable`, `writable`, `limit_low`, `limit_high` |
+| `devices` | `device_id`, `system`, `device_type`, `s_position`, `tree_path` |
+| `attributes` | `device_id`, `attribute_name`, `value`, `unit`, `readable`, `writable`, `lower_limit`, `upper_limit`, `variable` |
+
+Join `attributes` with `devices` on `device_id` to filter by system or device type. The `variable` column is the flat name used with `get` and `set` (e.g. `QF:K1`).
 
 ```
-ag> query SELECT attr_name, units FROM attributes LIMIT 3
-attr_name  units
----------  -----
-K1         1/m
-orbit.x    mm
-orbit.y    mm
+ag> query SELECT attribute_name, unit FROM attributes LIMIT 3
+attribute_name  unit
+--------------  ----
+K1              1/m
+orbit.x         mm
+orbit.y         mm
 
 (3 rows)
+```
+
+```
+ag> query SELECT a.variable, a.unit FROM attributes a JOIN devices d ON a.device_id = d.device_id WHERE d.system = 'magnets'
+variable  unit
+--------  ----
+QF:K1     1/m
+QD:K1     1/m
+
+(2 rows)
 ```
 
 ### Reading and Writing Variables
