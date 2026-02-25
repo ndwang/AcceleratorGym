@@ -59,21 +59,23 @@ class TestBrowseDevices:
 
 class TestQueryDevices:
     def test_query_systems(self, mcp_machine):
-        result = server.query_devices("SELECT name FROM systems ORDER BY name")
+        result = server.query_devices(
+            "SELECT DISTINCT system FROM devices ORDER BY system"
+        )
         assert result["count"] == 2
-        names = [r["name"] for r in result["rows"]]
+        names = [r["system"] for r in result["rows"]]
         assert names == ["diagnostics", "magnets"]
 
     def test_query_devices_by_type(self, mcp_machine):
         result = server.query_devices(
-            "SELECT name FROM devices WHERE device_type='quadrupole' ORDER BY name"
+            "SELECT device_id FROM devices WHERE device_type='quadrupole' ORDER BY device_id"
         )
-        names = [r["name"] for r in result["rows"]]
+        names = [r["device_id"] for r in result["rows"]]
         assert names == ["QD", "QF"]
 
     def test_query_attributes(self, mcp_machine):
         result = server.query_devices(
-            "SELECT variable, units FROM attributes WHERE writable=0"
+            "SELECT variable, unit FROM attributes WHERE writable=0"
         )
         assert result["count"] == 2
         variables = {r["variable"] for r in result["rows"]}
