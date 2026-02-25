@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import logging
 import sys
 from typing import Any
@@ -100,15 +101,41 @@ def get_variable(name: str) -> dict[str, Any]:
         raise
 
 
+def _write_csv(path: str, rows: list[dict[str, Any]]) -> None:
+    """Write variable readings to a CSV file."""
+    with open(path, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=["name", "value", "units"])
+        writer.writeheader()
+        writer.writerows(rows)
+
+
 @mcp.tool()
-def get_variables(names: list[str]) -> dict[str, Any]:
-    """Read multiple variables at once. Each name must be a variable name (e.g. "QF:K1")."""
+def get_variables(names: list[str], output_file: str | None = None) -> dict[str, Any]:
+    """Read multiple variables at once. Each name must be a variable name (e.g. "QF:K1").
+
+    If output_file is provided, results are written as CSV to that path instead of
+    being returned inline. This saves tokens when reading many variables. The CSV has
+    columns: name, value, units. Returns {"file": path, "count": N} on success.
+    """
     try:
         machine = _get_machine()
         for name in names:
             if name not in machine.variables:
                 return {"error": "not_found", "message": f"Unknown variable: '{name}'"}
         values = machine.get_many(names)
+
+        if output_file is not None:
+            rows = [
+                {
+                    "name": name,
+                    "value": values[name],
+                    "units": machine.variables[name].units or "",
+                }
+                for name in names
+            ]
+            _write_csv(output_file, rows)
+            return {"file": output_file, "count": len(rows)}
+
         return {"values": values}
     except ValueError as e:
         return {"error": "validation_error", "message": str(e)}

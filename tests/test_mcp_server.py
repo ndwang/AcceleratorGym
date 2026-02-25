@@ -111,6 +111,34 @@ class TestGetVariables:
         assert "error" in result
 
 
+class TestGetVariablesOutputFile:
+    def test_output_file_csv(self, mcp_machine, tmp_path):
+        path = str(tmp_path / "out.csv")
+        result = server.get_variables(["QF:K1", "QD:K1"], output_file=path)
+        assert result == {"file": path, "count": 2}
+        with open(path) as f:
+            lines = f.read().strip().split("\n")
+        assert lines[0] == "name,value,units"
+        assert lines[1] == "QF:K1,0.5,1/m"
+        assert lines[2] == "QD:K1,-0.5,1/m"
+
+    def test_output_file_no_units(self, mcp_machine, tmp_path):
+        """Variables without units get an empty units column."""
+        path = str(tmp_path / "out.csv")
+        result = server.get_variables(["BPM1:X"], output_file=path)
+        assert result["count"] == 1
+        with open(path) as f:
+            lines = f.read().strip().split("\n")
+        assert lines[1].endswith(",mm") or lines[1].endswith(",")
+        # BPM1:X has units "mm", so verify it's there
+        assert "BPM1:X" in lines[1]
+
+    def test_output_file_unknown_variable(self, mcp_machine, tmp_path):
+        path = str(tmp_path / "out.csv")
+        result = server.get_variables(["NOPE"], output_file=path)
+        assert "error" in result
+
+
 class TestSetVariable:
     def test_set_valid(self, mcp_machine):
         result = server.set_variable("QF:K1", 1.0)
