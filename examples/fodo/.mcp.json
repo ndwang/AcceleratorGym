@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "accelerator-gym": {
+      "type": "stdio",
+      "command": "python",
+      "args": [
+        "-m",
+        "accelerator_gym.server"
+      ],
+      "env": {}
+    }
+  }
+}
