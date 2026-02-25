@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import logging
 import os
+import readline  # noqa: F401 – enables arrow-key history in input()
 import shlex
 import sys
 from pathlib import Path
