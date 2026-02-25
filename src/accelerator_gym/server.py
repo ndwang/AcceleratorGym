@@ -77,30 +77,6 @@ def query_devices(sql: str) -> dict[str, Any]:
         return {"error": "query_error", "message": str(e)}
 
 
-@mcp.tool()
-def get_variable(name: str) -> dict[str, Any]:
-    """Read a single variable value. Use a variable name.
-
-    Variable names are flat strings like "QF:K1", "BPM1:X". Get them from browse_devices
-    (see the "variable" field when you browse to an attribute) or by querying the metadata database.
-    """
-    try:
-        machine = _get_machine()
-        var = machine.variables.get(name)
-        if var is None:
-            return {"error": "not_found", "message": f"Unknown variable: '{name}'"}
-        value = machine.get(name)
-        result: dict[str, Any] = {"name": name, "value": value}
-        if var.units:
-            result["units"] = var.units
-        return result
-    except ValueError as e:
-        return {"error": "validation_error", "message": str(e)}
-    except Exception:
-        logger.exception(f"Error in get_variable({name})")
-        raise
-
-
 def _write_csv(path: str, rows: list[dict[str, Any]]) -> None:
     """Write variable readings to a CSV file."""
     with open(path, "w", newline="") as f:
@@ -110,18 +86,21 @@ def _write_csv(path: str, rows: list[dict[str, Any]]) -> None:
 
 
 @mcp.tool()
-def get_variables(names: list[str], output_file: str | None = None) -> dict[str, Any]:
-    """Read multiple variables at once. Each name must be a variable name (e.g. "QF:K1").
+def get_variables(names: list[str], output_file: str | None = None) -> str:
+    """Read one or more variables. Each name must be a variable name (e.g. "QF:K1").
+
+    Variable names are flat strings like "QF:K1", "BPM1:X". Get them from browse_devices
+    (see the "variable" field when you browse to an attribute) or by querying the metadata database.
 
     If output_file is provided, results are written as CSV to that path instead of
     being returned inline. This saves tokens when reading many variables. The CSV has
-    columns: name, value, units. Returns {"file": path, "count": N} on success.
+    columns: name, value, units.
     """
     try:
         machine = _get_machine()
         for name in names:
             if name not in machine.variables:
-                return {"error": "not_found", "message": f"Unknown variable: '{name}'"}
+                return f"Error: Unknown variable '{name}'"
         values = machine.get_many(names)
 
         if output_file is not None:
@@ -134,69 +113,51 @@ def get_variables(names: list[str], output_file: str | None = None) -> dict[str,
                 for name in names
             ]
             _write_csv(output_file, rows)
-            return {"file": output_file, "count": len(rows)}
+            return f"Wrote {len(rows)} variables to {output_file}"
 
-        return {"values": values}
+        lines = []
+        for name in names:
+            var = machine.variables[name]
+            if var.units:
+                lines.append(f"{name} = {values[name]} ({var.units})")
+            else:
+                lines.append(f"{name} = {values[name]}")
+        return "\n".join(lines)
     except ValueError as e:
-        return {"error": "validation_error", "message": str(e)}
+        return f"Error: {e}"
     except Exception:
         logger.exception(f"Error in get_variables({names})")
         raise
 
 
 @mcp.tool()
-def set_variable(name: str, value: float) -> dict[str, Any]:
-    """Write a single variable value. Use a variable name (e.g. "QF:K1")."""
-    try:
-        machine = _get_machine()
-        var = machine.variables.get(name)
-        if var is None:
-            return {"error": "not_found", "message": f"Unknown variable: '{name}'"}
-        try:
-            machine.set(name, value)
-        except ValueError as e:
-            result: dict[str, Any] = {
-                "error": "validation_error",
-                "variable": name,
-                "value": value,
-            }
-            if var.limits:
-                result["limits"] = list(var.limits)
-            result["message"] = str(e)
-            return result
-        return {"success": True, "name": name, "value": value}
-    except Exception:
-        logger.exception(f"Error in set_variable({name}, {value})")
-        raise
-
-
-@mcp.tool()
-def set_variables(values: dict[str, float]) -> dict[str, Any]:
-    """Write multiple variables atomically. Keys must be variable names (e.g. "QF:K1"). 
+def set_variables(values: dict[str, float]) -> str:
+    """Write one or more variables atomically. Keys must be variable names (e.g. "QF:K1").
     All-or-nothing: if any value violates limits, none are applied.
     """
     try:
         machine = _get_machine()
         for name in values:
             if name not in machine.variables:
-                return {"error": "not_found", "message": f"Unknown variable: '{name}'"}
+                return f"Error: Unknown variable '{name}'"
         try:
             machine.set_many(values)
         except ValueError as e:
-            return {"error": "validation_error", "message": str(e)}
-        return {"success": True, "values": values}
+            return f"Error: {e}"
+        lines = [f"{name} set to {v}" for name, v in values.items()]
+        return "\n".join(lines)
     except Exception:
         logger.exception(f"Error in set_variables({values})")
         raise
 
 
 @mcp.tool()
-def reset() -> dict[str, Any]:
+def reset() -> str:
     """Reset the machine to its initial state."""
     try:
         machine = _get_machine()
         machine.reset()
-        return {"success": True}
+        return "Machine reset to initial state"
     except Exception:
         logger.exception("Error in reset")
         raise

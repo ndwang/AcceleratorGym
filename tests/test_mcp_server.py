@@ -90,34 +90,38 @@ class TestQueryDevices:
         assert result["error"] == "query_error"
 
 
-class TestGetVariable:
-    def test_get_existing(self, mcp_machine):
-        result = server.get_variable("QF:K1")
-        assert result["name"] == "QF:K1"
-        assert result["value"] == 0.5
-        assert result["units"] == "1/m"
-
-    def test_get_unknown(self, mcp_machine):
-        result = server.get_variable("NONEXISTENT")
-        assert result["error"] == "not_found"
-
-
 class TestGetVariables:
+    def test_get_single(self, mcp_machine):
+        result = server.get_variables(["QF:K1"])
+        assert "QF:K1" in result
+        assert "0.5" in result
+        assert "1/m" in result
+
+    def test_get_single_without_units(self, mcp_machine):
+        result = server.get_variables(["BPM1:X"])
+        assert "BPM1:X" in result
+        assert "=" in result
+
     def test_get_multiple(self, mcp_machine):
         result = server.get_variables(["QF:K1", "QD:K1"])
-        assert result["values"]["QF:K1"] == 0.5
-        assert result["values"]["QD:K1"] == -0.5
+        assert "QF:K1 = 0.5 (1/m)" in result
+        assert "QD:K1 = -0.5 (1/m)" in result
+
+    def test_get_unknown(self, mcp_machine):
+        result = server.get_variables(["NONEXISTENT"])
+        assert "Error" in result
 
     def test_get_unknown_in_list(self, mcp_machine):
         result = server.get_variables(["QF:K1", "NOPE"])
-        assert "error" in result
+        assert "Error" in result
 
 
 class TestGetVariablesOutputFile:
     def test_output_file_csv(self, mcp_machine, tmp_path):
         path = str(tmp_path / "out.csv")
         result = server.get_variables(["QF:K1", "QD:K1"], output_file=path)
-        assert result == {"file": path, "count": 2}
+        assert "2 variables" in result
+        assert path in result
         with open(path) as f:
             lines = f.read().strip().split("\n")
         assert lines[0] == "name,value,units"
@@ -128,54 +132,50 @@ class TestGetVariablesOutputFile:
         """Variables without units get an empty units column."""
         path = str(tmp_path / "out.csv")
         result = server.get_variables(["BPM1:X"], output_file=path)
-        assert result["count"] == 1
+        assert "1 variables" in result
         with open(path) as f:
             lines = f.read().strip().split("\n")
-        assert lines[1].endswith(",mm") or lines[1].endswith(",")
-        # BPM1:X has units "mm", so verify it's there
         assert "BPM1:X" in lines[1]
 
     def test_output_file_unknown_variable(self, mcp_machine, tmp_path):
         path = str(tmp_path / "out.csv")
         result = server.get_variables(["NOPE"], output_file=path)
-        assert "error" in result
-
-
-class TestSetVariable:
-    def test_set_valid(self, mcp_machine):
-        result = server.set_variable("QF:K1", 1.0)
-        assert result["success"] is True
-        assert result["value"] == 1.0
-
-    def test_set_out_of_limits(self, mcp_machine):
-        result = server.set_variable("QF:K1", 100.0)
-        assert result["error"] == "validation_error"
-        assert result["variable"] == "QF:K1"
-        assert result["limits"] == [-5.0, 5.0]
-
-    def test_set_not_writable(self, mcp_machine):
-        result = server.set_variable("BPM1:X", 1.0)
-        assert "error" in result
-
-    def test_set_unknown(self, mcp_machine):
-        result = server.set_variable("NOPE", 1.0)
-        assert result["error"] == "not_found"
+        assert "Error" in result
 
 
 class TestSetVariables:
+    def test_set_single(self, mcp_machine):
+        result = server.set_variables({"QF:K1": 1.0})
+        assert "QF:K1 set to 1.0" in result
+
     def test_set_multiple(self, mcp_machine):
         result = server.set_variables({"QF:K1": 1.0, "QD:K1": -1.0})
-        assert result["success"] is True
+        assert "QF:K1 set to 1.0" in result
+        assert "QD:K1 set to -1.0" in result
+
+    def test_set_out_of_limits(self, mcp_machine):
+        result = server.set_variables({"QF:K1": 100.0})
+        assert "Error" in result
+        assert "outside limits" in result
+
+    def test_set_not_writable(self, mcp_machine):
+        result = server.set_variables({"BPM1:X": 1.0})
+        assert "Error" in result
+
+    def test_set_unknown(self, mcp_machine):
+        result = server.set_variables({"NOPE": 1.0})
+        assert "Error" in result
+        assert "Unknown variable" in result
 
     def test_set_multiple_with_violation(self, mcp_machine):
         result = server.set_variables({"QF:K1": 1.0, "QD:K1": -100.0})
-        assert "error" in result
+        assert "Error" in result
 
 
 class TestReset:
     def test_reset(self, mcp_machine):
-        server.set_variable("QF:K1", 2.0)
+        server.set_variables({"QF:K1": 2.0})
         result = server.reset()
-        assert result["success"] is True
-        state = server.get_variable("QF:K1")
-        assert state["value"] == 0.5
+        assert "reset" in result.lower()
+        state = server.get_variables(["QF:K1"])
+        assert "0.5" in state
