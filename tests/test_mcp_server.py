@@ -142,13 +142,6 @@ class TestSetVariables:
         assert "error" in result
 
 
-class TestGetState:
-    def test_get_state(self, mcp_machine):
-        result = server.get_state()
-        assert "variables" in result
-        assert result["variables"]["QF:K1"] == 0.5
-
-
 class TestReset:
     def test_reset(self, mcp_machine):
         server.set_variable("QF:K1", 2.0)

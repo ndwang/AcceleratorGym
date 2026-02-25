@@ -21,7 +21,6 @@ COMMANDS = {
     "gets":      "gets <var1> <var2> ...    Read multiple variables",
     "set":       "set <variable> <value>    Write a variable value",
     "sets":      "sets <var>=<val> ...      Write multiple variables atomically",
-    "state":     "state                     Snapshot of all readable variables",
     "reset":     "reset                     Reset machine to initial state",
     "help":      "help                      Show this help message",
     "quit":      "quit                      Exit the CLI",
@@ -368,11 +367,6 @@ class CLI:
             var = self._machine.variables.get(name)
             units = f"  {_magenta(f'[{var.units}]')}" if var and var.units else ""
             print(f"  {_cyan(name)} {_dim('<-')} {_yellow(str(val))}{units}")
-
-    def cmd_state(self, args: list[str]) -> None:
-        readable = [n for n, v in self._machine.variables.items() if v.readable]
-        values = self._machine.get_many(readable)
-        print(_fmt_values(values, self._machine.variables))
 
     def cmd_reset(self, args: list[str]) -> None:
         self._machine.reset()

@@ -153,18 +153,6 @@ ag> sets QF:K1=1.5 QD:K1=-0.8
 
 ### Machine State
 
-#### `state`
-
-Print a snapshot of all readable variable values.
-
-```
-ag> state
-  BPM1:orbit.x  = 0.001  [mm]
-  BPM1:orbit.y  = 0.0    [mm]
-  QD:K1         = -0.3   [1/m]
-  QF:K1         = 1.5    [1/m]
-```
-
 #### `reset`
 
 Reset the machine to its initial state.

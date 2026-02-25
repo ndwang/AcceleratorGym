@@ -164,24 +164,6 @@ def set_variables(values: dict[str, float]) -> dict[str, Any]:
 
 
 @mcp.tool()
-def get_state() -> dict[str, Any]:
-    """Get a snapshot of all readable variable names and their current values.
-
-    Returns a "variables" dict mapping variable name -> value. Use these names
-    in get_variable, set_variable, get_variables, and set_variables.
-    """
-    try:
-        machine = _get_machine()
-        variables = machine.variables
-        readable_names = [n for n, v in variables.items() if v.readable]
-        values = machine.get_many(readable_names)
-        return {"variables": values}
-    except Exception:
-        logger.exception("Error in get_state")
-        raise
-
-
-@mcp.tool()
 def reset() -> dict[str, Any]:
     """Reset the machine to its initial state."""
     try:
