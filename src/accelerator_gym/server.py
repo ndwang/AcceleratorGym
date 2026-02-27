@@ -6,6 +6,7 @@ import argparse
 import csv
 import logging
 import sys
+from pathlib import Path
 from typing import Any
 
 from mcp.server.fastmcp import FastMCP
@@ -79,6 +80,7 @@ def query_devices(sql: str) -> dict[str, Any]:
 
 def _write_csv(path: str, rows: list[dict[str, Any]]) -> None:
     """Write variable readings to a CSV file."""
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=["name", "value", "units"])
         writer.writeheader()
