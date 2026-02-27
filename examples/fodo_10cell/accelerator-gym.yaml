@@ -11,6 +11,7 @@ devices:
     quadrupole:
       QF_1:
         description: "Focusing quadrupole 1"
+        s_position: 1.5
         attributes:
           K1:
             description: "Normalized quadrupole strength"
@@ -20,6 +21,7 @@ devices:
             write: true
       QF_2:
         description: "Focusing quadrupole 2"
+        s_position: 6.5
         attributes:
           K1:
             description: "Normalized quadrupole strength"
@@ -29,6 +31,7 @@ devices:
             write: true
       QF_3:
         description: "Focusing quadrupole 3"
+        s_position: 11.5
         attributes:
           K1:
             description: "Normalized quadrupole strength"
@@ -38,6 +41,7 @@ devices:
             write: true
       QF_4:
         description: "Focusing quadrupole 4"
+        s_position: 16.5
         attributes:
           K1:
             description: "Normalized quadrupole strength"
@@ -47,6 +51,7 @@ devices:
             write: true
       QF_5:
         description: "Focusing quadrupole 5"
+        s_position: 21.5
         attributes:
           K1:
             description: "Normalized quadrupole strength"
@@ -56,6 +61,7 @@ devices:
             write: true
       QF_6:
         description: "Focusing quadrupole 6"
+        s_position: 26.5
         attributes:
           K1:
             description: "Normalized quadrupole strength"
@@ -65,6 +71,7 @@ devices:
             write: true
       QF_7:
         description: "Focusing quadrupole 7"
+        s_position: 31.5
         attributes:
           K1:
             description: "Normalized quadrupole strength"
@@ -74,6 +81,7 @@ devices:
             write: true
       QF_8:
         description: "Focusing quadrupole 8"
+        s_position: 36.5
         attributes:
           K1:
             description: "Normalized quadrupole strength"
@@ -83,6 +91,7 @@ devices:
             write: true
       QF_9:
         description: "Focusing quadrupole 9"
+        s_position: 41.5
         attributes:
           K1:
             description: "Normalized quadrupole strength"
@@ -92,6 +101,7 @@ devices:
             write: true
       QF_10:
         description: "Focusing quadrupole 10"
+        s_position: 46.5
         attributes:
           K1:
             description: "Normalized quadrupole strength"
@@ -101,6 +111,7 @@ devices:
             write: true
       QD_1:
         description: "Defocusing quadrupole 1"
+        s_position: 4.0
         attributes:
           K1:
             description: "Normalized quadrupole strength"
@@ -110,6 +121,7 @@ devices:
             write: true
       QD_2:
         description: "Defocusing quadrupole 2"
+        s_position: 9.0
         attributes:
           K1:
             description: "Normalized quadrupole strength"
@@ -119,6 +131,7 @@ devices:
             write: true
       QD_3:
         description: "Defocusing quadrupole 3"
+        s_position: 14.0
         attributes:
           K1:
             description: "Normalized quadrupole strength"
@@ -128,6 +141,7 @@ devices:
             write: true
       QD_4:
         description: "Defocusing quadrupole 4"
+        s_position: 19.0
         attributes:
           K1:
             description: "Normalized quadrupole strength"
@@ -137,6 +151,7 @@ devices:
             write: true
       QD_5:
         description: "Defocusing quadrupole 5"
+        s_position: 24.0
         attributes:
           K1:
             description: "Normalized quadrupole strength"
@@ -146,6 +161,7 @@ devices:
             write: true
       QD_6:
         description: "Defocusing quadrupole 6"
+        s_position: 29.0
         attributes:
           K1:
             description: "Normalized quadrupole strength"
@@ -155,6 +171,7 @@ devices:
             write: true
       QD_7:
         description: "Defocusing quadrupole 7"
+        s_position: 34.0
         attributes:
           K1:
             description: "Normalized quadrupole strength"
@@ -164,6 +181,7 @@ devices:
             write: true
       QD_8:
         description: "Defocusing quadrupole 8"
+        s_position: 39.0
         attributes:
           K1:
             description: "Normalized quadrupole strength"
@@ -173,6 +191,7 @@ devices:
             write: true
       QD_9:
         description: "Defocusing quadrupole 9"
+        s_position: 44.0
         attributes:
           K1:
             description: "Normalized quadrupole strength"
@@ -182,6 +201,7 @@ devices:
             write: true
       QD_10:
         description: "Defocusing quadrupole 10"
+        s_position: 49.0
         attributes:
           K1:
             description: "Normalized quadrupole strength"
@@ -192,6 +212,7 @@ devices:
     hkicker:
       HK_1:
         description: "Horizontal kicker 1"
+        s_position: 1.5
         attributes:
           kick:
             description: "Horizontal kick angle"
@@ -201,6 +222,7 @@ devices:
             write: true
       HK_2:
         description: "Horizontal kicker 2"
+        s_position: 6.5
         attributes:
           kick:
             description: "Horizontal kick angle"
@@ -210,6 +232,7 @@ devices:
             write: true
       HK_3:
         description: "Horizontal kicker 3"
+        s_position: 11.5
         attributes:
           kick:
             description: "Horizontal kick angle"
@@ -219,6 +242,7 @@ devices:
             write: true
       HK_4:
         description: "Horizontal kicker 4"
+        s_position: 16.5
         attributes:
           kick:
             description: "Horizontal kick angle"
@@ -228,6 +252,7 @@ devices:
             write: true
       HK_5:
         description: "Horizontal kicker 5"
+        s_position: 21.5
         attributes:
           kick:
             description: "Horizontal kick angle"
@@ -237,6 +262,7 @@ devices:
             write: true
       HK_6:
         description: "Horizontal kicker 6"
+        s_position: 26.5
         attributes:
           kick:
             description: "Horizontal kick angle"
@@ -246,6 +272,7 @@ devices:
             write: true
       HK_7:
         description: "Horizontal kicker 7"
+        s_position: 31.5
         attributes:
           kick:
             description: "Horizontal kick angle"
@@ -255,6 +282,7 @@ devices:
             write: true
       HK_8:
         description: "Horizontal kicker 8"
+        s_position: 36.5
         attributes:
           kick:
             description: "Horizontal kick angle"
@@ -264,6 +292,7 @@ devices:
             write: true
       HK_9:
         description: "Horizontal kicker 9"
+        s_position: 41.5
         attributes:
           kick:
             description: "Horizontal kick angle"
@@ -273,6 +302,7 @@ devices:
             write: true
       HK_10:
         description: "Horizontal kicker 10"
+        s_position: 46.5
         attributes:
           kick:
             description: "Horizontal kick angle"
@@ -283,6 +313,7 @@ devices:
     vkicker:
       VK_1:
         description: "Vertical kicker 1"
+        s_position: 4.0
         attributes:
           kick:
             description: "Vertical kick angle"
@@ -292,6 +323,7 @@ devices:
             write: true
       VK_2:
         description: "Vertical kicker 2"
+        s_position: 9.0
         attributes:
           kick:
             description: "Vertical kick angle"
@@ -301,6 +333,7 @@ devices:
             write: true
       VK_3:
         description: "Vertical kicker 3"
+        s_position: 14.0
         attributes:
           kick:
             description: "Vertical kick angle"
@@ -310,6 +343,7 @@ devices:
             write: true
       VK_4:
         description: "Vertical kicker 4"
+        s_position: 19.0
         attributes:
           kick:
             description: "Vertical kick angle"
@@ -319,6 +353,7 @@ devices:
             write: true
       VK_5:
         description: "Vertical kicker 5"
+        s_position: 24.0
         attributes:
           kick:
             description: "Vertical kick angle"
@@ -328,6 +363,7 @@ devices:
             write: true
       VK_6:
         description: "Vertical kicker 6"
+        s_position: 29.0
         attributes:
           kick:
             description: "Vertical kick angle"
@@ -337,6 +373,7 @@ devices:
             write: true
       VK_7:
         description: "Vertical kicker 7"
+        s_position: 34.0
         attributes:
           kick:
             description: "Vertical kick angle"
@@ -346,6 +383,7 @@ devices:
             write: true
       VK_8:
         description: "Vertical kicker 8"
+        s_position: 39.0
         attributes:
           kick:
             description: "Vertical kick angle"
@@ -355,6 +393,7 @@ devices:
             write: true
       VK_9:
         description: "Vertical kicker 9"
+        s_position: 44.0
         attributes:
           kick:
             description: "Vertical kick angle"
@@ -364,6 +403,7 @@ devices:
             write: true
       VK_10:
         description: "Vertical kicker 10"
+        s_position: 49.0
         attributes:
           kick:
             description: "Vertical kick angle"
@@ -375,6 +415,7 @@ devices:
     monitor:
       BPM_1:
         description: "Beam position monitor at end of cell 1"
+        s_position: 5.0
         attributes:
           orbit.x:
             description: "Horizontal beam position"
@@ -398,6 +439,7 @@ devices:
             write: false
       BPM_2:
         description: "Beam position monitor at end of cell 2"
+        s_position: 10.0
         attributes:
           orbit.x:
             description: "Horizontal beam position"
@@ -421,6 +463,7 @@ devices:
             write: false
       BPM_3:
         description: "Beam position monitor at end of cell 3"
+        s_position: 15.0
         attributes:
           orbit.x:
             description: "Horizontal beam position"
@@ -444,6 +487,7 @@ devices:
             write: false
       BPM_4:
         description: "Beam position monitor at end of cell 4"
+        s_position: 20.0
         attributes:
           orbit.x:
             description: "Horizontal beam position"
@@ -467,6 +511,7 @@ devices:
             write: false
       BPM_5:
         description: "Beam position monitor at end of cell 5"
+        s_position: 25.0
         attributes:
           orbit.x:
             description: "Horizontal beam position"
@@ -490,6 +535,7 @@ devices:
             write: false
       BPM_6:
         description: "Beam position monitor at end of cell 6"
+        s_position: 30.0
         attributes:
           orbit.x:
             description: "Horizontal beam position"
@@ -513,6 +559,7 @@ devices:
             write: false
       BPM_7:
         description: "Beam position monitor at end of cell 7"
+        s_position: 35.0
         attributes:
           orbit.x:
             description: "Horizontal beam position"
@@ -536,6 +583,7 @@ devices:
             write: false
       BPM_8:
         description: "Beam position monitor at end of cell 8"
+        s_position: 40.0
         attributes:
           orbit.x:
             description: "Horizontal beam position"
@@ -559,6 +607,7 @@ devices:
             write: false
       BPM_9:
         description: "Beam position monitor at end of cell 9"
+        s_position: 45.0
         attributes:
           orbit.x:
             description: "Horizontal beam position"
@@ -582,6 +631,7 @@ devices:
             write: false
       BPM_10:
         description: "Beam position monitor at end of cell 10"
+        s_position: 50.0
         attributes:
           orbit.x:
             description: "Horizontal beam position"

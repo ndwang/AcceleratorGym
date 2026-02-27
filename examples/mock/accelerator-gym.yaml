@@ -10,6 +10,7 @@ devices:
     quadrupole:
       QF:
         description: "Focusing quadrupole"
+        s_position: 1.5
         attributes:
           K1:
             description: "Normalized quadrupole strength"
@@ -19,6 +20,7 @@ devices:
             write: true
       QD:
         description: "Defocusing quadrupole"
+        s_position: 4.0
         attributes:
           K1:
             description: "Normalized quadrupole strength"
@@ -30,6 +32,7 @@ devices:
     monitor:
       BPM1:
         description: "Beam position monitor 1"
+        s_position: 5.0
         attributes:
           orbit.x:
             description: "Horizontal beam position"
