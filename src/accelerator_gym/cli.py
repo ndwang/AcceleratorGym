@@ -5,13 +5,19 @@ from __future__ import annotations
 import argparse
 import logging
 import os
-import readline  # noqa: F401 – enables arrow-key history in input()
 import shlex
 import sys
 from pathlib import Path
 from typing import Any
 
 from accelerator_gym.core.machine import Machine
+
+try:
+    # Optional: improves line editing / history on platforms that provide it
+    import readline  # type: ignore[unused-ignore]  # noqa: F401
+except ImportError:  # pragma: no cover
+    # On Windows and some environments, readline is unavailable; CLI still works.
+    readline = None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
 
