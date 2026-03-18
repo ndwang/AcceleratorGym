@@ -128,98 +128,113 @@ def make_call_tool(instrumented: InstrumentedMachine):
 
 TOOL_SCHEMAS: list[dict[str, Any]] = [
     {
-        "name": "browse_devices",
-        "description": (
-            "Browse the device tree to discover devices using filesystem-like paths. "
-            "Use this to discover what you can read/write. The catalog is tree-shaped.\n\n"
-            "Path levels: \"/\" -> systems, \"/system\" -> device types, "
-            "\"/system/type\" -> devices, \"/system/type/device\" -> attributes, "
-            "\"/system/type/device/attr\" -> attribute metadata.\n\n"
-            "When you browse to an attribute (or use depth so attributes are included), each "
-            "attribute has a \"variable\" field: that is the exact string to pass to get_variables "
-            "and set_variables. Use depth > 1 to see multiple levels at once."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "path": {
-                    "type": "string",
-                    "description": "Tree path to browse (default: \"/\")",
-                    "default": "/",
-                },
-                "depth": {
-                    "type": "integer",
-                    "description": "How many levels below path to include (default: 1)",
-                    "default": 1,
+        "type": "function",
+        "function": {
+            "name": "browse_devices",
+            "description": (
+                "Browse the device tree to discover devices using filesystem-like paths. "
+                "Use this to discover what you can read/write. The catalog is tree-shaped.\n\n"
+                "Path levels: \"/\" -> systems, \"/system\" -> device types, "
+                "\"/system/type\" -> devices, \"/system/type/device\" -> attributes, "
+                "\"/system/type/device/attr\" -> attribute metadata.\n\n"
+                "When you browse to an attribute (or use depth so attributes are included), each "
+                "attribute has a \"variable\" field: that is the exact string to pass to get_variables "
+                "and set_variables. Use depth > 1 to see multiple levels at once."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "path": {
+                        "type": "string",
+                        "description": "Tree path to browse (default: \"/\")",
+                        "default": "/",
+                    },
+                    "depth": {
+                        "type": "integer",
+                        "description": "How many levels below path to include (default: 1)",
+                        "default": 1,
+                    },
                 },
             },
         },
     },
     {
-        "name": "query_devices",
-        "description": (
-            "Run a read-only SQL query against the device metadata database.\n\n"
-            "Tables: devices(device_id, system, device_type, s_position, tree_path), "
-            "attributes(device_id, attribute_name, description, value, unit, readable, writable, "
-            "lower_limit, upper_limit, variable).\n"
-            "JOIN attributes with devices on device_id to filter by system/device_type.\n"
-            "Example: SELECT a.variable, a.unit FROM attributes a JOIN devices d "
-            "ON a.device_id = d.device_id WHERE d.system = 'magnets';"
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "sql": {
-                    "type": "string",
-                    "description": "SQL SELECT query",
+        "type": "function",
+        "function": {
+            "name": "query_devices",
+            "description": (
+                "Run a read-only SQL query against the device metadata database.\n\n"
+                "Tables: devices(device_id, system, device_type, s_position, tree_path), "
+                "attributes(device_id, attribute_name, description, value, unit, readable, writable, "
+                "lower_limit, upper_limit, variable).\n"
+                "JOIN attributes with devices on device_id to filter by system/device_type.\n"
+                "Example: SELECT a.variable, a.unit FROM attributes a JOIN devices d "
+                "ON a.device_id = d.device_id WHERE d.system = 'magnets';"
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "sql": {
+                        "type": "string",
+                        "description": "SQL SELECT query",
+                    },
                 },
+                "required": ["sql"],
             },
-            "required": ["sql"],
         },
     },
     {
-        "name": "get_variables",
-        "description": (
-            "Read one or more variables. Each name must be a variable name (e.g. \"QF:K1\").\n\n"
-            "Variable names are flat strings like \"QF:K1\", \"BPM1:X\". Get them from browse_devices "
-            "(see the \"variable\" field when you browse to an attribute) or by querying the metadata database."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "names": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                    "description": "List of variable names to read",
+        "type": "function",
+        "function": {
+            "name": "get_variables",
+            "description": (
+                "Read one or more variables. Each name must be a variable name (e.g. \"QF:K1\").\n\n"
+                "Variable names are flat strings like \"QF:K1\", \"BPM1:X\". Get them from browse_devices "
+                "(see the \"variable\" field when you browse to an attribute) or by querying the metadata database."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "names": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "List of variable names to read",
+                    },
                 },
+                "required": ["names"],
             },
-            "required": ["names"],
         },
     },
     {
-        "name": "set_variables",
-        "description": (
-            "Write one or more variables atomically. Keys must be variable names (e.g. \"QF:K1\"). "
-            "All-or-nothing: if any value violates limits, none are applied."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "values": {
-                    "type": "object",
-                    "additionalProperties": {"type": "number"},
-                    "description": "Map of variable names to values",
+        "type": "function",
+        "function": {
+            "name": "set_variables",
+            "description": (
+                "Write one or more variables atomically. Keys must be variable names (e.g. \"QF:K1\"). "
+                "All-or-nothing: if any value violates limits, none are applied."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "values": {
+                        "type": "object",
+                        "additionalProperties": {"type": "number"},
+                        "description": "Map of variable names to values",
+                    },
                 },
+                "required": ["values"],
             },
-            "required": ["values"],
         },
     },
     {
-        "name": "reset",
-        "description": "Reset the machine to its initial state.",
-        "input_schema": {
-            "type": "object",
-            "properties": {},
+        "type": "function",
+        "function": {
+            "name": "reset",
+            "description": "Reset the machine to its initial state.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+            },
         },
     },
 ]

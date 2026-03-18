@@ -25,8 +25,13 @@ def main():
     )
     run_parser.add_argument(
         "--adapter",
-        default="accelbench.adapters.claude_sdk.ClaudeSDKAdapter",
-        help="Fully qualified adapter class name",
+        default=None,
+        help="Fully qualified adapter class name (default: LiteLLMAdapter)",
+    )
+    run_parser.add_argument(
+        "--model",
+        default="gpt-4o",
+        help="Model name for the default LiteLLM adapter (e.g. anthropic/claude-sonnet-4-20250514, gemini/gemini-2.5-pro)",
     )
     run_parser.add_argument(
         "--tasks", default=None, help="Comma-separated task IDs (e.g. 1.1,1.2,3.5)"
@@ -83,7 +88,11 @@ def _cmd_run(args):
     )
 
     # Import adapter class
-    adapter = _load_adapter(args.adapter)
+    if args.adapter:
+        adapter = _load_adapter(args.adapter)
+    else:
+        from accelbench.adapters.litellm import LiteLLMAdapter
+        adapter = LiteLLMAdapter(model=args.model)
 
     # Parse task IDs
     task_ids = args.tasks.split(",") if args.tasks else None

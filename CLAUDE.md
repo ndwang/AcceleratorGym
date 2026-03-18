@@ -11,7 +11,7 @@ AcceleratorGym is a unified interface for AI agents to monitor and control parti
 ```bash
 pip install -e ".[test]"           # Install in dev mode with test deps
 pip install -e ".[bmad]"           # Include Bmad/Tao backend
-pip install -e ".[bench]"          # Include benchmark deps (anthropic SDK)
+pip install -e ".[bench]"          # Include benchmark deps (litellm)
 
 python -m pytest                   # Run all tests
 python -m pytest tests/test_variable.py          # Single test file

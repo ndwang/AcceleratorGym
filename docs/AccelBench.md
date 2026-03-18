@@ -11,6 +11,8 @@ accelbench list                    # Show all 27 tasks
 accelbench list --tier 1           # Show only Tier 1 tasks
 
 accelbench run --config examples/booster/accelerator-gym.yaml --seed 42
+accelbench run --config ... --model anthropic/claude-sonnet-4-20250514
+accelbench run --config ... --model gemini/gemini-2.5-pro
 accelbench run --config ... --tasks 1.1,1.2,1.3
 accelbench run --config ... --tier 1
 accelbench run --config ... --output results.json
@@ -84,14 +86,37 @@ The adapter class is imported and instantiated with no arguments. If your adapte
 
 ## Built-in Adapters
 
-### `accelbench.adapters.claude_sdk.ClaudeSDKAdapter`
+### `accelbench.adapters.litellm.LiteLLMAdapter` (default)
 
-Reference implementation using the Anthropic Python SDK (callback mode). Sends the prompt and tool schemas to Claude via the Messages API, executes tool calls in a loop, and returns the final text response.
-
-Requires the `ANTHROPIC_API_KEY` environment variable and the `anthropic` package (`pip install -e ".[bench]"`).
+The default adapter, using [LiteLLM](https://docs.litellm.ai/docs/providers) for provider-agnostic model access. Supports 100+ providers through a single interface — pass any model via `--model`:
 
 ```bash
-accelbench run --config ... --adapter accelbench.adapters.claude_sdk.ClaudeSDKAdapter
+# OpenAI (default)
+OPENAI_API_KEY=... accelbench run --config ...
+
+# Anthropic
+ANTHROPIC_API_KEY=... accelbench run --config ... --model anthropic/claude-sonnet-4-20250514
+
+# Gemini
+GEMINI_API_KEY=... accelbench run --config ... --model gemini/gemini-2.5-pro
+
+# Mistral
+MISTRAL_API_KEY=... accelbench run --config ... --model mistral/mistral-large-latest
+
+# Local Ollama
+accelbench run --config ... --model ollama/llama3
+```
+
+Requires `pip install -e ".[bench]"` and the appropriate API key env var for your provider.
+
+For custom constructor parameters (e.g. `api_base`), subclass and pass via `--adapter`:
+
+```python
+from accelbench.adapters.litellm import LiteLLMAdapter
+
+class OllamaAdapter(LiteLLMAdapter):
+    def __init__(self):
+        super().__init__(model="ollama/llama3", api_base="http://localhost:11434")
 ```
 
 ### `accelbench.adapters.claude_code.ClaudeCodeAdapter`
@@ -121,7 +146,8 @@ Run benchmark tasks and produce a scored report.
 |------|---------|-------------|
 | `--config` | (required) | Path to `accelerator-gym.yaml` |
 | `--seed` | 42 | Random seed for reproducible setups |
-| `--adapter` | `...ClaudeSDKAdapter` | Fully qualified adapter class name |
+| `--model` | `gpt-4o` | Model name for the default LiteLLM adapter |
+| `--adapter` | `LiteLLMAdapter` | Fully qualified adapter class name (overrides `--model`) |
 | `--tasks` | all | Comma-separated task IDs (e.g. `1.1,2.3`) |
 | `--tier` | all | Run only tasks from this tier |
 | `--output` | none | Path to save JSON report |

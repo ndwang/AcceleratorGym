@@ -23,7 +23,7 @@ accelbench = "accelbench.cli:main"
 [project.optional-dependencies]
 bmad = ["pytao"]
 epics = ["pyepics"]
-bench = ["anthropic>=0.30"]
+bench = ["litellm>=1.0"]
 test = ["pytest>=7.0"]
 
 [tool.setuptools.packages.find]

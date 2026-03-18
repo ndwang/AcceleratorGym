@@ -1,0 +1,99 @@
+"""LiteLLM adapter — supports OpenAI, Gemini, Mistral, Llama, and 100+ providers."""
+
+from __future__ import annotations
+
+import json
+import logging
+from typing import Any, Callable
+
+logger = logging.getLogger(__name__)
+
+_SYSTEM_PROMPT = """\
+You are an accelerator operations agent. You have access to tools for monitoring \
+and controlling a particle accelerator. Use the tools to complete the task.
+
+IMPORTANT: When you have your final answer, output it as a JSON object inside a \
+```json fenced code block. Include all requested values with the exact keys \
+specified in the task prompt."""
+
+
+class LiteLLMAdapter:
+    """Adapter using LiteLLM for provider-agnostic model access.
+
+    Supports any model that LiteLLM supports:
+      - OpenAI:   model="gpt-4o"
+      - Gemini:   model="gemini/gemini-2.5-pro"
+      - Mistral:  model="mistral/mistral-large-latest"
+      - Ollama:   model="ollama/llama3"
+      - etc.
+
+    See https://docs.litellm.ai/docs/providers for the full list.
+    Set the appropriate API key env var for your provider
+    (OPENAI_API_KEY, GEMINI_API_KEY, etc.).
+    """
+
+    def __init__(
+        self,
+        model: str = "gpt-4o",
+        max_tokens: int = 4096,
+        api_base: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        self._model = model
+        self._max_tokens = max_tokens
+        self._api_base = api_base
+        self._extra_kwargs = kwargs
+
+    def run(
+        self,
+        prompt: str,
+        tools: list[dict[str, Any]],
+        call_tool: Callable[[str, dict[str, Any]], str],
+    ) -> str:
+        import litellm
+
+        messages: list[dict[str, Any]] = [
+            {"role": "system", "content": _SYSTEM_PROMPT},
+            {"role": "user", "content": prompt},
+        ]
+
+        while True:
+            kwargs: dict[str, Any] = {
+                "model": self._model,
+                "messages": messages,
+                "tools": tools,
+                "max_tokens": self._max_tokens,
+                **self._extra_kwargs,
+            }
+            if self._api_base:
+                kwargs["api_base"] = self._api_base
+
+            response = litellm.completion(**kwargs)
+            choice = response.choices[0]
+            message = choice.message
+
+            # Append assistant message to history
+            messages.append(message.model_dump(exclude_none=True))
+
+            # Check for tool calls
+            tool_calls = message.tool_calls
+            if not tool_calls:
+                # Agent is done — return text content
+                return message.content or ""
+
+            # Execute each tool call and feed results back
+            for tc in tool_calls:
+                fn = tc.function
+                try:
+                    arguments = json.loads(fn.arguments)
+                except json.JSONDecodeError:
+                    arguments = {}
+
+                logger.debug(f"Tool call: {fn.name}({arguments})")
+                result = call_tool(fn.name, arguments)
+
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": tc.id,
+                    "content": result,
+                })
