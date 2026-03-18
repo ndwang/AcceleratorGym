@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import json
 import logging
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -21,6 +23,7 @@ def run_benchmark(
     seed: int = 42,
     task_ids: list[str] | None = None,
     tier: int | None = None,
+    output_dir: str | None = None,
 ) -> RunRecord:
     """Run the full benchmark (or a subset) and return results.
 
@@ -30,6 +33,7 @@ def run_benchmark(
         seed: Random seed for reproducibility.
         task_ids: If given, only run these task IDs.
         tier: If given, only run tasks from this tier.
+        output_dir: If given, save per-task trajectory files here.
 
     Returns:
         A RunRecord with all results.
@@ -37,10 +41,18 @@ def run_benchmark(
     # Select tasks
     tasks = _select_tasks(task_ids, tier)
 
+    # Prepare output directory
+    traces_dir = None
+    if output_dir:
+        traces_dir = Path(output_dir) / "traces"
+        traces_dir.mkdir(parents=True, exist_ok=True)
+
+    model = str(getattr(adapter, "model", "")) or ""
     record = RunRecord(
         seed=seed,
         config_path=config_path,
         adapter_name=type(adapter).__name__,
+        model=model,
     )
 
     for task in tasks:
@@ -76,7 +88,57 @@ def run_benchmark(
         finally:
             machine.close()
 
+        # Save trajectory file
+        if traces_dir:
+            _save_trajectory(record.results[-1], task, traces_dir)
+
     return record
+
+
+def _save_trajectory(
+    result: TaskResult, task: TaskDef, traces_dir: Path
+) -> None:
+    """Save a per-task trajectory file with the full trace."""
+    trajectory = {
+        "task_id": result.task_id,
+        "task_name": task.name,
+        "tier": task.tier,
+        "abilities": task.abilities,
+        "passed": result.passed,
+        "tool_calls": result.tool_calls,
+        "budget": result.budget,
+        "efficiency": round(result.efficiency, 3),
+        "wall_time": round(result.wall_time, 2),
+        "error": result.error,
+        "model": result.model,
+        "usage": result.usage,
+        "prompt": result.prompt,
+        "response": result.response,
+        "extracted_answer": result.extracted_answer,
+        "setup_data": _safe_serialize(result.setup_data),
+        "trace": result.trace,
+    }
+    path = traces_dir / f"task_{result.task_id.replace('.', '_')}.json"
+    with open(path, "w") as f:
+        json.dump(trajectory, f, indent=2, default=str)
+    logger.debug(f"Trajectory saved: {path}")
+
+
+def _safe_serialize(obj: Any) -> Any:
+    """Convert an object to JSON-safe types."""
+    if obj is None:
+        return None
+    if isinstance(obj, dict):
+        return {k: _safe_serialize(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_safe_serialize(v) for v in obj]
+    if isinstance(obj, (np.integer,)):
+        return int(obj)
+    if isinstance(obj, (np.floating,)):
+        return float(obj)
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    return obj
 
 
 def _select_tasks(

@@ -40,7 +40,7 @@ def main():
         "--tier", type=int, default=None, help="Run only tasks from this tier"
     )
     run_parser.add_argument(
-        "--output", default=None, help="Path to save JSON report"
+        "--output-dir", default=None, help="Directory for report and per-task trajectory files"
     )
     run_parser.add_argument(
         "--debug", action="store_true", help="Enable debug logging"
@@ -106,13 +106,16 @@ def _cmd_run(args):
         seed=args.seed,
         task_ids=task_ids,
         tier=args.tier,
+        output_dir=args.output_dir,
     )
 
     report = generate_report(record)
     print_report(report)
 
-    if args.output:
-        save_report(report, args.output)
+    if args.output_dir:
+        import os
+        os.makedirs(args.output_dir, exist_ok=True)
+        save_report(report, os.path.join(args.output_dir, "report.json"))
 
 
 def _load_adapter(fqn: str):

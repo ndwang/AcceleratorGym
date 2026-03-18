@@ -43,6 +43,17 @@ class LiteLLMAdapter:
         self._max_tokens = max_tokens
         self._api_base = api_base
         self._extra_kwargs = kwargs
+        # Reset per run
+        self._last_usage: dict[str, int] = {}
+
+    @property
+    def model(self) -> str:
+        return self._model
+
+    @property
+    def last_usage(self) -> dict[str, int]:
+        """Token usage from the most recent run() call."""
+        return dict(self._last_usage)
 
     def run(
         self,
@@ -51,6 +62,8 @@ class LiteLLMAdapter:
         call_tool: Callable[[str, dict[str, Any]], str],
     ) -> str:
         import litellm
+
+        self._last_usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
 
         messages: list[dict[str, Any]] = [
             {"role": "system", "content": _SYSTEM_PROMPT},
@@ -69,6 +82,13 @@ class LiteLLMAdapter:
                 kwargs["api_base"] = self._api_base
 
             response = litellm.completion(**kwargs)
+
+            # Accumulate token usage
+            if response.usage:
+                self._last_usage["prompt_tokens"] += response.usage.prompt_tokens or 0
+                self._last_usage["completion_tokens"] += response.usage.completion_tokens or 0
+                self._last_usage["total_tokens"] += response.usage.total_tokens or 0
+
             choice = response.choices[0]
             message = choice.message
 

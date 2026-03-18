@@ -49,6 +49,11 @@ class TaskResult:
     extracted_answer: dict[str, Any] | None
     error: str | None = None
     setup_data: dict[str, Any] | None = None
+    prompt: str = ""
+    response: str = ""
+    trace: list[dict[str, Any]] = field(default_factory=list)
+    model: str = ""
+    usage: dict[str, int] = field(default_factory=dict)
 
     @property
     def efficiency(self) -> float:
@@ -64,3 +69,4 @@ class RunRecord:
     results: list[TaskResult] = field(default_factory=list)
     config_path: str = ""
     adapter_name: str = ""
+    model: str = ""

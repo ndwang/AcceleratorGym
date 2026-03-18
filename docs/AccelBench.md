@@ -15,7 +15,7 @@ accelbench run --config ... --model anthropic/claude-sonnet-4-20250514
 accelbench run --config ... --model gemini/gemini-2.5-pro
 accelbench run --config ... --tasks 1.1,1.2,1.3
 accelbench run --config ... --tier 1
-accelbench run --config ... --output results.json
+accelbench run --config ... --output-dir results/
 ```
 
 ## Architecture
@@ -150,19 +150,54 @@ Run benchmark tasks and produce a scored report.
 | `--adapter` | `LiteLLMAdapter` | Fully qualified adapter class name (overrides `--model`) |
 | `--tasks` | all | Comma-separated task IDs (e.g. `1.1,2.3`) |
 | `--tier` | all | Run only tasks from this tier |
-| `--output` | none | Path to save JSON report |
+| `--output-dir` | none | Directory for report and per-task trajectory files |
 | `--debug` | off | Enable debug logging on stderr |
 
-## Report Format
+## Output Format
 
-The report (printed to stdout and optionally saved as JSON) contains:
+A summary is always printed to stdout. When `--output-dir` is given, the harness writes:
 
-- **Summary**: total/passed/failed/error counts and pass rate
-- **Per-tier breakdown**: pass counts for each difficulty tier
-- **Per-ability pass rates**: how well the agent performs on each capability
-- **Per-task details**: tool calls used, budget, efficiency score, wall time, pass/fail, errors
+```
+results/
+├── report.json              # Aggregate scoring report
+└── traces/
+    ├── task_1_1.json         # Full trajectory for task 1.1
+    ├── task_1_2.json
+    └── ...
+```
 
-Example output:
+### `report.json` — Aggregate Scores
+
+Contains summary stats, per-tier breakdown, per-ability pass rates, and per-task score lines (no traces — kept lean for quick comparison).
+
+### `traces/task_X_Y.json` — Per-Task Trajectories
+
+Full record of a single task run:
+
+```json
+{
+  "task_id": "1.1",
+  "task_name": "Read a Parameter",
+  "tier": 1,
+  "abilities": ["io"],
+  "passed": true,
+  "tool_calls": 2,
+  "budget": 3,
+  "efficiency": 0.333,
+  "wall_time": 3.21,
+  "error": null,
+  "prompt": "What is K1 of QVA1? ...",
+  "response": "The K1 of QVA1 is ... ```json\n{\"value\": 0.5}\n```",
+  "extracted_answer": {"value": 0.5},
+  "setup_data": {"element": "QVA1", "variable": "QVA1:K1"},
+  "trace": [
+    {"tool": "browse_devices", "arguments": {"path": "/", "depth": 2}, "result": "..."},
+    {"tool": "get_variables", "arguments": {"names": ["QVA1:K1"]}, "result": "QVA1:K1 = 0.5 (1/m^2)"}
+  ]
+}
+```
+
+### Console Output
 
 ```
 ============================================================

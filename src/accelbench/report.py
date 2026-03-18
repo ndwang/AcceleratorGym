@@ -50,6 +50,12 @@ def generate_report(record: RunRecord) -> dict[str, Any]:
         for ability, stats in sorted(ability_stats.items())
     }
 
+    # Aggregate token usage
+    total_usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+    for r in record.results:
+        for key in total_usage:
+            total_usage[key] += r.usage.get(key, 0)
+
     # Per-task details
     task_details = []
     for r in record.results:
@@ -63,6 +69,7 @@ def generate_report(record: RunRecord) -> dict[str, Any]:
             "budget": r.budget,
             "efficiency": round(r.efficiency, 3),
             "wall_time": round(r.wall_time, 2),
+            "usage": r.usage,
         }
         if r.error:
             detail["error"] = r.error
@@ -75,6 +82,9 @@ def generate_report(record: RunRecord) -> dict[str, Any]:
             "failed": failed,
             "errors": errors,
             "pass_rate": round(passed / total, 3) if total > 0 else 0.0,
+            "total_tokens": total_usage["total_tokens"],
+            "prompt_tokens": total_usage["prompt_tokens"],
+            "completion_tokens": total_usage["completion_tokens"],
         },
         "per_tier": {
             str(tier): dict(stats)
@@ -86,6 +96,7 @@ def generate_report(record: RunRecord) -> dict[str, Any]:
             "seed": record.seed,
             "config_path": record.config_path,
             "adapter": record.adapter_name,
+            "model": record.model,
         },
     }
 
@@ -93,8 +104,13 @@ def generate_report(record: RunRecord) -> dict[str, Any]:
 def print_report(report: dict[str, Any]) -> None:
     """Print a human-readable summary to stdout."""
     s = report["summary"]
+    m = report["metadata"]
     print(f"\n{'='*60}")
     print(f"AccelBench Results: {s['passed']}/{s['total']} passed ({s['pass_rate']:.0%})")
+    if m.get("model"):
+        print(f"Model: {m['model']}")
+    if s.get("total_tokens"):
+        print(f"Tokens: {s['total_tokens']:,} total ({s['prompt_tokens']:,} prompt + {s['completion_tokens']:,} completion)")
     print(f"{'='*60}")
 
     print("\nPer-Tier Breakdown:")

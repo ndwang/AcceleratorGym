@@ -60,12 +60,22 @@ def run_task(
     # Build tool interface
     call_tool = make_call_tool(instrumented)
 
+    def _trace_dicts() -> list[dict]:
+        return [tc.to_dict() for tc in instrumented.trace]
+
+    def _adapter_meta() -> dict[str, Any]:
+        """Extract model and usage from adapter if available."""
+        model = getattr(adapter, "model", "") or ""
+        usage = getattr(adapter, "last_usage", None) or {}
+        return {"model": str(model), "usage": dict(usage)}
+
     # Run agent
     start = time.monotonic()
     try:
         response = adapter.run(prompt, TOOL_SCHEMAS, call_tool)
     except Exception as e:
         elapsed = time.monotonic() - start
+        meta = _adapter_meta()
         logger.exception(f"Task {task.id} agent run failed")
         return TaskResult(
             task_id=task.id,
@@ -76,8 +86,13 @@ def run_task(
             extracted_answer=None,
             error=f"Agent error: {e}",
             setup_data=setup_data,
+            prompt=prompt,
+            response="",
+            trace=_trace_dicts(),
+            **meta,
         )
     elapsed = time.monotonic() - start
+    meta = _adapter_meta()
 
     # Extract answer
     answer = extract_json_answer(response) if response else None
@@ -93,6 +108,10 @@ def run_task(
             extracted_answer=None,
             error="No JSON answer extracted from response",
             setup_data=setup_data,
+            prompt=prompt,
+            response=response or "",
+            trace=_trace_dicts(),
+            **meta,
         )
 
     try:
@@ -109,4 +128,8 @@ def run_task(
         wall_time=elapsed,
         extracted_answer=answer,
         setup_data=setup_data,
+        prompt=prompt,
+        response=response or "",
+        trace=_trace_dicts(),
+        **meta,
     )

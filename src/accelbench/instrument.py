@@ -7,6 +7,20 @@ from typing import Any
 from accelerator_gym.core.machine import Machine
 
 
+class ToolCall:
+    """Record of a single tool invocation."""
+
+    __slots__ = ("tool", "arguments", "result")
+
+    def __init__(self, tool: str, arguments: dict[str, Any], result: str) -> None:
+        self.tool = tool
+        self.arguments = arguments
+        self.result = result
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"tool": self.tool, "arguments": self.arguments, "result": self.result}
+
+
 class InstrumentedMachine:
     """Wraps a Machine, counting each tool-level call and enforcing budgets."""
 
@@ -14,6 +28,7 @@ class InstrumentedMachine:
         self._machine = machine
         self._budget = budget
         self._call_count = 0
+        self._trace: list[ToolCall] = []
 
     @property
     def machine(self) -> Machine:
@@ -27,6 +42,10 @@ class InstrumentedMachine:
     def budget(self) -> int:
         return self._budget
 
+    @property
+    def trace(self) -> list[ToolCall]:
+        return list(self._trace)
+
     def _check_budget(self) -> str | None:
         """Return error string if budget exceeded, else None."""
         if self._call_count >= self._budget:
@@ -34,29 +53,42 @@ class InstrumentedMachine:
         self._call_count += 1
         return None
 
+    def _log(self, tool: str, arguments: dict[str, Any], result: str) -> None:
+        self._trace.append(ToolCall(tool, arguments, result))
+
     def browse_devices(self, path: str = "/", depth: int = 1) -> str:
+        args = {"path": path, "depth": depth}
         err = self._check_budget()
         if err:
+            self._log("browse_devices", args, err)
             return err
         try:
             result = self._machine.catalog.browse(path, depth)
-            return _format_json(result)
+            out = _format_json(result)
         except Exception as e:
-            return f"Error: {e}"
+            out = f"Error: {e}"
+        self._log("browse_devices", args, out)
+        return out
 
     def query_devices(self, sql: str) -> str:
+        args = {"sql": sql}
         err = self._check_budget()
         if err:
+            self._log("query_devices", args, err)
             return err
         try:
             rows = self._machine.catalog.query(sql)
-            return _format_json({"rows": rows, "count": len(rows)})
+            out = _format_json({"rows": rows, "count": len(rows)})
         except (ValueError, Exception) as e:
-            return _format_json({"error": "query_error", "message": str(e)})
+            out = _format_json({"error": "query_error", "message": str(e)})
+        self._log("query_devices", args, out)
+        return out
 
     def get_variables(self, names: list[str]) -> str:
+        args = {"names": names}
         err = self._check_budget()
         if err:
+            self._log("get_variables", args, err)
             return err
         try:
             values = self._machine.get_many(names)
@@ -67,30 +99,40 @@ class InstrumentedMachine:
                     lines.append(f"{name} = {values[name]} ({var.units})")
                 else:
                     lines.append(f"{name} = {values[name]}")
-            return "\n".join(lines)
+            out = "\n".join(lines)
         except (KeyError, ValueError) as e:
-            return f"Error: {e}"
+            out = f"Error: {e}"
+        self._log("get_variables", args, out)
+        return out
 
     def set_variables(self, values: dict[str, float]) -> str:
+        args = {"values": values}
         err = self._check_budget()
         if err:
+            self._log("set_variables", args, err)
             return err
         try:
             self._machine.set_many(values)
             lines = [f"{name} set to {v}" for name, v in values.items()]
-            return "\n".join(lines)
+            out = "\n".join(lines)
         except (KeyError, ValueError, TypeError) as e:
-            return f"Error: {e}"
+            out = f"Error: {e}"
+        self._log("set_variables", args, out)
+        return out
 
     def reset(self) -> str:
+        args: dict[str, Any] = {}
         err = self._check_budget()
         if err:
+            self._log("reset", args, err)
             return err
         try:
             self._machine.reset()
-            return "Machine reset to initial state"
+            out = "Machine reset to initial state"
         except Exception as e:
-            return f"Error: {e}"
+            out = f"Error: {e}"
+        self._log("reset", args, out)
+        return out
 
 
 def _format_json(obj: Any) -> str:
