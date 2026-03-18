@@ -1,0 +1,580 @@
+!==============================================================
+! booster.conversions
+! Developed originally by M. Tanaka and A. Luccio for
+! Slow Extracted Beam from the Booster
+!
+! translated to BMAD 12/29/22  Lucy Lin
+!
+! This file contains parameter conversions and polynomials used
+! in Booster lattice
+!
+!==============================================================
+!
+! Expected Variables:
+! 1. IDIPO               = for main dipole current
+! 2. Brho_booster        = used in tune and chromaticity calculations
+! 3. IQHC & IQVC         = tune trim power supplied
+! 4. ISH & ISV           = chrom. sextupoles
+! 5. ISEBC8F8 & ISEBB4E4 = drive sextupoles for 13/3 resonance
+! 6. D03kick             = D3 thin septum
+! 7. IC7, ID1,ID2, ID4, ID6, ID7, IE1  = for D3/D6 orbit bump
+!             call file = BOOSTER.BMP to use these
+! 8. BDOT
+!
+!==============================================================
+
+
+
+
+!========================================================
+! Dipole parameters
+!========================================================
+
+lend = 2.42
+
+angd = 0.174532925    ! 10 degrees
+
+rho_booster = 13.8656     ! Bend radius of Booster main dipole
+
+! IDIPO = current in main dipole
+
+
+idipo2 = IDIPO^2
+idipo3 = IDIPO^3
+idipo4 = IDIPO^4
+idipo5 = IDIPO^5
+idipo6 = IDIPO^6
+idipo7 = IDIPO^7
+idipo8 = IDIPO^8
+
+! Transfer function, dipole field from current
+! use expansion to include saturation
+
+idipc0 = 0.0009122
+idipc1 = 2.371E-4
+idipc2 = 1.717E-8
+idipc3 = 2.412E-11
+idipc4 = 1.836E-14
+idipc5 = 7.88E-18
+idipc6 = 1.891E-21
+idipc7 = 2.351E-25
+idipc8 = 1.163E-29
+
+bdipo = idipc0 + idipo * idipc1 + idipo2 * idipc2 - idipo3 * idipc3 + idipo4 * idipc4 - idipo5 * idipc5 + idipo6 * idipc6 - idipo7 *idipc7 + idipo8 * idipc8
+
+brho_booster = BDIPO * rho_booster - CBrho_booster * BDOT
+
+!========================================================
+! Bend parameters
+!========================================================
+
+! 8th order fit to data in tech note 190
+kc0 = -0.003571
+kc1 = 2.52E-6
+kc2 = 6.145E-09
+kc3 = 7.113E-12
+kc4 = 4.531E-15
+kc5 = 1.666E-18
+kc6 = 3.523E-22
+kc7 = 3.972E-26
+kc8 = 1.847E-30
+
+k10 = (kc0 - IDIPO * kc1 + IDIPO2 * kc2 - IDIPO3 * kc3 + IDIPO4 * kc4 - IDIPO5 * kc5 + IDIPO6 * kc6 - IDIPO7 * kc7 + IDIPO8 * kc8) / rho_booster
+
+sbdot = 0.
+
+! MB 6/20/91 from R.Thern Tech Note 190 and SYL TN 147
+k20 = (-0.4438 + 0.31764 * SBDOT) / rho_booster
+
+!========================================================
+! Quadrupole parameters
+!========================================================
+
+ckc = 0.20022    ! quad trim coil vs. main coil
+
+! To match change in power supply response to back emf due to bdot we add
+! a bdot term, with a calibration coefficient
+
+iqh = IDIPO + CKC * (IQHC + BDOT*IQHBD)
+iqv = IDIPO + CKC * (-IQVC + BDOT*IQVBD)
+
+! old length
+lenqh = 0.493
+lenqv = 0.504
+
+!lengths corrected for saturation fit to values in E.Bleser Report
+!lenqh = 1.0*(0.4998-IQH*1.569e-05+IQH*IQH*7.900e-09-IQH*IQH*IQH*1.215e-12)
+!lenqv = 1.0*(0.5125-IQV*1.946e-05+IQV*IQV*9.609e-09-IQV*IQV*IQV*1.404e-12)
+
+!lengths corrected using fit to Wuzeng Meng quadrupole models
+!lenqh = 1.0*(0.4974+IQH*4.863e-08+IQH*IQH*1.539e-11-IQH*IQH*IQH*1.166e-13)
+!lenqv = 1.0*(0.5091-IQV*9.765e-08+IQV*IQV*1.049e-10-IQV*IQV*IQV*1.336e-13)
+
+! Adjust the drifts on either side to keep Circ. Constant
+
+lvus = (0.504-LENQV)/2
+lvds = (0.504-LENQV)/2
+lhus = (0.493-LENQH)/2
+lhds = (0.493-LENQH)/2
+
+
+
+!========================================================
+! MODIFICATIONS oct 1992 BY AUL FOR NONLINEAR EFFECTS 
+!
+! quad integrated gradient in tesla. This is a linear aproximation valid
+! in the range 600-800 amps. See file luccio/mad_spline.dat --- old stuff; kab
+!
+! New stuff: 10/18/01 Kevin Brown
+!  added effective length as a function of current (see LENQH & V above)
+!  effective length was never measured, so used Opera3D model to calculate
+!  added 5th order polynomial to include saturation effects.
+!   for shorts this was fudged by 0.9996 to match real data
+!   for longs this was fudged by 1.0024 to match real data
+!  added BDot dependence based on Opera2D transient model, adjusted to match 
+!  real data.
+!
+!========================================================
+
+!========================================================
+!  short quads ( current in amps )
+!  5th order, match to field measurements
+!========================================================
+
+klhc0 = 0.001818
+klhc1 = 9.080E-4
+klhc2 = 6.657E-9
+klhc3 = 7.225E-12
+klhc4 = 3.239E-15
+klhc5 = 5.07E-19
+
+b1lh = klhc0 + IQH * klhc1 + IQH^2 * klhc2 - IQH^3 * klhc3 + IQH^4 * klhc4 - IQH^5 * klhc5
+
+b1lho = IQH*9.121E-4
+
+! for 3D transient model
+ckh = (1 - 0.00004179 * (BDOT/BDIPO)) *1.00*B1LH / (Brho_booster*LENQH)
+
+!========================================================
+!  long quads ( current in amps )
+!  5th order, match to field measurements
+!========================================================
+
+
+klvc0 = 0.002099
+klvc1 = 9.257E-4
+klvc2 = 1.164E-8
+klvc3 = 1.046E-11
+klvc4 = 4.057E-15
+klvc5 = 5.75E-19
+
+b1lv = klvc0 + IQV * klvc1 + IQV^2 * klvc2 - IQV^3 * klvc3 + IQV^4 * klvc4 - IQV^5 * klvc5
+
+b1lvo = IQV*9.325E-4
+
+! for 3D transient model
+ckv = -(1 - 0.000041942 * (BDOT/BDIPO)) *1.0030*B1LV / (Brho_booster*LENQV)
+ckvear = -(1 - 0.000062913 * (BDOT/BDIPO)) *1.0030*B1LV / (Brho_booster*LENQV)
+
+!========================================================
+!  Stop band correctors are configured as follows per Booster TN149
+!  and AGS TN 465
+!  4 power supplies for 1/2 integer to 2 turns on main quadrupoles
+!   p.s. 1 QVSTR1 = +A1, +A7, -B1, -B7, ...
+!   p.s. 2 QHSTR1 = +A2, +A8, -B2, -B8, ...
+!   p.s. 3 QVSTR2 = +A3, -A5, -B3, +B5, ...
+!   p.s. 4 QHSTR2 = +A4, -A6, -B4, +B6, ...
+! 
+!  IQVT & IQHT are trims for pol. proton test, small beta at C5 foil 7/6/07 KAB
+!
+!========================================================
+
+! small trim coils are 2 turns
+ckc2 = 0.4
+
+!========================================================
+! Vertical
+!========================================================
+
+iqva1 = IDIPO + CKC*(IQVC + BDOT*IQVBD) + ckc2*( QVSTR1)
+iqva3 = IDIPO + CKC*(IQVC + BDOT*IQVBD) + ckc2*( QVSTR2)
+iqva5 = IDIPO + CKC*(IQVC + BDOT*IQVBD) + ckc2*(-QVSTR2)
+iqva7 = IDIPO + CKC*(IQVC + BDOT*IQVBD) + ckc2*( QVSTR1)
+iqvb1 = IDIPO + CKC*(IQVC + BDOT*IQVBD) + ckc2*(-QVSTR1)
+iqvb3 = IDIPO + CKC*(IQVC + BDOT*IQVBD) + ckc2*(-QVSTR2)
+iqvb5 = IDIPO + CKC*(IQVC + IQVTB5 + BDOT*IQVBD) + ckc2*( QVSTR2)
+iqvb7 = IDIPO + CKC*(IQVC + IQVTB7 + BDOT*IQVBD) + ckc2*(-QVSTR1)
+iqvc1 = IDIPO + CKC*(IQVC + IQVTC1 + BDOT*IQVBD) + ckc2*( QVSTR1)
+iqvc3 = IDIPO + CKC*(IQVC + IQVTC3 + BDOT*IQVBD) + ckc2*( QVSTR2)
+iqvc5 = IDIPO + CKC*(IQVC + IQVTC5 + BDOT*IQVBD) + ckc2*(-QVSTR2)
+iqvc7 = IDIPO + CKC*(IQVC + IQVTC7 + BDOT*IQVBD) + ckc2*( QVSTR1)
+iqvd1 = IDIPO + CKC*(IQVC + IQVTD1 + BDOT*IQVBD) + ckc2*(-QVSTR1)
+iqvd3 = IDIPO + CKC*(IQVC + IQVTD3 + BDOT*IQVBD) + ckc2*(-QVSTR2)
+iqvd5 = IDIPO + CKC*(IQVC + BDOT*IQVBD) + ckc2*( QVSTR2)
+iqvd7 = IDIPO + CKC*(IQVC + BDOT*IQVBD) + ckc2*(-QVSTR1)
+iqve1 = IDIPO + CKC*(IQVC + BDOT*IQVBD) + ckc2*( QVSTR1)
+iqve3 = IDIPO + CKC*(IQVC + BDOT*IQVBD) + ckc2*( QVSTR2)
+iqve5 = IDIPO + CKC*(IQVC + BDOT*IQVBD) + ckc2*(-QVSTR2)
+iqve7 = IDIPO + CKC*(IQVC + BDOT*IQVBD) + ckc2*( QVSTR1)
+iqvf1 = IDIPO + CKC*(IQVC + BDOT*IQVBD) + ckc2*(-QVSTR1)
+iqvf3 = IDIPO + CKC*(IQVC + BDOT*IQVBD) + ckc2*(-QVSTR2)
+iqvf5 = IDIPO + CKC*(IQVC + BDOT*IQVBD) + ckc2*( QVSTR2)
+iqvf7 = IDIPO + CKC*(IQVC + BDOT*IQVBD) + ckc2*(-QVSTR1)
+
+
+b1lva1 = klvc0 + IQVA1 * klvc1 + IQVA1^2 * klvc2 - IQVA1^3 * klvc3 + IQVA1^4 * klvc4 - IQVA1^5 * klvc5
+
+b1lva3 = klvc0 + IQVA3 * klvc1 + IQVA3^2 * klvc2 - IQVA3^3 * klvc3 + IQVA3^4 * klvc4 - IQVA3^5 * klvc5
+
+b1lva5 = klvc0 + IQVA5 * klvc1 + IQVA5^2 * klvc2 - IQVA5^3 * klvc3 + IQVA5^4 * klvc4 - IQVA5^5 * klvc5
+
+b1lva7 = klvc0 + IQVA7 * klvc1 + IQVA7^2 * klvc2 - IQVA7^3 * klvc3 + IQVA7^4 * klvc4 - IQVA7^5 * klvc5
+
+b1lvb1 = klvc0 + IQVB1 * klvc1 + IQVB1^2 * klvc2 - IQVB1^3 * klvc3 + IQVB1^4 * klvc4 - IQVB1^5 * klvc5
+
+b1lvb3 = klvc0 + IQVB3 * klvc1 + IQVB3^2 * klvc2 - IQVB3^3 * klvc3 + IQVB3^4 * klvc4 - IQVB3^5 * klvc5
+
+b1lvb5 = klvc0 + IQVB5 * klvc1 + IQVB5^2 * klvc2 - IQVB5^3 * klvc3 + IQVB5^4 * klvc4 - IQVB5^5 * klvc5
+
+b1lvb7 = klvc0 + IQVB7 * klvc1 + IQVB7^2 * klvc2 - IQVB7^3 * klvc3 + IQVB7^4 * klvc4 - IQVB7^5 * klvc5
+
+b1lvc1 = klvc0 + IQVC1 * klvc1 + IQVC1^2 * klvc2 - IQVC1^3 * klvc3 + IQVC1^4 * klvc4 - IQVC1^5 * klvc5
+
+b1lvc3 = klvc0 + IQVC3 * klvc1 + IQVC3^2 * klvc2 - IQVC3^3 * klvc3 + IQVC3^4 * klvc4 - IQVC3^5 * klvc5
+
+b1lvc5 = klvc0 + IQVC5 * klvc1 + IQVC5^2 * klvc2 - IQVC5^3 * klvc3 + IQVC5^4 * klvc4 - IQVC5^5 * klvc5
+
+b1lvc7 = klvc0 + IQVC7 * klvc1 + IQVC7^2 * klvc2 - IQVC7^3 * klvc3 + IQVC7^4 * klvc4 - IQVC7^5 * klvc5
+
+b1lvd1 = klvc0 + IQVD1 * klvc1 + IQVD1^2 * klvc2 - IQVD1^3 * klvc3 + IQVD1^4 * klvc4 - IQVD1^5 * klvc5
+
+b1lvd3 = klvc0 + IQVD3 * klvc1 + IQVD3^2 * klvc2 - IQVD3^3 * klvc3 + IQVD3^4 * klvc4 - IQVD3^5 * klvc5
+
+b1lvd5 = klvc0 + IQVD5 * klvc1 + IQVD5^2 * klvc2 - IQVD5^3 * klvc3 + IQVD5^4 * klvc4 - IQVD5^5 * klvc5
+
+b1lvd7 = klvc0 + IQVD7 * klvc1 + IQVD7^2 * klvc2 - IQVD7^3 * klvc3 + IQVD7^4 * klvc4 - IQVD7^5 * klvc5
+
+b1lve1 = klvc0 + IQVE1 * klvc1 + IQVE1^2 * klvc2 - IQVE1^3 * klvc3 + IQVE1^4 * klvc4 - IQVE1^5 * klvc5
+
+b1lve3 = klvc0 + IQVE3 * klvc1 + IQVE3^2 * klvc2 - IQVE3^3 * klvc3 + IQVE3^4 * klvc4 - IQVE3^5 * klvc5
+
+b1lve5 = klvc0 + IQVE5 * klvc1 + IQVE5^2 * klvc2 - IQVE5^3 * klvc3 + IQVE5^4 * klvc4 - IQVE5^5 * klvc5
+
+b1lve7 =  klvc0 + IQVE7 * klvc1 + IQVE7^2 * klvc2 - IQVE7^3 * klvc3 + IQVE7^4 * klvc4 - IQVE7^5 * klvc5
+
+b1lvf1 = klvc0 + IQVF1 * klvc1 + IQVF1^2 * klvc2 - IQVF1^3 * klvc3 + IQVF1^4 * klvc4 - IQVF1^5 * klvc5
+
+b1lvf3 = klvc0 + IQVF3 * klvc1 + IQVF3^2 * klvc2 - IQVF3^3 * klvc3 + IQVF3^4 * klvc4 - IQVF3^5 * klvc5
+
+b1lvf5 = klvc0 + IQVF5 * klvc1 + IQVF5^2 * klvc2 - IQVF5^3 * klvc3 + IQVF5^4 * klvc4 - IQVF5^5 * klvc5
+
+b1lvf7 = klvc0 + IQVF7 * klvc1 + IQVF7^2 * klvc2 - IQVF7^3 * klvc3 + IQVF7^4 * klvc4 - IQVF7^5 * klvc5
+
+ckvta1 = -(1-0.000041942*(BDOT/BDIPO))*1.0030*B1LVA1/(Brho_booster*LENQV)
+ckvta3 = -(1-0.000041942*(BDOT/BDIPO))*1.0030*B1LVA3/(Brho_booster*LENQV)
+ckvta5 = -(1-0.000041942*(BDOT/BDIPO))*1.0030*B1LVA5/(Brho_booster*LENQV)
+ckvta7 = -(1-0.000041942*(BDOT/BDIPO))*1.0030*B1LVA7/(Brho_booster*LENQV)
+ckvtb1 = -(1-0.000041942*(BDOT/BDIPO))*1.0030*B1LVB1/(Brho_booster*LENQV)
+ckvtb3 = -(1-0.000041942*(BDOT/BDIPO))*1.0030*B1LVB3/(Brho_booster*LENQV)
+ckvtb5 = -(1-0.000041942*(BDOT/BDIPO))*1.0030*B1LVB5/(Brho_booster*LENQV)
+ckvtb7 = -(1-0.000041942*(BDOT/BDIPO))*1.0030*B1LVB7/(Brho_booster*LENQV)
+ckvtc1 = -(1-0.000041942*(BDOT/BDIPO))*1.0030*B1LVC1/(Brho_booster*LENQV)
+ckvtc3 = -(1-0.000041942*(BDOT/BDIPO))*1.0030*B1LVC3/(Brho_booster*LENQV)
+ckvtc5 = -(1-0.000041942*(BDOT/BDIPO))*1.0030*B1LVC5/(Brho_booster*LENQV)
+ckvtc7 = -(1-0.000041942*(BDOT/BDIPO))*1.0030*B1LVC7/(Brho_booster*LENQV)
+ckvtd1 = -(1-0.000041942*(BDOT/BDIPO))*1.0030*B1LVD1/(Brho_booster*LENQV)
+ckvtd3 = -(1-0.000041942*(BDOT/BDIPO))*1.0030*B1LVD3/(Brho_booster*LENQV)
+ckvtd5 = -(1-0.000062913*(BDOT/BDIPO))*1.0030*B1LVD5/(Brho_booster*LENQV) !Ear Chamber
+ckvtd7 = -(1-0.000041942*(BDOT/BDIPO))*1.0030*B1LVD7/(Brho_booster*LENQV)
+ckvte1 = -(1-0.000041942*(BDOT/BDIPO))*1.0030*B1LVE1/(Brho_booster*LENQV)
+ckvte3 = -(1-0.000041942*(BDOT/BDIPO))*1.0030*B1LVE3/(Brho_booster*LENQV)
+ckvte5 = -(1-0.000041942*(BDOT/BDIPO))*1.0030*B1LVE5/(Brho_booster*LENQV)
+ckvte7 = -(1-0.000041942*(BDOT/BDIPO))*1.0030*B1LVE7/(Brho_booster*LENQV)
+ckvtf1 = -(1-0.000041942*(BDOT/BDIPO))*1.0030*B1LVF1/(Brho_booster*LENQV)
+ckvtf3 = -(1-0.000041942*(BDOT/BDIPO))*1.0030*B1LVF3/(Brho_booster*LENQV)
+ckvtf5 = -(1-0.000062913*(BDOT/BDIPO))*1.0030*B1LVF5/(Brho_booster*LENQV) !Ear Chamber
+ckvtf7 = -(1-0.000041942*(BDOT/BDIPO))*1.0030*B1LVF7/(Brho_booster*LENQV)
+
+
+!========================================================
+! Horizontal
+!========================================================
+
+iqha2 = IDIPO + CKC*(IQHC + BDOT*IQHBD) + ckc2*( QHSTR1)
+iqha4 = IDIPO + CKC*(IQHC + BDOT*IQHBD) + ckc2*( QHSTR2)
+iqha6 = IDIPO + CKC*(IQHC + BDOT*IQHBD) + ckc2*(-QHSTR2)
+iqha8 = IDIPO + CKC*(IQHC + BDOT*IQHBD) + ckc2*( QHSTR1)
+iqhb2 = IDIPO + CKC*(IQHC + BDOT*IQHBD) + ckc2*(-QHSTR1)
+iqhb4 = IDIPO + CKC*(IQHC + BDOT*IQHBD) + ckc2*(-QHSTR2)
+iqhb6 = IDIPO + CKC*(IQHC + IQHTB6 + BDOT*IQHBD) + ckc2*( QHSTR2)
+iqhb8 = IDIPO + CKC*(IQHC + IQHTB8 + BDOT*IQHBD) + ckc2*(-QHSTR1)
+iqhc2 = IDIPO + CKC*(IQHC + IQHTC2 + BDOT*IQHBD) + ckc2*( QHSTR1)
+iqhc4 = IDIPO + CKC*(IQHC + IQHTC4 + BDOT*IQHBD) + ckc2*( QHSTR2)
+iqhc6 = IDIPO + CKC*(IQHC + IQHTC6 + BDOT*IQHBD) + ckc2*(-QHSTR2)
+iqhc8 = IDIPO + CKC*(IQHC + IQHTC8 + BDOT*IQHBD) + ckc2*( QHSTR1)
+iqhd2 = IDIPO + CKC*(IQHC + IQHTD2 + BDOT*IQHBD) + ckc2*(-QHSTR1)
+iqhd4 = IDIPO + CKC*(IQHC + IQHTD4 + BDOT*IQHBD) + ckc2*(-QHSTR2)
+iqhd6 = IDIPO + CKC*(IQHC + BDOT*IQHBD) + ckc2*( QHSTR2)
+iqhd8 = IDIPO + CKC*(IQHC + BDOT*IQHBD) + ckc2*(-QHSTR1)
+iqhe2 = IDIPO + CKC*(IQHC + BDOT*IQHBD) + ckc2*( QHSTR1)
+iqhe4 = IDIPO + CKC*(IQHC + BDOT*IQHBD) + ckc2*( QHSTR2)
+iqhe6 = IDIPO + CKC*(IQHC + BDOT*IQHBD) + ckc2*(-QHSTR2)
+iqhe8 = IDIPO + CKC*(IQHC + BDOT*IQHBD) + ckc2*( QHSTR1)
+iqhf2 = IDIPO + CKC*(IQHC + BDOT*IQHBD) + ckc2*(-QHSTR1)
+iqhf4 = IDIPO + CKC*(IQHC + BDOT*IQHBD) + ckc2*(-QHSTR2)
+iqhf6 = IDIPO + CKC*(IQHC + BDOT*IQHBD) + ckc2*( QHSTR2)
+iqhf8 = IDIPO + CKC*(IQHC + BDOT*IQHBD) + ckc2*(-QHSTR1)
+
+
+b1lha2 = klhc0 + IQHA2 * klhc1 + IQHA2^2 * klhc2 - IQHA2^3 * klhc3 + IQHA2^4 * klhc4 - IQHA2^5 * klhc5
+
+b1lha4 = klhc0 + IQHA4 * klhc1 + IQHA4^2 * klhc2 - IQHA4^3 * klhc3 + IQHA4^4 * klhc4 - IQHA4^5 * klhc5
+
+b1lha6 = klhc0 + IQHA6 * klhc1 + IQHA6^2 * klhc2 - IQHA6^3 * klhc3 + IQHA6^4 * klhc4 - IQHA6^5 * klhc5
+
+b1lha8 = klhc0 + IQHA8 * klhc1 + IQHA8^2 * klhc2 - IQHA8^3 * klhc3 + IQHA8^4 * klhc4 - IQHA8^5 * klhc5
+
+b1lhb2 = klhc0 + IQHB2 * klhc1 + IQHB2^2 * klhc2 - IQHB2^3 * klhc3 + IQHB2^4 * klhc4 - IQHB2^5 * klhc5
+
+b1lhb4 = klhc0 + IQHB4 * klhc1 + IQHB4^2 * klhc2 - IQHB4^3 * klhc3 + IQHB4^4 * klhc4 - IQHB4^5 * klhc5
+
+b1lhb6 = klhc0 + IQHB6 * klhc1 + IQHB6^2 * klhc2 - IQHB6^3 * klhc3 + IQHB6^4 * klhc4 - IQHB6^5 * klhc5
+
+b1lhb8 = klhc0 + IQHB8 * klhc1 + IQHB8^2 * klhc2 - IQHB8^3 * klhc3 + IQHB8^4 * klhc4 - IQHB8^5 * klhc5
+
+b1lhc2 = klhc0 + IQHC2 * klhc1 + IQHC2^2 * klhc2 - IQHC2^3 * klhc3 + IQHC2^4 * klhc4 - IQHC2^5 * klhc5
+
+b1lhc4 = klhc0 + IQHC4 * klhc1 + IQHC4^2 * klhc2 - IQHC4^3 * klhc3 + IQHC4^4 * klhc4 - IQHC4^5 * klhc5
+
+b1lhc6 = klhc0 + IQHC6 * klhc1 + IQHC6^2 * klhc2 - IQHC6^3 * klhc3 + IQHC6^4 * klhc4 - IQHC6^5 * klhc5
+
+b1lhc8 = klhc0 + IQHC8 * klhc1 + IQHC8^2 * klhc2 - IQHC8^3 * klhc3 + IQHC8^4 * klhc4 - IQHC8^5 * klhc5
+
+b1lhd2 = klhc0 + IQHD2 * klhc1 + IQHD2^2 * klhc2 - IQHD2^3 * klhc3 + IQHD2^4 * klhc4 - IQHD2^5 * klhc5
+
+b1lhd4 = klhc0 + IQHD4 * klhc1 + IQHD4^2 * klhc2 - IQHD4^3 * klhc3 + IQHD4^4 * klhc4 - IQHD4^5 * klhc5
+
+b1lhd6 = klhc0 + IQHD6 * klhc1 + IQHD6^2 * klhc2 - IQHD6^3 * klhc3 + IQHD6^4 * klhc4 - IQHD6^5 * klhc5
+
+b1lhd8 = klhc0 + IQHD8 * klhc1 + IQHD8^2 * klhc2 - IQHD8^3 * klhc3 + IQHD8^4 * klhc4 - IQHD8^5 * klhc5
+
+b1lhe2 = klhc0 + IQHE2 * klhc1 + IQHE2^2 * klhc2 - IQHE2^3 * klhc3 + IQHE2^4 * klhc4 - IQHE2^5 * klhc5
+
+b1lhe4 = klhc0 + IQHE4 * klhc1 + IQHE4^2 * klhc2 - IQHE4^3 * klhc3 + IQHE4^4 * klhc4 - IQHE4^5 * klhc5
+
+b1lhe6 = klhc0 + IQHE6 * klhc1 + IQHE6^2 * klhc2 - IQHE6^3 * klhc3 + IQHE6^4 * klhc4 - IQHE6^5 * klhc5
+
+b1lhe8 = klhc0 + IQHE8 * klhc1 + IQHE8^2 * klhc2 - IQHE8^3 * klhc3 + IQHE8^4 * klhc4 - IQHE8^5 * klhc5
+
+b1lhf2 = klhc0 + IQHF2 * klhc1 + IQHF2^2 * klhc2 - IQHF2^3 * klhc3 + IQHF2^4 * klhc4 - IQHF2^5 * klhc5
+
+b1lhf4 = klhc0 + IQHF4 * klhc1 + IQHF4^2 * klhc2 - IQHF4^3 * klhc3 + IQHF4^4 * klhc4 - IQHF4^5 * klhc5
+
+b1lhf6 = klhc0 + IQHF6 * klhc1 + IQHF6^2 * klhc2 - IQHF6^3 * klhc3 + IQHF6^4 * klhc4 - IQHF6^5 * klhc5
+
+b1lhf8 = klhc0 + IQHF8 * klhc1 + IQHF8^2 * klhc2 - IQHF8^3 * klhc3 + IQHF8^4 * klhc4 - IQHF8^5 * klhc5
+
+
+ckhta2 = (1-0.00004179*(BDOT/BDIPO))*1.00*B1LHA2/(Brho_booster*LENQH)
+ckhta4 = (1-0.00004179*(BDOT/BDIPO))*1.00*B1LHA4/(Brho_booster*LENQH)
+ckhta6 = (1-0.00004179*(BDOT/BDIPO))*1.00*B1LHA6/(Brho_booster*LENQH)
+ckhta8 = (1-0.00004179*(BDOT/BDIPO))*1.00*B1LHA8/(Brho_booster*LENQH)
+ckhtb2 = (1-0.00004179*(BDOT/BDIPO))*1.00*B1LHB2/(Brho_booster*LENQH)
+ckhtb4 = (1-0.00004179*(BDOT/BDIPO))*1.00*B1LHB4/(Brho_booster*LENQH)
+ckhtb6 = (1-0.00004179*(BDOT/BDIPO))*1.00*B1LHB6/(Brho_booster*LENQH)
+ckhtb8 = (1-0.00004179*(BDOT/BDIPO))*1.00*B1LHB8/(Brho_booster*LENQH)
+ckhtc2 = (1-0.00004179*(BDOT/BDIPO))*1.00*B1LHC2/(Brho_booster*LENQH)
+ckhtc4 = (1-0.00004179*(BDOT/BDIPO))*1.00*B1LHC4/(Brho_booster*LENQH)
+ckhtc6 = (1-0.00004179*(BDOT/BDIPO))*1.00*B1LHC6/(Brho_booster*LENQH)
+ckhtc8 = (1-0.00004179*(BDOT/BDIPO))*1.00*B1LHC8/(Brho_booster*LENQH)
+ckhtd2 = (1-0.00004179*(BDOT/BDIPO))*1.00*B1LHD2/(Brho_booster*LENQH)
+ckhtd4 = (1-0.00004179*(BDOT/BDIPO))*1.00*B1LHD4/(Brho_booster*LENQH)
+ckhtd6 = (1-0.00004179*(BDOT/BDIPO))*1.00*B1LHD6/(Brho_booster*LENQH)
+ckhtd8 = (1-0.00004179*(BDOT/BDIPO))*1.00*B1LHD8/(Brho_booster*LENQH)
+ckhte2 = (1-0.00004179*(BDOT/BDIPO))*1.00*B1LHE2/(Brho_booster*LENQH)
+ckhte4 = (1-0.00004179*(BDOT/BDIPO))*1.00*B1LHE4/(Brho_booster*LENQH)
+ckhte6 = (1-0.00004179*(BDOT/BDIPO))*1.00*B1LHE6/(Brho_booster*LENQH)
+ckhte8 = (1-0.00004179*(BDOT/BDIPO))*1.00*B1LHE8/(Brho_booster*LENQH)
+ckhtf2 = (1-0.00004179*(BDOT/BDIPO))*1.00*B1LHF2/(Brho_booster*LENQH)
+ckhtf4 = (1-0.00004179*(BDOT/BDIPO))*1.00*B1LHF4/(Brho_booster*LENQH)
+ckhtf6 = (1-0.00004179*(BDOT/BDIPO))*1.00*B1LHF6/(Brho_booster*LENQH)
+ckhtf8 = (1-0.00004179*(BDOT/BDIPO))*1.00*B1LHF8/(Brho_booster*LENQH)
+
+
+!========================================================
+! Sextupoles
+!========================================================
+
+lens_booster = 0.1
+
+scon = 0.013144 / (lens_booster*Brho_booster)    ! E.Bleser Tech Note # 182
+k2sh = SCON
+k2sv = -SCON
+
+
+s1 = 0    ! horizontal slow injection bump
+
+t1_dhc4 = S1*(-0.12798448)*X/ANGD
+t1_dhc8 = S1*(-0.011850274)*X/ANGD
+t1_dhd1 = S1*(-0.13939141)*X/ANGD
+
+s2 = 0    ! horizontal fast injection 3-bump
+
+t2_khc3 = S2*0.14459278*X
+t2_khc7 = S2*0.016421456*X
+t2_khd1 = S2*0.12814203*X
+
+s3 = 0    ! horizontal slow fine injection
+
+t3_dhcc2 = S3*(0.16940561*X -0.93606722*XP)
+t3_dhcc4 = S3*(-0.029924389*X +0.70499849*XP)
+t3_dhcc6 = S3*(0.10427119*X -0.96937346*XP)
+t3_dhcc8 = S3*(0.090955891*X +0.026715931*XP)
+
+s4 = 0    ! vertical aperture scan on QVA3
+
+t4_dvca1 = S4*0.088223659*Y
+t4_dvca3 = S4*(-0.064612977)*Y
+t4_dvca5 = S4*0.088223659*Y
+
+s5 = 0    ! horizontal aperture scan on QHA4
+
+t5_dhca2 = S5*0.088559799*X
+t5_dhca4 = S5*(-0.064121939)*X
+t5_dhca6 = S5*0.089833096*X
+
+s6 = 0    ! vertical slow fine injection
+
+t6_dvcc3 = S6*(0.074244805*Y +0.30190152*YP)
+t6_dvcc5 = S6*(0.12507899*Y -0.71429497*YP)
+t6_dvcc7 = S6*(-0.057183515*Y +0.66310227*YP)
+t6_dvcd1 = S6*(0.17945427*Y -0.49318850*YP)
+
+s7 = 0    ! horizontal fast injection 4-bump
+
+t7_khc1 = S7*(0.20363538*X -1.4652994*XP)
+t7_khc3 = S7*(0.14961341*X -0.036126863*XP)
+t7_khc7 = S7*(0.23095290*X -1.5437044*XP)
+t7_khd1 = S7*(0.029793601*X +0.70768589*XP)
+
+s14 = 0    ! vertical 3-bump aperture scan
+
+t14_vca5 = S14*( 0.88254191E-01*Y)
+t14_vca7 = S14*(-0.64375877E-01*Y)
+t14_vcb1 = S14*( 0.88289112E-01*Y)
+
+s16 = 0    ! heavy ion injection 4-bump kicker
+
+t16_khc1 = S16*(0.22255889*X -0.61358076*XP)
+t16_khc3 = S16*(-0.15043682*X +1.4147446*XP)
+t16_khc7 = S16*(0.19047807*X -0.31069359*XP)
+t16_khd1 = S16*(-0.24505234*X +1.5589644*XP)
+
+s17 = 0    ! horizontal 3-bump extraction  TDH
+
+t17_dhf2 = S17*0.12245361E+00*X
+t17_dhf4 = S17*0.74039027E-02*X
+t17_dhf7 = S17*0.13890560E+00*X
+
+s18 = 0    ! horizontal 4-bump extraction  TDH
+
+t18_dhf2 = S18*(-0.10721114*X -0.11093005E+01*XP)
+t18_dhf4 = S18*(0.20383906*X +0.94879878*XP)
+t18_dhf7 = S18*(-0.10602628*X -0.11830419E+01*XP)
+t18_dha1 = S18*(0.23878516*X  +0.11533529E+01*XP)
+
+s19 = 0    ! vertical 3-bump extraction
+
+t19_vcf5 = S19*( 0.19364195*Y)
+t19_vcf7 = S19*(-0.14124987*Y)
+t19_vca1 = S19*( 0.19371845*Y)
+
+s20 = 0    ! vertical 4-bump extraction
+
+t20_vcf3 = S20*(0.17750078*Y -0.46906182*YP)
+t20_vcf5 = S20*(-0.38368683E-01*Y  +0.61310905*YP)
+t20_vcf7 = S20*(0.11126131*Y -0.66728365*YP)
+t20_vca1 = S20*( 0.90878882E-01*Y  +0.27176276*YP)
+
+s21 = 0    ! horizontal slow 4-bump p_injection TDH
+
+t21_dhc2 = -S21*( 0.20199332*X -0.97392946*XP)/ANGD
+t21_dhc4 = -S21*(-0.077447392*X +0.98914665*XP)/ANGD
+t21_dhc8 = -S21*(0.25857499*X -1.1977088*XP)/ANGD
+t21_dhd1 = -S21*(-0.22695553*X +1.7699569*XP)/ANGD
+
+s24 = 0    ! horizontal extraction slow 3-bump TDH3
+
+t24_dhb4 = S24*(0.12687738)*X/ANGD
+t24_dhb8 = S24*(1.43801849E-02)*X/ANGD
+t24_dhc1 = S24*(0.13588530)*X/ANGD
+
+s25 = 0    ! horizontal extraction slow 3-bump TDH3
+
+t25_dhd4 = S25*(0.12712482)*X/ANGD
+t25_dhd8 = S25*(1.43290553E-02)*X/ANGD
+t25_dhe1 = S25*(0.13610920)*X/ANGD
+
+!========================================================
+!  Slow correctors
+!    kab, 8/31/07
+!  Calib. of correctors from BoosterTN 224, R.Thern
+!   Bdl/I = 9.75e-5 Tm/A
+!   so a kick (in radians) is (1/Brho_booster)*(Bdl/I)*amps
+!========================================================
+
+
+corcalib = 0.0000975
+
+
+dhca2k = (1/Brho_booster)*CorCalib*DHCA2i
+dhca4k = (1/Brho_booster)*CorCalib*DHCA4i
+dhca6k = (1/Brho_booster)*CorCalib*DHCA6i
+dhca8k = (1/Brho_booster)*CorCalib*DHCA8i
+dhcb2k = (1/Brho_booster)*CorCalib*DHCB2i
+dhcb4k = (1/Brho_booster)*CorCalib*DHCB4i
+dhcb6k = (1/Brho_booster)*CorCalib*DHCB6i
+dhcb8k = (1/Brho_booster)*CorCalib*DHCB8i
+dhcc2k = (1/Brho_booster)*CorCalib*DHCC2i
+dhcc4k = (1/Brho_booster)*CorCalib*DHCC4i
+dhcc6k = (1/Brho_booster)*CorCalib*DHCC6i
+dhcc8k = (1/Brho_booster)*CorCalib*DHCC8i
+dhcd2k = (1/Brho_booster)*CorCalib*DHCD2i
+dhcd4k = (1/Brho_booster)*CorCalib*DHCD4i
+! missing?
+dhcd6k = (1/Brho_booster)*CorCalib*DHCD6i                     
+dhcd8k = (1/Brho_booster)*CorCalib*DHCD8i
+dhce2k = (1/Brho_booster)*CorCalib*DHCE2i
+dhce4k = (1/Brho_booster)*CorCalib*DHCE4i
+dhce6k = (1/Brho_booster)*CorCalib*DHCE6i
+dhce8k = (1/Brho_booster)*CorCalib*DHCE8i
+dhcf2k = (1/Brho_booster)*CorCalib*DHCF2i
+dhcf4k = (1/Brho_booster)*CorCalib*DHCF4i
+! missing?
+dhcf6k = (1/Brho_booster)*CorCalib*DHCF6i                      
+dhcf8k = (1/Brho_booster)*CorCalib*DHCF8i
+
+dvca1k = (1/Brho_booster)*CorCalib*DVCA1i
+dvca3k = (1/Brho_booster)*CorCalib*DVCA3i
+dvca5k = (1/Brho_booster)*CorCalib*DVCA5i
+dvca7k = (1/Brho_booster)*CorCalib*DVCA7i
+dvcb1k = (1/Brho_booster)*CorCalib*DVCB1i
+dvcb3k = (1/Brho_booster)*CorCalib*DVCB3i
+dvcb5k = (1/Brho_booster)*CorCalib*DVCB5i
+dvcb7k = (1/Brho_booster)*CorCalib*DVCB7i
+dvcc1k = (1/Brho_booster)*CorCalib*DVCC1i
+dvcc3k = (1/Brho_booster)*CorCalib*DVCC3i
+dvcc5k = (1/Brho_booster)*CorCalib*DVCC5i
+dvcc7k = (1/Brho_booster)*CorCalib*DVCC7i
+dvcd1k = (1/Brho_booster)*CorCalib*DVCD1i
+dvcd3k = (1/Brho_booster)*CorCalib*DVCD3i
+dvcd5k = (1/Brho_booster)*CorCalib*DVCD5i
+dvcd7k = (1/Brho_booster)*CorCalib*DVCD7i
+dvce1k = (1/Brho_booster)*CorCalib*DVCE1i
+dvce3k = (1/Brho_booster)*CorCalib*DVCE3i
+dvce5k = (1/Brho_booster)*CorCalib*DVCE5i
+dvce7k = (1/Brho_booster)*CorCalib*DVCE7i
+dvcf1k = (1/Brho_booster)*CorCalib*DVCF1i
+dvcf3k = (1/Brho_booster)*CorCalib*DVCF3i
+dvcf5k = (1/Brho_booster)*CorCalib*DVCF5i
+dvcf7k = (1/Brho_booster)*CorCalib*DVCF7i

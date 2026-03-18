@@ -2,7 +2,7 @@
   "mcpServers": {
     "accelerator-gym": {
       "type": "stdio",
-      "command": "python",
+      "command": "C:/Users/wdong/miniconda3/envs/accgym/python.exe",
       "args": [
         "-m",
         "accelerator_gym.server"

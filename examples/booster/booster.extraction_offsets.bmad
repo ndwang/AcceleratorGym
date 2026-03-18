@@ -1,0 +1,257 @@
+!==============================================================
+! Injection/Extraction Kickers, elements, sublines for AGS Booster lattice
+! From bootser.lattice MAD-X file
+! 1/3/23 Lucy Lin
+!==============================================================
+
+
+d1 = 0.011
+d2 = 0.01
+bx = 5
+by = 5
+ax = 2.255
+ay = 1.4
+
+
+ijfoil: marker  ! Proton Injection Foil
+sptmc3: marker  ! Heavy Ion Injection Septum
+
+start_of_bext: marker  ! This is just upstream of F2 main mag.
+start_of_bta: marker  ! This is just upstream of F6 SEPTUM (SEPTF6)
+
+
+!========================================================
+! Proton Injection Fast Kickers
+! Heavy Ion Injection Fast Kickers
+!========================================================
+
+ijkdhc1: hkicker, kick = t7_khc1 +t16_khc1
+ijkdhc3: hkicker, kick = t2_khc3 +t7_khc3 +t16_khc3
+ijkdhc7: hkicker, kick = t2_khc7 +t7_khc7 +t16_khc7
+ijkdhd1: hkicker, kick = t2_khd1 +t7_khd1 +t16_khd1
+
+
+!========================================================
+! Extraction Kickers
+!========================================================
+
+x1dhf3: hkicker, kick = f3kick
+x2dhf3: hkicker, kick = f3kick
+x3dhf3: hkicker, kick = f3kick
+x4dhf3: hkicker, kick = f3kick
+sptmd3k: hkicker, kick = d03kick
+
+! from BtA lattice
+!X1DHF3: HKICKER, L=0.4, KICK=0.00
+!X2DHF3: HKICKER, L=0.4, KICK=0.00
+!X3DHF3: HKICKER, L=0.4, KICK=0.00
+!X4DHF3: HKICKER, L=0.4, KICK=0.00
+
+!========================================================
+! the D6 septum
+!========================================================
+
+d6septu: sbend, l = 2.30/2, angle = angd6/2
+d6septd: sbend, l = 2.30/2, angle = angd6/2
+
+sptmf6: marker  ! Extraction Septum
+sptmb6: marker  ! SEB Septum
+sptmd3: marker  ! SEB Septum
+
+sptmd6: rcollimator, l = 0, x_limit = 0, y_limit = 0
+d6ds: rcollimator, l = 0, x_limit = 0, y_limit = 0
+
+! collimator for SEB (AUL & ST 12/23/92)
+!collb6, rcollimator, l = 0, x_limit = 0.12, y_limit = 1.
+!collb6, rcollimator, l = 0, x_limit = 0.005, y_limit = 1.
+collb6: marker
+
+
+!========================================================
+! Special Sections
+!========================================================
+
+LJC1: LINE = (L028, IJKDHC1, L030)
+!LJC3: LINE = (L032, IJKDHC3, L222, SPTMC3, L019) ! Heavy Ion Injection
+LJC3: LINE = (L032, IJKDHC3, L2757, SPTMC3, L0218)! 7/26/91 Heavy Ion Injection
+LJC7: LINE = (L028, IJKDHC7, L030)
+LJD1: LINE = (L028, IJKDHD1, L030)
+LIJF: LINE = (L02835, IJFOIL, L02869) ! Proton Injection
+RFA3: LINE = (LDHH, CAVITY, LDHH) ! Proton cavity
+
+
+
+!========================================================
+! Extraction fast kicker
+!========================================================
+
+LXF3: LINE = (LEK1,X1DHF3,LEK2,X2DHF3,LEK3,X3DHF3,LEK4,X4DHF3,LEK5)
+LXF6: LINE = (START_OF_BTA, SPTMF6, LDH) ! Extraction septum
+
+
+
+!========================================================
+! Sublines
+!========================================================
+
+DHA1: LINE = (DHA1T,DHA1Z)
+DHA2: LINE = (DHA2T,DHA2Z)
+DHA4: LINE = (DHA4T,DHA4Z)
+DHA5: LINE = (DHA5T,DHA5Z)
+DHA7: LINE = (DHA7T,DHA7Z)
+DHA8: LINE = (DHA8T,DHA8Z)
+
+
+LA1:  LINE = (L057, DVCA1, L007, SVA1, L014, PUEVA1, L011, QVA1, L029, DHA1)
+LA2:  LINE = (L057, DHCA2, L007, SHA2, L014, PUEHA2, L012, QHA2, L031, DHA2)
+LA3:  LINE = (L057, DVCA3, L007, SVA3, L014, PUEVA3, L011, QVA3, L029, RFA3)
+LA4:  LINE = (L057, DHCA4, L007, SHA4, L014, PUEHA4, L012, QHA4, L031, DHA4)
+LA5:  LINE = (L057, DVCA5, L007, SVA5, L014, PUEVA5, L011, QVA5, L029, DHA5)
+LA6:  LINE = (L057, DHCA6, L007, SHA6, L014, PUEHA6, L012, QHA6, L031, LDH)
+LA7:  LINE = (L057, DVCA7, L007, SVA7, L014, PUEVA7, L011, QVA7, L029, DHA7)
+LA8:  LINE = (L057, DHCA8, L007, SHA8, L014, PUEHA8, L012, QHA8, L031, DHA8)
+
+
+DHB1: LINE = (DHB1T,DHB1Z)
+DHB2: LINE = (DHB2T,DHB2Z)
+DHB4: LINE = (DHB4T,DHB4Z)
+DHB5: LINE = (DHB5T,DHB5Z)
+DHB7: LINE = (DHB7T,DHB7Z)
+DHB8: LINE = (DHB8T,DHB8Z)
+
+
+LB1:  LINE = (L057, DVCB1, L007, SVB1, L014, PUEVB1, L011, QVB1, L029, DHB1)
+LB2:  LINE = (L057, DHCB2, L007, SHB2, L014, PUEHB2, L012, QHB2, L031, DHB2)
+LB3:  LINE = (L057, DVCB3, L007, SVB3, L014, PUEVB3, L011, QVB3, L029, LDH)
+LB4:  LINE = (L057, DHCB4, L007, SHB4, L014, PUEHB4, L012, QHB4, L031, DHB4)
+LB5:  LINE = (L057, DVCB5, L007, SVB5, L014, PUEVB5, L011, QVB5, L029, DHB5)
+LB6:  LINE = (L057, DHCB6, L007, SHB6, L014, PUEHB6, L012, QHB6, L031,LDHH, SPTMB6, LDHH)
+LB7:  LINE = (L057, DVCB7, L007, SVB7, L014, PUEVB7, L011, QVB7, L029, DHB7)
+LB8:  LINE = (L057, DHCB8, L007, SHB8, L014, PUEHB8, L012, QHB8, L031, DHB8)
+
+
+DHC1: LINE = (DHC1T,DHC1Z)
+DHC2: LINE = (DHC2T,DHC2Z)
+DHC4: LINE = (DHC4T,DHC4Z)
+DHC5: LINE = (DHC5T,DHC5Z)
+DHC7: LINE = (DHC7T,DHC7Z)
+DHC8: LINE = (DHC8T,DHC8Z)
+
+
+LC1:  LINE = (LJC1, DVCC1, L007, SVC1, L014, PUEVC1, L011, QVC1, L029, DHC1)
+LC2:  LINE = (L057, DHCC2, L007, SHC2, L014, PUEHC2, L012, QHC2, L031, DHC2)
+LC3:  LINE = (L057, DVCC3, L007, SVC3, L014, PUEVC3, L011, QVC3, LJC3      )
+
+!7/26/91
+LC4:  LINE = (      DHCC4, L007, SHC4, L014, PUEHC4, L012, QHC4, L031, DHC4)
+!LC4:  LINE = (L057, HKC, L007, SHC4, L014, PUEHC4, L012, QHC4, L031, DHC4)
+
+LC5:  LINE = (L057, DVCC5, L007, SVC5, L014, PUEVC5, L011, QVC5, L029, DHC5)
+LC6:  LINE = (LIJF, DHCC6, L007, SHC6, L014, PUEHC6, L012, QHC6, L031, LDH)
+LC7:  LINE = (LJC7, DVCC7, L007, SVC7, L014, PUEVC7, L011, QVC7, L029, DHC7)
+LC8:  LINE = (L057, DHCC8, L007, SHC8, L014, PUEHC8, L012, QHC8, L031, DHC8)
+
+
+DHD1: LINE = (DHD1T,DHD1Z)
+DHD2: LINE = (DHD2T,DHD2Z)
+!DHD4: LINE = (DHD4T,DHD4TK,DHD4Z)
+DHD4: LINE = (DHD4T,DHD4Z)
+DHD5: LINE = (DHD5T,DHD5Z)
+DHD7: LINE = (DHD7T,DHD7Z)
+!DHD8: LINE = (DHD8T,DHD8TK,DHD8Z)
+DHD8: LINE = (DHD8T,DHD8Z)
+
+
+LD1:  LINE = (LJD1, DVCD1, L007, SVD1, L014, PUEVD1, L011, QVD1, L029, DHD1)
+LD2:  LINE = (L057, DHCD2, L007, SHD2, L014, PUEHD2, L012, QHD2, L031, DHD2)
+
+LIPMu: LINE = (LDH1,IPMV,LDH2,IPMSK,LDH3,IPMH)
+LD3u: LINE = (L057, DVCD3, L007, SVD3, L014, PUEVD3, L011, QVD3, L029,LIPMu)
+
+LIPM: LINE = (LDH1,IPMV,LDH2,IPMSK,LDH3,IPMH, SPTMD3, LDH4)
+LD3:  LINE = (L057, DVCD3, L007, SVD3, L014, PUEVD3, L011, QVD3, L029, LIPM)
+
+LD3K: LINE = (SPTMD3k, LDH4)
+
+LD3S: LINE = (LDH1,IPMV,LDH2,IPMSK,LDH3,IPMH, SPTMD3, LDH4)
+LD3n: LINE = (L057, DVCD3, L007, SVD3, L014, PUEVD3, L011, QVD3, L029, LIPM)
+LD4:  LINE = (L057, DHCD4, L007, SHD4, L014, PUEHD4, L012, QHD4, L031, DHD4)
+LD5:  LINE = (L057, DVCD5, L007, SVD5, L014, PUEVD5, L011, QVD5, L029, DHD5)
+
+LD6ts: LINE=(L057,DHCD6,L007,SHD6,L014,PUEHD6,L012,QHD6,L031)
+LD6as: LINE=(SPTMD6,LDHH,LDHH,D6ds)
+LD6: LINE=(L057,DHCD6,L007,SHD6,L014,PUEHD6,L012,QHD6,L031,SPTMD6,LDHH,LDHH,D6ds)
+LD6toS: LINE =(L057,DHCD6,L007,SHD6,L014,PUEHD6,L012,QHD6,L031,SPTMD6)
+LD6toBAF: LINE =(L057,DHCD6,L007,SHD6,L014,PUEHD6,L012,QHD6,L031,D6SEPTu,D6SEPTd)
+
+LD7:  LINE = (L057, DVCD7, L007, SVD7, L014, PUEVD7, L011, QVD7, L029, DHD7)
+LD8:  LINE = (L057, DHCD8, L007, SHD8, L014, PUEHD8, L012, QHD8, L031, DHD8)
+
+! For SEB; D3 with septum kicker, through booster to D3
+LDipm: LINE = (LD1, LD2, LD3u)
+LDd3: LINE = (LD3K, LD4, LD5, LD6, LD7, LD8)
+
+DHE1: LINE = (DHE1T,DHE1Z)
+DHE2: LINE = (DHE2T,DHE2Z)
+DHE4: LINE = (DHE4T,DHE4Z)
+DHE5: LINE = (DHE5T,DHE5Z)
+DHE7: LINE = (DHE7T,DHE7Z)
+DHE8: LINE = (DHE8T,DHE8Z)
+
+
+LE1:  LINE = (L057, DVCE1, L007, SVE1, L014, PUEVE1, L011, QVE1, L029, DHE1)
+LE2:  LINE = (L057, DHCE2, L007, SHE2, L014, PUEHE2, L012, QHE2, L031, DHE2)
+LE3:  LINE = (L057, DVCE3, L007, SVE3, L014, PUEVE3, L011, QVE3, L029, LDH)
+LE4:  LINE = (L057, DHCE4, L007, SHE4, L014, PUEHE4, L012, QHE4, L031, DHE4)
+LE5:  LINE = (L057, DVCE5, L007, SVE5, L014, PUEVE5, L011, QVE5, L029, DHE5)
+LE6:  LINE = (L057, DHCE6, L007, SHE6, L014, PUEHE6, L012, QHE6, L031, LDH)
+LE7:  LINE = (L057, DVCE7, L007, SVE7, L014, PUEVE7, L011, QVE7, L029, DHE7)
+LE8:  LINE = (L057, DHCE8, L007, SHE8, L014, PUEHE8, L012, QHE8, L031, DHE8)
+
+
+DHF1: LINE = (DHF1T,DHF1Z)
+DHF2: LINE = (DHF2T,DHF2Z)
+DHF4: LINE = (DHF4T,DHF4Z)
+DHF5: LINE = (DHF5T,DHF5Z)
+DHF7: LINE = (DHF7T,DHF7Z)
+DHF8: LINE = (DHF8T,DHF8Z)
+
+
+LF1:  LINE = (L057, DVCF1, L007, SVF1, L014, PUEVF1, L011, QVF1, L029, DHF1)
+LF2:  LINE = (L057, DHCF2, L007, SHF2, L014, PUEHF2, L012, QHF2, START_OF_BEXT, L031, DHF2)
+LF3:  LINE = (L057, DVCF3, L007, SVF3, L014, PUEVF3, L011, QVF3, L029, LXF3)
+LF4:  LINE = (L057, DHCF4, L007, SHF4, L014, PUEHF4, L012, QHF4, L031, DHF4)
+LF5:  LINE = (L057, DVCF5, L007, SVF5, L014, PUEVF5, L011, QVF5, L029, DHF5)
+LF6:  LINE = (L057, DHCF6, L007, SHF6, L014, PUEHF6, L012, QHF6, L031, LXF6)
+LF7:  LINE = (L057, DVCF7, L007, SVF7, L014, PUEVF7, L011, QVF7, L029, DHF7)
+LF8:  LINE = (L057, DHCF8, L007, SHF8, L014, PUEHF8, L012, QHF8, L031, DHF8)
+
+
+
+! temp for SEB work
+LL0:  LINE = (SPTMB6, COLLB6, LDHH,L057, DVCB7, L007, SVB7, L014, PUEVB7, L011, QVB7, L029, DHB7,L057, DHCB8, L007, SHB8, L014, PUEHB8, L012, QHB8, L031, DHB8)
+
+
+LLF:  LINE = (L057, DVCB1, L007, SVB1, L014, PUEVB1, L011, QVB1, L029, DHB1,L057, DHCB2, L007, SHB2, L014, PUEHB2, L012, QHB2, L031, DHB2,L057, DVCB3, L007, SVB3, L014, PUEVB3, L011, QVB3, L029, LDH,L057, DHCB4, L007, SHB4, L014, PUEHB4, L012, QHB4, L031, DHB4,L057, DVCB5, L007, SVB5, L014, PUEVB5, L011, QVB5, L029, DHB5,L057, DHCB6, L007, SHB6, L014, PUEHB6, L012, QHB6, L031,LDHH)
+
+
+Asuper: LINE = (LA1, LA2, LA3, LA4, LA5, LA6, LA7, LA8)
+Bsuper: LINE = (LB1, LB2, LB3, LB4, LB5, LB6, LB7, LB8)
+Csuper: LINE = (LC1, LC2, LC3, LC4, LC5, LC6, LC7, LC8)
+Dsuper: LINE = (LD1, LD2, LD3, LD4, LD5, LD6, LD7, LD8)
+Esuper: LINE = (LE1, LE2, LE3, LE4, LE5, LE6, LE7, LE8)
+Fsuper: LINE = (LF1, LF2, LF3, LF4, LF5, LF6, LF7, LF8)
+
+
+
+!BOOSTER: LINE = (LL0,5 * SUPER,LLF)
+BOOSTER: LINE = (Dsuper, Esuper, Fsuper, Asuper, Bsuper, Csuper)
+
+BOOSTER_A: LINE = (Asuper, Bsuper, Csuper, Dsuper, Esuper, Fsuper)
+
+BOOSTER_EXT: LINE = (START_OF_BEXT, L031, DHF2, LF3, LF4, LF5,L057, DHCF6, L007, SHF6, L014, PUEHF6, L012, QHF6, L031, START_OF_BTA, SPTMF6)
+
+
+B_D3: LINE = (LDd3, Esuper, Fsuper, Asuper, Bsuper, Csuper, LDipm)
+B_D6: LINE = (LD6as,LD7,LD8,Esuper,Fsuper,Asuper,Bsuper,Csuper,LDipm,LD3K,LD4,LD5,LD6ts)
+

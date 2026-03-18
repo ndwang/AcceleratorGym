@@ -1,0 +1,74 @@
+!==============================================================
+! Correctors for AGS Booster lattice
+! From booster.lattice MAD-X file
+! 1/3/23  Lucy Lin
+!==============================================================
+
+
+
+!============================================================
+! Slow correctors
+!   kab, 8/31/07
+! Calib. of correctors from BoosterTN 224, R.Thern
+!  Bdl/A = 9.75e-5 Tm/A
+!  so a kick (in radians) is (1/Brho)*(Bdl/A)*amps
+!
+!============================================================
+
+
+dhcc2: hkicker, kick = t3_dhcc2 + dhcc2k
+dhcc4: hkicker, kick = t3_dhcc4 + dhcc4k
+dhcc6: hkicker, kick = t3_dhcc6 + dhcc6k
+dhcc8: hkicker, kick = t3_dhcc8 + dhcc8k
+dhcd2: hkicker, kick = 0.0 + dhcd2k
+dhcd4: hkicker, kick = 0.0 + dhcd4k
+
+dhcd6: hkicker, kick = 0.0 + dhcd6k  ! missing
+dhcd8: hkicker, kick = 0.0 + dhcd8k
+
+
+dhce2: hkicker, kick = 0.0 + dhce2k
+dhce4: hkicker, kick = 0.0 + dhce4k
+dhce6: hkicker, kick = 0.0 + dhce6k
+dhce8: hkicker, kick = 0.0 + dhce8k
+dhcf2: hkicker, kick = 0.0 + dhcf2k
+dhcf4: hkicker, kick = 0.0 + dhcf4k
+dhcf6: hkicker, kick = 0.0 + dhcf6k  ! missing
+dhcf8: hkicker, kick = 0.0 + dhcf8k
+dhca2: hkicker, kick = t5_dhca2 + dhca2k
+dhca4: hkicker, kick = t5_dhca4 + dhca4k
+dhca6: hkicker, kick = t5_dhca6 + dhca6k
+dhca8: hkicker, kick = 0.0 + dhca8k
+dhcb2: hkicker, kick = 0.0 + dhcb2k
+dhcb4: hkicker, kick = 0.0 + dhcb4k
+dhcb6: hkicker, kick = 0.0 + dhcb6k
+dhcb8: hkicker, kick = 0.0 + dhcb8k
+
+
+!========================================================
+
+
+dvcc1: vkicker, l = 0, kick = 0.0 + dvcc1k
+dvcc3: vkicker, l = 0, kick = t6_dvcc3 + dvcc3k
+dvcc5: vkicker, l = 0, kick = t6_dvcc5 + dvcc5k
+dvcc7: vkicker, l = 0, kick = t6_dvcc7 + dvcc7k
+dvcd1: vkicker, l = 0, kick = t6_dvcd1 + dvcd1k
+dvcd3: vkicker, l = 0, kick = 0.0 + dvcd3k
+dvcd5: vkicker, l = 0, kick = 0.0 + dvcd5k
+dvcd7: vkicker, l = 0, kick = 0.0 + dvcd7k
+dvce1: vkicker, l = 0, kick = 0.0 + dvce1k
+dvce3: vkicker, l = 0, kick = 0.0 + dvce3k
+dvce5: vkicker, l = 0, kick = 0.0 + dvce5k
+dvce7: vkicker, l = 0, kick = 0.0 + dvce7k
+dvcf1: vkicker, l = 0, kick = 0.0 + dvcf1k
+dvcf3: vkicker, l = 0, kick = t20_vcf3 + dvcf3k
+dvcf5: vkicker, l = 0, kick = t19_vcf5 +t20_vcf5 + dvcf5k
+dvcf7: vkicker, l = 0, kick = t19_vcf7 +t20_vcf7 + dvcf7k
+dvca1: vkicker, l = 0, kick = t4_dvca1 +t19_vca1 +t20_vca1 + dvca1k
+dvca3: vkicker, l = 0, kick = t4_dvca3                     + dvca3k
+dvca5: vkicker, l = 0, kick = t4_dvca5 +t14_vca5 + dvca5k
+dvca7: vkicker, l = 0, kick = t14_vca7 + dvca7k
+dvcb1: vkicker, l = 0, kick = t14_vcb1 + dvcb1k
+dvcb3: vkicker, l = 0, kick = 0.0 + dvcb3k
+dvcb5: vkicker, l = 0, kick = 0.0 + dvcb5k
+dvcb7: vkicker, l = 0, kick = 0.0 + dvcb7k

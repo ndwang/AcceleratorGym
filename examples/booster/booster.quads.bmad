@@ -1,0 +1,78 @@
+!==============================================================
+! Quadrupoles for AGS Booster lattice
+! From booster.lattice MAD-X file
+! 1/3/23  Lucy Lin
+!==============================================================
+
+!lenqh = 0.493
+!lenqv = 0.504  
+! k1 values are in conversion file
+
+! 400 Amp at flat top
+
+
+qva1: quadrupole, l = lenqv, k1 = ckvta1
+qha2: quadrupole, l = lenqh, k1 = ckhta2
+qva3: quadrupole, l = lenqv, k1 = ckvta3
+qha4: quadrupole, l = lenqh, k1 = ckhta4
+qva5: quadrupole, l = lenqv, k1 = ckvta5
+qha6: quadrupole, l = lenqh, k1 = ckhta6
+qva7: quadrupole, l = lenqv, k1 = ckvta7
+qha8: quadrupole, l = lenqh, k1 = ckhta8
+
+
+qvb1: quadrupole, l = lenqv, k1 = ckvtb1
+qhb2: quadrupole, l = lenqh, k1 = ckhtb2
+qvb3: quadrupole, l = lenqv, k1 = ckvtb3
+qhb4: quadrupole, l = lenqh, k1 = ckhtb4
+qvb5: quadrupole, l = lenqv, k1 = ckvtb5
+qhb6: quadrupole, l = lenqh, k1 = ckhtb6
+qvb7: quadrupole, l = lenqv, k1 = ckvtb7
+qhb8: quadrupole, l = lenqh, k1 = ckhtb8
+
+
+qvc1: quadrupole, l = lenqv, k1 = ckvtc1
+qhc2: quadrupole, l = lenqh, k1 = ckhtc2
+qvc3: quadrupole, l = lenqv, k1 = ckvtc3
+qhc4: quadrupole, l = lenqh, k1 = ckhtc4
+qvc5: quadrupole, l = lenqv, k1 = ckvtc5
+qhc6: quadrupole, l = lenqh, k1 = ckhtc6
+qvc7: quadrupole, l = lenqv, k1 = ckvtc7
+qhc8: quadrupole, l = lenqh, k1 = ckhtc8
+
+
+qvd1: quadrupole, l = lenqv, k1 = ckvtd1
+qhd2: quadrupole, l = lenqh, k1 = ckhtd2
+qvd3: quadrupole, l = lenqv, k1 = ckvtd3
+qhd4: quadrupole, l = lenqh, k1 = ckhtd4
+! ear chamber d5
+qvd5: quadrupole, l = lenqv, k1 = ckvtd5
+qhd6: quadrupole, l = lenqh, k1 = ckhtd6
+qvd7: quadrupole, l = lenqv, k1 = ckvtd7
+qhd8: quadrupole, l = lenqh, k1 = ckhtd8
+
+
+qve1: quadrupole, l = lenqv, k1 = ckvte1
+qhe2: quadrupole, l = lenqh, k1 = ckhte2
+qve3: quadrupole, l = lenqv, k1 = ckvte3
+qhe4: quadrupole, l = lenqh, k1 = ckhte4
+qve5: quadrupole, l = lenqv, k1 = ckvte5
+qhe6: quadrupole, l = lenqh, k1 = ckhte6
+qve7: quadrupole, l = lenqv, k1 = ckvte7
+qhe8: quadrupole, l = lenqh, k1 = ckhte8
+
+
+qvf1: quadrupole, l = lenqv, k1 = ckvtf1
+qhf2: quadrupole, l = lenqh, k1 = ckhtf2
+qvf3: quadrupole, l = lenqv, k1 = ckvtf3
+qhf4: quadrupole, l = lenqh, k1 = ckhtf4
+! ear chamber f5
+qvf5: quadrupole, l = lenqv, k1 = ckvtf5
+qhf6: quadrupole, l = lenqh, k1 = ckhtf6
+qvf7: quadrupole, l = lenqv, k1 = ckvtf7
+qhf8: quadrupole, l = lenqh, k1 = ckhtf8
+
+
+
+
+

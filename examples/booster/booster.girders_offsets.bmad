@@ -1,0 +1,62 @@
+!==============================================================
+! Girders for AGS Booster lattice
+! To add misalignment to quads and BPMs simultaneously
+! 7/13/23  Lucy Lin
+!==============================================================
+
+GA1: girder = {PUEVA1, L011, QVA1}, x_offset = 0.005688, y_offset = 0.005567, z_offset = 0.000698
+GA2: girder = {PUEHA2, L012, QHA2}, x_offset = 0.005125, y_offset = 0.007185, z_offset = 0.001957
+GA3: girder = {PUEVA3, L011, QVA3}, x_offset = 0.004379, y_offset = 0.007191, z_offset = 0.003074
+GA4: girder = {PUEHA4, L012, QHA4}, x_offset = 0.003855, y_offset = 0.006112, z_offset = 0.004015
+GA5: girder = {PUEVA5, L011, QVA5}, x_offset = 0.003345, y_offset = 0.005074, z_offset = 0.004268
+GA6: girder = {PUEHA6, L012, QHA6}, x_offset = 0.002721, y_offset = 0.003997, z_offset = 0.006079
+GA7: girder = {PUEVA7, L011, QVA7}, x_offset = 0.002631, y_offset = 0.003839, z_offset = 0.005328
+GA8: girder = {PUEHA8, L012, QHA8}, x_offset = 0.002534, y_offset = 0.003671, z_offset = 0.004949
+
+
+GB1: girder = {PUEVB1, L011, QVB1}, x_offset = 0.002354, y_offset = 0.003303, z_offset = 0.004714
+GB2: girder = {PUEHB2, L012, QHB2}, x_offset = 0.002038, y_offset = 0.002452, z_offset = 0.004296
+GB3: girder = {PUEVB3, L011, QVB3}, x_offset = 0.001594, y_offset = 0.001282, z_offset = 0.003718
+GB4: girder = {PUEHB4, L012, QHB4}, x_offset = 0.001192, y_offset = 0.001138, z_offset = 0.004326
+GB5: girder = {PUEVB5, L011, QVB5}, x_offset = 0.000748, y_offset = 0.00102, z_offset = 0.004486
+GB6: girder = {PUEHB6, L012, QHB6}, x_offset = -9.4e-05, y_offset = 0.000469, z_offset = 0.005618
+GB7: girder = {PUEVB7, L011, QVB7}, x_offset = -0.000759, y_offset = -0.00013, z_offset = 0.0047
+GB8: girder = {PUEHB8, L012, QHB8}, x_offset = -0.001313, y_offset = -0.000325, z_offset = 0.00393
+
+GC1: girder = {PUEVC1, L011, QVC1}, x_offset = -0.001813, y_offset = -0.000191, z_offset = 0.003188
+GC2: girder = {PUEHC2, L012, QHC2}, x_offset = -0.002316, y_offset = 3.4e-05, z_offset = 0.002517
+GC3: girder = {PUEVC3, L011, QVC3}, x_offset = -0.002721, y_offset = 0.000773, z_offset = 0.00242
+GC4: girder = {PUEHC4, L012, QHC4}, x_offset = -0.002251, y_offset = 0.000722, z_offset = 0.001604
+GC5: girder = {PUEVC5, L011, QVC5}, x_offset = -0.001834, y_offset = 0.00045, z_offset = 0.000935
+GC6: girder = {PUEHC6, L012, QHC6}, x_offset = -0.001725, y_offset = -7.7e-05, z_offset = 0.007656
+GC7: girder = {PUEVC7, L011, QVC7}, x_offset = -0.001734, y_offset = -6.3e-05, z_offset = 0.001617
+GC8: girder = {PUEHC8, L012, QHC8}, x_offset = -0.001736, y_offset = -6.4e-05, z_offset = -0.000755
+
+GD1: girder = {PUEVD1, L011, QVD1}, x_offset = -0.001796, y_offset = -5.2e-05, z_offset = -0.001073
+GD2: girder = {PUEHD2, L012, QHD2}, x_offset = -0.001973, y_offset = 3.7e-05, z_offset = -0.00299
+GD3: girder = {PUEVD3, L011, QVD3}, x_offset = -0.002316, y_offset = 0.00017, z_offset = 0.000752
+GD4: girder = {PUEHD4, L012, QHD4}, x_offset = -0.001066, y_offset = -6.5e-05, z_offset = -0.002102
+GD5: girder = {PUEVD5, L011, QVD5}, x_offset = 0.00022, y_offset = -0.000633, z_offset = -0.001635
+GD6: girder = {PUEHD6, L012, QHD6}, x_offset = 0.001846, y_offset = -0.002602, z_offset = -0.001169
+GD7: girder = {PUEVD7, L011, QVD7}, x_offset = 0.001767, y_offset = -0.004825, z_offset = -0.001278
+GD8: girder = {PUEHD8, L012, QHD8}, x_offset = 0.001797, y_offset = -0.006961, z_offset = -0.001005
+
+GE1: girder = {PUEVE1, L011, QVE1}, x_offset = 0.002073, y_offset = -0.008918, z_offset = -0.000357
+GE2: girder = {PUEHE2, L012, QHE2}, x_offset = 0.002531, y_offset = -0.010609, z_offset = -0.00133
+GE3: girder = {PUEVE3, L011, QVE3}, x_offset = 0.003062, y_offset = -0.011945, z_offset = 0.000445
+GE4: girder = {PUEHE4, L012, QHE4}, x_offset = 0.003966, y_offset = -0.012211, z_offset = -0.002095
+GE5: girder = {PUEVE5, L011, QVE5}, x_offset = 0.004797, y_offset = -0.012524, z_offset = -0.003359
+GE6: girder = {PUEHE6, L012, QHE6}, x_offset = 0.005674, y_offset = -0.012547, z_offset = -0.002049
+GE7: girder = {PUEVE7, L011, QVE7}, x_offset = 0.006096, y_offset = -0.012641, z_offset = -0.003901
+GE8: girder = {PUEHE8, L012, QHE8}, x_offset = 0.006583, y_offset = -0.012662, z_offset = -0.003695
+
+GF1: girder = {PUEVF1, L011, QVF1}, x_offset = 0.007039, y_offset = -0.012283, z_offset = -0.001855
+GF2: girder = {PUEHF2, L012, QHF2}, x_offset = 0.00733, y_offset = -0.011266, z_offset = -0.001085
+GF3: girder = {PUEVF3, L011, QVF3}, x_offset = 0.00758, y_offset = -0.009439, z_offset = 0.000302
+GF4: girder = {PUEHF4, L012, QHF4}, x_offset = 0.007394, y_offset = -0.006917, z_offset = -0.001154
+GF5: girder = {PUEVF5, L011, QVF5}, x_offset = 0.007231, y_offset = -0.004486, z_offset = -0.001739
+GF6: girder = {PUEHF6, L012, QHF6}, x_offset = 0.00706, y_offset = -0.001432, z_offset = -0.000852
+GF7: girder = {PUEVF7, L011, QVF7}, x_offset = 0.006576, y_offset = 0.000519, z_offset = 5e-06
+GF8: girder = {PUEHF8, L012, QHF8}, x_offset = 0.006145, y_offset = 0.002903, z_offset = 0.000356
+
+

@@ -1,0 +1,141 @@
+!==============================================================
+! Drift sections for AGS Booster lattice
+! From booster.lattice MAD-X file
+! 1/3/23  Lucy Lin
+!==============================================================
+
+
+l007: drift, l = 0.069600
+
+! l011: drift, l = 0.111825 ! these are now defined based on EffL of quads
+! l012: drift, l = 0.117325 ! see quadrupoles section
+
+l014: drift, l = 0.138050
+l019: drift, l = 0.186080
+
+l0218: drift, l = 0.217555 ! 7/26/91 for new position of SPTMC3
+
+l028: drift, l = 0.276675
+l02835: drift, l = 0.2835
+l02869: drift, l = 0.2869
+
+! l029: drift, l = 0.289875 ! these are now defined based on EffL of quads
+! l031: drift, l = 0.295375 ! see quadrupoles section below
+
+l030: drift, l = 0.293725
+l032: drift, l = 0.305784
+l03025: drift, l = 0.3025
+l057: drift, l = 0.570400
+l0605: drift, l = 0.60500
+l222: drift, l = 2.218011
+l271: drift, l = 2.715375
+
+l2757: drift, l = 2.756936 ! 7/26/91 for new position of SPTMC3
+
+l328: drift, l = 3.280275
+
+
+!========================================================
+! Dipoles
+!========================================================
+
+lend: drift, l = 2.5
+ldh: drift, l = lend
+ldhh: drift, l = lend/2
+
+! ionization profile monitors
+ldh1: drift, l = 1.5
+ldh2: drift, l = 0.32
+ldh3: drift, l = 0.32
+ldh4: drift, l = lend - ldh1[l] - ldh2[l] - ldh3[l]  ! TOTAL LENGTH L= LEND
+
+ipmv: marker ! VERTICAL IPM
+ipmsk: marker ! SKEW FIELD CORRECTOR
+ipmh: marker ! HORIZONTAL IPM
+
+! new D3 kicker straight section
+ld31: drift, l = 0.32
+ld32: drift, l = 0.32
+ld33: drift, l = 1.5
+ld34: drift, l = 0.28
+
+
+!========================================================
+! Bend
+!========================================================
+
+dh: drift, l = lend
+!dh: drift, l = 2.32  ! defined by BD
+
+
+!========================================================
+! Quadrupoles
+!========================================================
+
+! adjusted lengths are defined in conversion file
+l011: drift, l = 0.111825+lvus
+l012: drift, l = 0.117325+lhus
+l029: drift, l = 0.289875+lvds
+l031: drift, l = 0.295375+lhds
+
+qvd1_l: drift, l = l011[L], x_offset = -0.000869, y_offset = -0.000869, z_offset = -0.001785
+qhd2_l: drift, l = l012[L], x_offset = -0.003006, y_offset = -0.003006, z_offset = -0.001958
+qvd3_l: drift, l = l011[L], x_offset = 0.000752, y_offset = 4.7e-05, z_offset = -0.002345
+qhd4_l: drift, l = l012[L], x_offset = -0.001938, y_offset = -8e-06, z_offset = -0.001141
+qvd5_l: drift, l = l011[L], x_offset = -0.001896, y_offset = -8.6e-05, z_offset = 0.000127
+qhd6_l: drift, l = l012[L], x_offset = -0.001169, y_offset = -0.000379, z_offset = 0.001807
+qvd7_l: drift, l = l011[L], x_offset = -0.001272, y_offset = -0.000721, z_offset = 0.001772
+qhd8_l: drift, l = l012[L], x_offset = -0.001046, y_offset = -0.001049, z_offset = 0.001786
+qve1_l: drift, l = l011[L], x_offset = -0.000385, y_offset = -0.001354, z_offset = 0.002045
+qhe2_l: drift, l = l012[L], x_offset = -0.001176, y_offset = -0.001617, z_offset = 0.002498
+qve3_l: drift, l = l011[L], x_offset = 0.000445, y_offset = -0.001831, z_offset = 0.003012
+qhe4_l: drift, l = l012[L], x_offset = -0.001949, y_offset = -0.001876, z_offset = 0.003911
+qve5_l: drift, l = l011[L], x_offset = -0.003382, y_offset = -0.001922, z_offset = 0.004744
+qhe6_l: drift, l = l012[L], x_offset = -0.002049, y_offset = -0.00191, z_offset = 0.005637
+qve7_l: drift, l = l011[L], x_offset = -0.003791, y_offset = -0.001944, z_offset = 0.00607
+qhe8_l: drift, l = l012[L], x_offset = -0.003848, y_offset = -0.001948, z_offset = 0.006546
+qvf1_l: drift, l = l011[L], x_offset = -0.001847, y_offset = -0.001894, z_offset = 0.007114
+qhf2_l: drift, l = l012[L], x_offset = -0.001012, y_offset = -0.001715, z_offset = 0.007354
+qvf3_l: drift, l = l011[L], x_offset = 0.000302, y_offset = -0.001459, z_offset = 0.007615
+qhf4_l: drift, l = l012[L], x_offset = -0.00107, y_offset = -0.001087, z_offset = 0.007406
+qvf5_l: drift, l = l011[L], x_offset = -0.001779, y_offset = -0.000717, z_offset = 0.007242
+qhf6_l: drift, l = l012[L], x_offset = -0.000852, y_offset = -0.000252, z_offset = 0.007092
+qvf7_l: drift, l = l011[L], x_offset = -4.6e-05, y_offset = 6.1e-05, z_offset = 0.006605
+qhf8_l: drift, l = l012[L], x_offset = 0.000373, y_offset = 0.000418, z_offset = 0.00617
+qva1_l: drift, l = l011[L], x_offset = 0.000635, y_offset = 0.000835, z_offset = 0.005726
+qha2_l: drift, l = l012[L], x_offset = 0.001881, y_offset = 0.001097, z_offset = 0.005163
+qva3_l: drift, l = l011[L], x_offset = 0.003074, y_offset = 0.001117, z_offset = 0.004416
+qha4_l: drift, l = l012[L], x_offset = 0.003961, y_offset = 0.00095, z_offset = 0.003887
+qva5_l: drift, l = l011[L], x_offset = 0.004303, y_offset = 0.000791, z_offset = 0.00338
+qha6_l: drift, l = l012[L], x_offset = 0.006079, y_offset = 0.000619, z_offset = 0.002662
+qva7_l: drift, l = l011[L], x_offset = 0.005372, y_offset = 0.000592, z_offset = 0.002636
+qha8_l: drift, l = l012[L], x_offset = 0.004943, y_offset = 0.000566, z_offset = 0.002542
+qvb1_l: drift, l = l011[L], x_offset = 0.004751, y_offset = 0.000515, z_offset = 0.002371
+qhb2_l: drift, l = l012[L], x_offset = 0.004302, y_offset = 0.000388, z_offset = 0.002062
+qvb3_l: drift, l = l011[L], x_offset = 0.003718, y_offset = 0.000243, z_offset = 0.001652
+qhb4_l: drift, l = l012[L], x_offset = 0.004291, y_offset = 0.000177, z_offset = 0.001216
+qvb5_l: drift, l = l011[L], x_offset = 0.004509, y_offset = 0.000158, z_offset = 0.000784
+qhb6_l: drift, l = l012[L], x_offset = 0.005618, y_offset = 5.9e-05, z_offset = -3e-06
+qvb7_l: drift, l = l011[L], x_offset = 0.004754, y_offset = -1.5e-05, z_offset = -0.000718
+qhb8_l: drift, l = l012[L], x_offset = 0.003961, y_offset = -5.3e-05, z_offset = -0.001283
+qvc1_l: drift, l = l011[L], x_offset = 0.003242, y_offset = -2.9e-05, z_offset = -0.001776
+qhc2_l: drift, l = l012[L], x_offset = 0.002533, y_offset = -1e-06, z_offset = -0.002289
+qvc3_l: drift, l = l011[L], x_offset = 0.00242, y_offset = 0.000146, z_offset = -0.002715
+qhc4_l: drift, l = l012[L], x_offset = 0.001651, y_offset = 0.000112, z_offset = -0.002279
+qvc5_l: drift, l = l011[L], x_offset = 0.000961, y_offset = 7.4e-05, z_offset = -0.001859
+qhc6_l: drift, l = l012[L], x_offset = 0.007656, y_offset = 0.0, z_offset = -0.001744
+qvc7_l: drift, l = l011[L], x_offset = 0.001974, y_offset = -1e-05, z_offset = -0.001733
+qhc8_l: drift, l = l012[L], x_offset = -0.000884, y_offset = -1e-05, z_offset = -0.001735
+
+!========================================================
+! Extraction fast kicker
+!========================================================
+
+s0 = 0.130 ! distance along missing dipole to upstream edge of 1st kicker
+
+lek1: drift, l = s0+0.2731
+lek2: drift, l = 0.6096
+lek3: drift, l = 0.5004
+lek4: drift, l = 0.5391
+lek5: drift, l = 0.4978-s0
+

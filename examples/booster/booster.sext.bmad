@@ -1,0 +1,90 @@
+!==============================================================
+! Sextupoles for AGS Booster lattice
+! From booster.lattice MAD-X file
+! 1/3/23  Lucy Lin
+!==============================================================
+
+
+! Defined in conversion file
+!lens_booster = 0.1
+!scon = 0.013144 / (lens_booster * brho)
+! k2sh = scon
+! k2sv = -scon
+! ish = 0
+! isv = 0
+
+
+
+sva1: sextupole, l = lens_booster, k2 = k2sv*isv
+sha2: sextupole, l = lens_booster, k2 = k2sh*ish
+sva3: sextupole, l = lens_booster, k2 = k2sv*isv
+sha4: sextupole, l = lens_booster, k2 = k2sh*ish
+sva5: sextupole, l = lens_booster, k2 = k2sv*isv
+sha6: sextupole, l = lens_booster, k2 = k2sh*ish
+sva7: sextupole, l = lens_booster, k2 = k2sv*isv
+sha8: sextupole, l = lens_booster, k2 = k2sh*ish
+
+
+
+svb1: sextupole, l = lens_booster, k2 = k2sv*isv
+shb2: sextupole, l = lens_booster, k2 = k2sh*ish
+svb3: sextupole, l = lens_booster, k2 = k2sv*isv
+
+!shb4: sextupole, l = lens_booster, k2 = k2sh*(ish+isebb4e4)
+shb4: sextupole, l = lens_booster, k2 = k2sh*(ish-isebb4e4) ! for 13/3 extraction
+
+svb5: sextupole, l = lens_booster, k2 = k2sv*isv
+shb6: sextupole, l = lens_booster, k2 = k2sh*ish
+svb7: sextupole, l = lens_booster, k2 = k2sv*isv
+shb8: sextupole, l = lens_booster, k2 = k2sh*ish
+
+
+svc1: sextupole, l = lens_booster, k2 = k2sv*isv
+shc2: sextupole, l = lens_booster, k2 = k2sh*ish
+svc3: sextupole, l = lens_booster, k2 = k2sv*isv
+shc4: sextupole, l = lens_booster, k2 = k2sh*ish
+svc5: sextupole, l = lens_booster, k2 = k2sv*isv
+shc6: sextupole, l = lens_booster, k2 = k2sh*ish
+svc7: sextupole, l = lens_booster, k2 = k2sv*isv
+
+!shc8: sextupole, l = lens_booster, k2 = k2sh*ish
+shc8: sextupole, l = lens_booster, k2 =  k2sh*(ish+isebc8f8) ! for 13/3
+!shc8: sextupole, l = lens_booster, k2 = k2sh*(ish-isebc8f8) ! for 14/3
+
+
+svd1: sextupole, l = lens_booster, k2 = k2sv*isv
+shd2: sextupole, l = lens_booster, k2 = k2sh*ish
+svd3: sextupole, l = lens_booster, k2 = k2sv*isv
+shd4: sextupole, l = lens_booster, k2 = k2sh*ish
+svd5: sextupole, l = lens_booster, k2 = k2sv*isv
+shd6: sextupole, l = lens_booster, k2 = k2sh*ish
+svd7: sextupole, l = lens_booster, k2 = k2sv*isv
+shd8: sextupole, l = lens_booster, k2 = k2sh*ish
+
+
+
+sve1: sextupole, l = lens_booster, k2 = k2sv*isv
+she2: sextupole, l = lens_booster, k2 = k2sh*ish
+sve3: sextupole, l = lens_booster, k2 = k2sv*isv
+
+!she4: sextupole, l = lens_booster, k2 = k2sh*(ish-isebb4e4) ! for 13/3
+she4: sextupole, l = lens_booster, k2 = k2sh*(ish+isebb4e4) ! for 13/3
+
+sve5: sextupole, l = lens_booster, k2 = k2sv*isv
+she6: sextupole, l = lens_booster, k2 = k2sh*ish
+sve7: sextupole, l = lens_booster, k2 = k2sv*isv
+she8: sextupole, l = lens_booster, k2 = k2sh*ish
+
+
+
+svf1: sextupole, l = lens_booster, k2 = k2sv*isv
+shf2: sextupole, l = lens_booster, k2 = k2sh*ish
+svf3: sextupole, l = lens_booster, k2 = k2sv*isv
+shf4: sextupole, l = lens_booster, k2 = k2sh*ish
+svf5: sextupole, l = lens_booster, k2 = k2sv*isv
+shf6: sextupole, l = lens_booster, k2 = k2sh*ish
+svf7: sextupole, l = lens_booster, k2 = k2sv*isv
+
+!shf8: sextupole, l = lens_booster, k2 = k2sh*ish
+shf8: sextupole, l = lens_booster, k2 = k2sh*(ish-isebc8f8) ! for 13/3 extraction
+!shf8: sextupole, l = lens_booster, k2 = k2sh*(ish+isebc8f8) ! for 14/3 extraction

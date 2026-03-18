@@ -1,0 +1,228 @@
+!------------------------------------------------------------------------
+
+!&tao_start
+!  plot_file = 'tao_plot.init' 
+!/
+
+!------------------------------------------------------------------------
+
+&tao_design_lattice
+  n_universes =1
+  design_lattice(1)%file = "booster.run.bmad"
+/
+
+!------------------------------------------------------------------------
+
+&tao_params
+  global%plot_on = True
+  global%track_type = 'single'
+  global%optimizer = 'lmdif'
+  global%n_opti_cycles = 100
+  !---Bmad---
+  !bmad_com%radiation_damping_on = F
+  !bmad_com%radiation_fluctuations_on = T
+  !bmad_com%absolute_time_tracking_default = T
+  bmad_com%rel_tol_tracking = 2e-8
+  bmad_com%abs_tol_tracking = 2e-8
+  
+/
+
+!------------------------------------------------------------------------
+!--- BPMs orbit data
+
+&tao_d2_data
+	d2_data%name = 'orbit'
+	universe = '1'
+	default_merit_type = 'target'
+	n_d1_data = 3
+/
+
+&tao_d1_data
+	ix_d1_data = 1
+	d1_data%name = 'x'
+	default_data_type = 'orbit.x'
+	search_for_lat_eles = '*'
+/
+
+&tao_d1_data
+	ix_d1_data = 2
+	d1_data%name = 'px'
+	default_data_type = 'orbit.px'
+	search_for_lat_eles = '*'
+/
+
+&tao_d1_data
+	ix_d1_data = 3
+	d1_data%name = 'y'
+	default_data_type = 'bpm_orbit.y'
+	search_for_lat_eles = 'Monitor::puev*'
+/
+
+
+!------------------------------------------------------------------------
+!--- BPMs twiss data
+
+&tao_d2_data
+	d2_data%name = 'twiss'
+	universe = '1'
+	default_merit_type = 'target'
+	n_d1_data = 10
+/
+
+&tao_d1_data
+	ix_d1_data = 1
+	d1_data%name = 'beta_x'
+	default_data_type = 'beta.a'
+	search_for_lat_eles = 'Monitor::pue*'
+/
+
+&tao_d1_data
+	ix_d1_data = 2
+	d1_data%name = 'beta_y'
+	default_data_type = 'beta.b'
+	search_for_lat_eles = 'Monitor::pue*'
+/
+
+&tao_d1_data
+	ix_d1_data = 3
+	d1_data%name = 'alpha_x'
+	default_data_type = 'alpha.a'
+	search_for_lat_eles = 'Monitor::pue*'
+/
+
+&tao_d1_data
+	ix_d1_data = 4
+	d1_data%name = 'alpha_y'
+	default_data_type = 'alpha.b'
+	search_for_lat_eles = 'Monitor::pue*'
+/
+
+&tao_d1_data
+	ix_d1_data = 5
+	d1_data%name = 'eta_x'
+	default_data_type = 'eta.a'
+	search_for_lat_eles = 'Monitor::pue*'
+/
+
+&tao_d1_data
+	ix_d1_data = 6
+	d1_data%name = 'eta_y'
+	default_data_type = 'eta.b'
+	search_for_lat_eles = 'Monitor::pue*'
+/
+
+&tao_d1_data
+	ix_d1_data = 7
+	d1_data%name = 'etap_x'
+	default_data_type = 'etap.a'
+	search_for_lat_eles = 'Monitor::pue*'
+/
+
+&tao_d1_data
+	ix_d1_data = 8
+	d1_data%name = 'etap_y'
+	default_data_type = 'etap.b'
+	search_for_lat_eles = 'Monitor::pue*'
+/
+
+&tao_d1_data
+	ix_d1_data = 9
+	d1_data%name = 'phase_x'
+	default_data_type = 'phase.a'
+	search_for_lat_eles = 'Monitor::pue*'
+/
+
+&tao_d1_data
+	ix_d1_data = 10
+	d1_data%name = 'phase_y'
+	default_data_type = 'phase.b'
+	search_for_lat_eles = 'Monitor::pue*'
+/
+
+!------------------------------------------------------------------------
+!--- Correctors
+
+&tao_var
+  v1_var%name = "correctors_x"
+  default_universe = '1'
+  default_attribute = "kick"
+  default_weight = 1e9
+  default_low_lim  = -0.01
+  default_high_lim = 0.01
+  default_step = 1e-10
+  ix_min_var = 1
+  search_for_lat_eles = "HKICKER::DHC*"
+/
+
+&tao_var
+  v1_var%name = "correctors_y"
+  default_universe = '1'
+  default_attribute = "kick"
+  default_weight = 1e9
+  default_low_lim  = -0.01
+  default_high_lim = 0.01
+  default_step = 1e-10
+  ix_min_var = 1
+  search_for_lat_eles = "VKICKER::DVC*"
+/
+
+!------------------------------------------------------------------------
+!--- Quadrupoles
+
+&tao_var
+  v1_var%name = "quads_x"
+  default_universe = '1'
+  default_attribute = "k1"
+  default_weight = 1e9
+  default_low_lim  = -1
+  default_high_lim = 1
+  default_step = 1e-20
+  ix_min_var = 1
+  search_for_lat_eles = "quad::QH*"
+/
+
+&tao_var
+  v1_var%name = "quads_y"
+  default_universe = '1'
+  default_attribute = "k1"
+  default_weight = 1e9
+  default_low_lim  = -1
+  default_high_lim = 1
+  default_step = 1e-20
+  ix_min_var = 1
+  search_for_lat_eles = "QUAD::QV*"
+/
+
+!------------------------------------------------------------------------
+!--- Dipoles
+
+&tao_var
+  v1_var%name = "bends"
+  default_universe = '1'
+  default_attribute = "k1"
+  default_weight = 1e9
+  default_low_lim  = -1
+  default_high_lim = 1
+  default_step = 1e-20
+  ix_min_var = 1
+  search_for_lat_eles = "sbend::*"
+/
+
+!------------------------------------------------------------------------
+!--- Bumps
+
+&tao_var
+  v1_var%name = "bump_i"
+  default_universe = '1'
+  default_attribute = "I"
+  default_merit_type = 'limit'
+  default_weight = 1e1
+  default_low_lim  = -1e3
+  default_high_lim = 1e3
+  default_step = 1e-1
+  ix_min_var = 1
+  search_for_lat_eles = 'overlay::*_bump'
+  !var(1)%ele_name = 'c7_bump'
+/
+
+

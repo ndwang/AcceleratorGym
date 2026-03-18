@@ -1,0 +1,96 @@
+!============================================
+! Horizontal sextupole overlays
+!============================================
+
+sh_k2: overlay = { &
+  sext::sh*[b2_gradient]: 0.013144 / lens_booster * ISH}, &
+  var = {ISH}, ISH=0!ish
+
+!============================================
+! Vertical sextupole overlays
+!============================================
+
+sv_k2: overlay = { &
+  sext::sv*[b2_gradient]: -0.013144 / lens_booster * ISV}, &
+  var = {ISV}, ISV=0!isv
+
+!============================================
+! Drive sextupole overlays
+!============================================
+
+sd_k2: overlay = { &
+  sext::shb4[b2_gradient]: -0.013144 / lens_booster * ISEBB4E4, &
+  sext::shc8[b2_gradient]:  0.013144 / lens_booster * ISEBC8F8, &
+  sext::she4[b2_gradient]:  0.013144 / lens_booster * ISEBB4E4, &
+  sext::shf8[b2_gradient]: -0.013144 / lens_booster * ISEBC8F8}, &
+  var = {ISEBB4E4,ISEBC8F8}, ISEBB4E4=isebb4e4, ISEBC8F8=isebc8f8
+
+
+!============================================
+! Dipole overlays
+!============================================
+
+b_main: overlay={ &
+ sbend::*[B_field]:  &
+  idipc0 + idipo * idipc1 +  &
+  IDIPO^2 * idipc2 - IDIPO^3 * idipc3 +  &
+  IDIPO^4 * idipc4 - IDIPO^5 * idipc5 +   &
+  IDIPO^6 * idipc6 - IDIPO^7 *idipc7 +  &
+  IDIPO^8 * idipc8, &
+ sbend::*[k1]:    &
+ (kc0 - IDIPO * kc1 + (IDIPO^2) * kc2 - &
+ (IDIPO^3) * kc3 + (IDIPO^4) * kc4 - &
+ (IDIPO^5) * kc5 + (IDIPO^6) * kc6 - &
+ (IDIPO^7) * kc7 + (IDIPO^8) * kc8) / &
+ rho_booster}, var={IDIPO},IDIPO=idipo
+
+!============================================
+! Horizontal quad overlays
+!============================================
+
+qh_k1: overlay = { &
+  quad::qh*[b1_gradient]: 0.9996 * &
+  (klhc0 + (IDIPO + ckc * IQHC) * klhc1 +  &
+  (IDIPO + ckc * IQHC)^2 * klhc2 -  &
+  (IDIPO + ckc * IQHC)^3 * klhc3 +  &
+  (IDIPO + ckc * IQHC)^4 * klhc4 -  &
+  (IDIPO + ckc * IQHC)^5 * klhc5)/lenqh},  &
+  var = {IDIPO,IQHC}, IDIPO=idipo, IQHC=-240
+
+!============================================
+! Vertical quad overlays
+!============================================
+
+qv_k1: overlay = { &
+  quad::qv*[b1_gradient]:  -1.0024 * &
+  (klvc0 + (IDIPO - ckc * IQVC) * klvc1 +  &
+  (IDIPO - ckc * IQVC)^2 * klvc2 -  &
+  (IDIPO - ckc * IQVC)^3 * klvc3 +  &
+  (IDIPO - ckc * IQVC)^4 * klvc4 -  &
+  (IDIPO - ckc * IQVC)^5 * klvc5)/lenqv},  &
+  var = {IDIPO,IQVC}, IDIPO=idipo, IQVC=-200 ! to change vertical tune
+
+
+
+idipo_ctrl: overlay = { &
+ !ref_pc[IDIPO]:IDIPO, &
+ b_main[IDIPO]:IDIPO, &
+ qh_k1[IDIPO]:IDIPO, &
+ qv_k1[IDIPO]:IDIPO &
+ !sh_k2[IDIPO]:IDIPO, &
+ !sv_k2[IDIPO]:IDIPO  &
+}, var = {IDIPO}, IDIPO = IDIPO
+
+
+ref_pc: ramper={ &
+ *[p0c]:  &
+  (idipc0 + (IDIPO -1.00*time/(10000*0.8e-6)) * idipc1 +  &
+  (IDIPO -1.00*time/(10000*0.8e-6))^2 * idipc2 - (IDIPO -1.00*time/(10000*0.8e-6))^3 * idipc3 +  &
+  (IDIPO -1.00*time/(10000*0.8e-6))^4 * idipc4 - (IDIPO -1.00*time/(10000*0.8e-6))^5 * idipc5 +   &
+  (IDIPO -1.00*time/(10000*0.8e-6))^6 * idipc6 - (IDIPO -1.00*time/(10000*0.8e-6))^7 *idipc7 +  &
+  (IDIPO -1.00*time/(10000*0.8e-6))^8 * idipc8)*rho_booster*c_light}, &
+  var={time}, interpolation = linear
+
+ramp_idip: ramper = {
+  idipo_ctrl[idipo]: (IDIPO -1.00 * time/(0.8e-6)/10000)},
+  var = {time}, interpolation = linear

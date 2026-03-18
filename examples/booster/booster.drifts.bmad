@@ -1,0 +1,96 @@
+!==============================================================
+! Drift sections for AGS Booster lattice
+! From booster.lattice MAD-X file
+! 1/3/23  Lucy Lin
+!==============================================================
+
+
+l007: drift, l = 0.069600
+
+! l011: drift, l = 0.111825 ! these are now defined based on EffL of quads
+! l012: drift, l = 0.117325 ! see quadrupoles section
+
+l014: drift, l = 0.138050
+l019: drift, l = 0.186080
+
+l0218: drift, l = 0.217555 ! 7/26/91 for new position of SPTMC3
+
+l028: drift, l = 0.276675
+l02835: drift, l = 0.2835
+l02869: drift, l = 0.2869
+
+! l029: drift, l = 0.289875 ! these are now defined based on EffL of quads
+! l031: drift, l = 0.295375 ! see quadrupoles section below
+
+l030: drift, l = 0.293725
+l032: drift, l = 0.305784
+l03025: drift, l = 0.3025
+l057: drift, l = 0.570400
+l0605: drift, l = 0.60500
+l222: drift, l = 2.218011
+l271: drift, l = 2.715375
+
+l2757: drift, l = 2.756936 ! 7/26/91 for new position of SPTMC3
+
+l328: drift, l = 3.280275
+
+
+!========================================================
+! Dipoles
+!========================================================
+
+lend: drift, l = 2.5
+ldh: drift, l = lend
+ldhh: drift, l = lend/2
+
+! ionization profile monitors
+ldh1: drift, l = 1.5
+ldh2: drift, l = 0.32
+ldh3: drift, l = 0.32
+ldh4: drift, l = lend - ldh1[l] - ldh2[l] - ldh3[l]  ! TOTAL LENGTH L= LEND
+
+ipmv: marker ! VERTICAL IPM
+ipmsk: marker ! SKEW FIELD CORRECTOR
+ipmh: marker ! HORIZONTAL IPM
+
+! new D3 kicker straight section
+ld31: drift, l = 0.32
+ld32: drift, l = 0.32
+ld33: drift, l = 1.5
+ld34: drift, l = 0.28
+
+
+!========================================================
+! Bend
+!========================================================
+
+dh: drift, l = lend
+!dh: drift, l = 2.32  ! defined by BD
+
+
+!========================================================
+! Quadrupoles
+!========================================================
+
+! adjusted lengths are defined in conversion file
+l011: drift, l = 0.111825+lvus
+l012: drift, l = 0.117325+lhus
+l029: drift, l = 0.289875+lvds
+l031: drift, l = 0.295375+lhds
+
+
+!========================================================
+! Extraction fast kicker
+!========================================================
+
+s0 = 0.130 ! distance along missing dipole to upstream edge of 1st kicker
+
+lek1: drift, l = s0+0.2731
+lek2: drift, l = 0.6096
+lek3: drift, l = 0.5004
+lek4: drift, l = 0.5391
+!LEK2: drift, L=0.0096
+!LEK3: drift, L=0.0004
+!LEK4: drift, L=0.0391
+lek5: drift, l = 0.4978-s0
+

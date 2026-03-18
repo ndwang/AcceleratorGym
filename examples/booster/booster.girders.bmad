@@ -1,0 +1,62 @@
+!==============================================================
+! Girders for AGS Booster lattice
+! To add misalignment to quads and BPMs simultaneously
+! 7/13/23  Lucy Lin
+!==============================================================
+
+GA1: girder = {PUEVA1, L011, QVA1}
+GA2: girder = {PUEHA2, L012, QHA2}
+GA3: girder = {PUEVA3, L011, QVA3}
+GA4: girder = {PUEHA4, L012, QHA4}
+GA5: girder = {PUEVA5, L011, QVA5}
+GA6: girder = {PUEHA6, L012, QHA6}
+GA7: girder = {PUEVA7, L011, QVA7}
+GA8: girder = {PUEHA8, L012, QHA8}
+
+
+GB1: girder = {PUEVB1, L011, QVB1}
+GB2: girder = {PUEHB2, L012, QHB2}
+GB3: girder = {PUEVB3, L011, QVB3}
+GB4: girder = {PUEHB4, L012, QHB4}
+GB5: girder = {PUEVB5, L011, QVB5}
+GB6: girder = {PUEHB6, L012, QHB6}
+GB7: girder = {PUEVB7, L011, QVB7}
+GB8: girder = {PUEHB8, L012, QHB8}
+
+GC1: girder = {PUEVC1, L011, QVC1}
+GC2: girder = {PUEHC2, L012, QHC2}
+GC3: girder = {PUEVC3, L011, QVC3}
+GC4: girder = {PUEHC4, L012, QHC4}
+GC5: girder = {PUEVC5, L011, QVC5}
+GC6: girder = {PUEHC6, L012, QHC6}
+GC7: girder = {PUEVC7, L011, QVC7}
+GC8: girder = {PUEHC8, L012, QHC8}
+
+GD1: girder = {PUEVD1, L011, QVD1}
+GD2: girder = {PUEHD2, L012, QHD2}
+GD3: girder = {PUEVD3, L011, QVD3}
+GD4: girder = {PUEHD4, L012, QHD4}
+GD5: girder = {PUEVD5, L011, QVD5}
+GD6: girder = {PUEHD6, L012, QHD6}
+GD7: girder = {PUEVD7, L011, QVD7}
+GD8: girder = {PUEHD8, L012, QHD8}
+
+GE1: girder = {PUEVE1, L011, QVE1}
+GE2: girder = {PUEHE2, L012, QHE2}
+GE3: girder = {PUEVE3, L011, QVE3}
+GE4: girder = {PUEHE4, L012, QHE4}
+GE5: girder = {PUEVE5, L011, QVE5}
+GE6: girder = {PUEHE6, L012, QHE6}
+GE7: girder = {PUEVE7, L011, QVE7}
+GE8: girder = {PUEHE8, L012, QHE8}
+
+GF1: girder = {PUEVF1, L011, QVF1}
+GF2: girder = {PUEHF2, L012, QHF2}
+GF3: girder = {PUEVF3, L011, QVF3}
+GF4: girder = {PUEHF4, L012, QHF4}
+GF5: girder = {PUEVF5, L011, QVF5}
+GF6: girder = {PUEHF6, L012, QHF6}
+GF7: girder = {PUEVF7, L011, QVF7}
+GF8: girder = {PUEHF8, L012, QHF8}
+
+

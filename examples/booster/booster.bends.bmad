@@ -1,0 +1,96 @@
+!==============================================================
+! Bends for AGS Booster lattice
+! From booster.lattice MAD-X file
+! 1/3/23  Lucy Lin
+!==============================================================
+
+! angd = 0.174532925  ! 10 degrees, in conversion file
+! k1 and k2 values also in conversion file
+
+
+dha1t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dha1z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dha2t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dha2z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dha4t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dha4z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dha5t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dha5z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dha7t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dha7z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dha8t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dha8z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+
+
+dhb1t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhb1z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhb2t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhb2z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhb4t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhb4z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhb5t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhb5z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhb7t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhb7z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhb8t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhb8z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+
+
+! a study of a broken vacuum chamber coil - Booster History 1992
+c7bmped = 1.0
+c7angd = angd * c7bmped
+
+dhc1t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhc1z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhc2t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhc2z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhc4t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhc4z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhc5t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhc5z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhc7t: sbend, l = lend/2, angle = c7angd/2, k1 = k10, k2 = k20
+dhc7z: sbend, l = lend/2, angle = c7angd/2, k1 = k10, k2 = k20
+dhc8t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhc8z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+
+
+dhd1t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhd1z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhd2t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhd2z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhd4t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhd4z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhd5t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhd5z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhd7t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhd7z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhd8t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhd8z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+
+
+dhe1t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhe1z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhe2t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhe2z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhe4t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhe4z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhe5t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhe5z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhe7t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhe7z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhe8t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhe8z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+
+
+dhf1t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhf1z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhf2t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhf2z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhf4t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhf4z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhf5t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhf5z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhf7t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhf7z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhf8t: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20
+dhf8z: sbend, l = lend/2, angle = angd/2, k1 = k10, k2 = k20

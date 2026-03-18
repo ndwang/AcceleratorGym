@@ -1,0 +1,68 @@
+!==============================================================
+! Beam Position Monitors for AGS Booster lattice
+! From booster.lattice MAD-X file
+! 1/3/23  Lucy Lin
+!==============================================================
+
+monh: marker
+monv: marker
+
+
+pueva1: monitor
+pueha2: monitor
+pueva3: monitor
+pueha4: monitor
+pueva5: monitor
+pueha6: monitor
+pueva7: monitor
+pueha8: monitor
+
+
+puevb1: monitor
+puehb2: monitor
+puevb3: monitor
+puehb4: monitor
+puevb5: monitor
+puehb6: monitor
+puevb7: monitor
+puehb8: monitor
+
+
+puevc1: monitor
+puehc2: monitor
+puevc3: monitor
+puehc4: monitor
+puevc5: monitor
+puehc6: monitor
+puevc7: monitor
+puehc8: monitor
+
+
+puevd1: monitor
+puehd2: monitor
+puevd3: monitor
+puehd4: monitor
+puevd5: monitor
+puehd6: monitor  ! missing
+puevd7: monitor
+puehd8: monitor
+
+
+pueve1: monitor
+puehe2: monitor
+pueve3: monitor
+puehe4: monitor
+pueve5: monitor
+puehe6: monitor
+pueve7: monitor
+puehe8: monitor
+
+
+puevf1: monitor
+puehf2: monitor
+puevf3: monitor
+puehf4: monitor
+puevf5: monitor
+puehf6: monitor  ! missing
+puevf7: monitor
+puehf8: monitor

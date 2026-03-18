@@ -1,0 +1,240 @@
+!=====================================================================
+! AGS Booster Physics Model
+! translated to BMAD 12/29/22  Lucy Lin
+!
+! This file contains values for constant variables used for elements
+!=====================================================================
+
+
+!========================================================
+! Physics/Machine constants
+!========================================================
+
+c = 2.99792458e8  ! speed of light [m/sec]
+
+conv = 0.0254     ! inches --> meters
+
+
+
+!========================================================
+! Set default values, injection bare machine
+!========================================================
+
+
+BDOT = 0
+
+
+! Dipole currents in Amps, between 0 and 5000
+
+IDIPO = 1675.80
+
+
+iqhc = 58.073364
+iqvc = 27.5948
+
+iqhbd = 3.4    ! value based on 1992/3 data
+iqvbd = 4.8    ! value based on 1992/3 data
+
+cbrho_booster = 0.0
+
+ish = -0.054932
+isv = 1.737697
+
+isebc8f8 = -90.
+isebb4e4 = -90.
+
+d03kick = 0.
+angd6 = 0.
+
+
+! for injection bumps, initialized to zero
+X = 0.0
+XP = 0.0
+Y = 0.0
+YP = 0.0
+
+! Slow extraction bumps, at D3 and D6
+! must include bump_overlay.bmad file for these to do anything
+IC7 = 0! -1.22396710577998036E+001
+ID1 = 0! -5.39984465762152244E+000
+ID4 = 0! -8.04653674041205846E+000
+ID7 = 0! -1.14168540653967465E+001
+IE1 = 0! 4.96370994880570038E+000
+
+! BtA extraction bumps
+IF2 = 0
+IF4 = 0
+IF7 = 0
+IA1 = 0
+
+!----------------------------------------------------
+! Initialized all correctors to 0 amp
+!----------------------------------------------------
+
+
+IQVTB5 = 0
+IQVTB7 = 0
+IQVTC1 = 0
+IQVTC3 = 0
+IQVTC5 = 0
+IQVTC7 = 0
+IQVTD1 = 0
+IQVTD3 = 0
+
+IQHTB6 = 0
+IQHTB8 = 0
+IQHTC2 = 0
+IQHTC4 = 0
+IQHTC6 = 0
+IQHTC8 = 0
+IQHTD2 = 0
+IQHTD4 = 0
+
+! 1/2 integer stop band correctors
+QVSTR1 = 0
+QHSTR1 = 0.
+QVSTR2 = 0
+QHSTR2 = 0.
+
+AmpH = 0.0
+AmpV = 0.0
+AngH = 0.0
+AngV = 0.0
+
+
+CX = AmpH * Cos(9*AngH)
+SX = AmpH * Sin(9*AngH)
+CY = AmpV * Cos(9*AngV)
+SY = AmpV * Sin(9*AngV)
+
+
+bfact = 0.0
+
+
+dhca2i = 0.
+dhca4i = 0.
+dhca6i = 0.
+dhca8i = 0.
+dhcb2i = 0.
+dhcb4i = 0.
+dhcb6i = 0.
+dhcb8i = 0.
+dhcc2i = 0.
+dhcc4i = 0.
+dhcc6i = 0.
+dhcc8i = 0.
+dhcd2i = 0.
+dhcd4i = 0.
+dhcd6i = 0.
+dhcd8i = 0.
+dhce2i = 0.
+dhce4i = 0.
+dhce6i = 0.
+dhce8i = 0.
+dhcf2i = 0.
+dhcf4i = 0.
+dhcf6i = 0.
+dhcf8i = 0.
+
+dvca1i = 0.
+dvca3i = 0.
+dvca5i = 0.
+dvca7i = 0.
+dvcb1i = 0.
+dvcb3i = 0.
+dvcb5i = 0.
+dvcb7i = 0.
+dvcc1i = 0.
+dvcc3i = 0.
+dvcc5i = 0.
+dvcc7i = 0.
+dvcd1i = 0.
+dvcd3i = 0.
+dvcd5i = 0.
+dvcd7i = 0.
+dvce1i = 0.
+dvce3i = 0.
+dvce5i = 0.
+dvce7i = 0.
+dvcf1i = 0.
+dvcf3i = 0.
+dvcf5i = 0.
+dvcf7i = 0.
+
+!========================================================
+! Call lattice files
+!========================================================
+
+call, file = booster.conversions.bmad
+
+call, file = booster.drifts.bmad
+
+call, file = booster.bends.bmad
+!call, file = booster.bends_offsets.bmad
+
+
+call, file = booster.quads.bmad
+!call, file = booster.quads_rotation.bmad
+
+call, file = booster.sext.bmad
+
+call, file = booster.corr.bmad
+
+call, file = booster.bpms.bmad
+
+call, file = booster.cavity.bmad
+
+!call, file = booster.girders_offsets.bmad
+
+call, file = bump_overlay.bmad
+call, file = booster.magnet_overlays.bmad
+
+call, file = booster.extraction.bmad
+
+
+!========================================================
+! Beam parameters
+!========================================================
+
+Q = 1  ! Charge in amu.
+NN = 1  ! Nucleon count [1]
+
+E0 = 0.938272 / NN  ! Particle rest  mass per nucleon [GeV/N]
+!gamma = 2.5
+
+PC = 0.299792458*BRHO_booster*Q        ! PC in GeV/c
+
+spinG = 1.792847337  ! Anomalous gyromagnetic ratio of a proton
+
+! Derived beam parameters
+PCT = 1e-9 * (BRHO_booster) * C * Q
+EE = sqrt((PCT*PCT) + (E0*E0*NN*NN))
+EK =  (EE - (E0*NN))
+GAMMA = EE / (E0*NN)
+
+
+parameter[particle] = proton
+parameter[E_tot] = EE * 1e9
+parameter[p0c] = pc * 1e9
+parameter[n_part] = 1
+
+
+!========================================================
+! Markers
+!========================================================
+
+Mar.BEG: marker
+Mar.END: marker
+
+!=======================================================
+!! Booster Ring
+!=======================================================
+
+!ring: line = (Mar.BEG, BOOSTER_off, Mar.END)
+ring: line = (Mar.BEG, BOOSTER_A, Mar.END)
+
+*[tracking_method] = symp_lie_bmad !symp_lie_ptc
+*[ds_step]       = 0.02
+
+use, ring
+!use, BOOSTER_D3_to_D6

@@ -1,0 +1,82 @@
+!====================================================
+! Bumps for D3 and D6 septums as overlays
+!====================================================
+
+*[scale_multipoles] = F
+
+Ic7bmp = 4.215e-4*IC7/Brho_booster
+Id1bmp = 4.215e-4*ID1/Brho_booster
+Id4bmp = 4.215e-4*ID4/Brho_booster
+Id7bmp = 4.215e-4*ID7/Brho_booster
+Ie1bmp = 4.215e-4*IE1/Brho_booster
+
+c7_bump: overlay = { &
+DHC7T[b0]: 4.215e-4*I/Brho_booster, &
+DHC7Z[b0]: 4.215e-4*I/Brho_booster, &
+}, var = {I}, I = IC7
+
+d1_bump: overlay = { &
+DHD1T[b0]: 4.215e-4*I/Brho_booster, &
+DHD1Z[b0]: 4.215e-4*I/Brho_booster, &
+}, var = {I}, I = ID1
+
+d4_bump: overlay = { &
+DHD4T[b0]: 4.215e-4*I/Brho_booster, &
+DHD4Z[b0]: 4.215e-4*I/Brho_booster, &
+}, var = {I}, I = ID4
+
+d7_bump: overlay = { &
+DHD7T[b0]: 4.215e-4*I/Brho_booster, &
+DHD7Z[b0]: 4.215e-4*I/Brho_booster, &
+}, var = {I}, I = ID7
+
+e1_bump: overlay = { &
+DHE1T[b0]: 4.215e-4*I/Brho_booster, &
+DHE1Z[b0]: 4.215e-4*I/Brho_booster, &
+}, var = {I}, I = IE1
+
+!====================================================
+! Bumps for BtA extraction as overlays
+!====================================================
+
+
+If2bmp = 4.215e-4*IF2/Brho_booster
+If4bmp = -4.215e-4*IF4/Brho_booster
+If7bmp = 4.215e-4*IF7/Brho_booster
+Ia1bmp = -4.215e-4*IA1/Brho_booster
+
+f2_bump: overlay = { &
+DHF2T[b0]: DHF2T[angle]*4.215e-4*I/Brho_booster, &
+DHF2T[b1]: K10*4.215e-4*I/Brho_booster, &
+DHF2T[b2]: K20*4.215e-4*I/Brho_booster, &
+DHF2Z[b0]: DHF2Z[angle]*4.215e-4*I/Brho_booster, &
+DHF2Z[b1]: K10*4.215e-4*I/Brho_booster, &
+DHF2Z[b2]: K20*4.215e-4*I/Brho_booster, &
+}, var = {I}, I = IF2
+
+f4_bump: overlay = { &
+DHF4T[b0]: DHF4T[angle]*-4.215e-4*I/Brho_booster, &
+DHF4T[b1]: K10*-4.215e-4*I/Brho_booster, &
+DHF4T[b2]: K20*-4.215e-4*I/Brho_booster, &
+DHF4Z[b0]: DHF4Z[angle]*-4.215e-4*I/Brho_booster, &
+DHF4Z[b1]: K10*-4.215e-4*I/Brho_booster, &
+DHF4Z[b2]: K20*-4.215e-4*I/Brho_booster, &
+}, var = {I}, I = IF4
+
+f7_bump: overlay = { &
+DHF7T[b0]: DHF7T[angle]*4.215e-4*I/Brho_booster, &
+DHF7T[b1]: K10*4.215e-4*I/Brho_booster, &
+DHF7T[b2]: K20*4.215e-4*I/Brho_booster, &
+DHF7Z[b0]: DHF7Z[angle]*4.215e-4*I/Brho_booster, &
+DHF7Z[b1]: K10*4.215e-4*I/Brho_booster, &
+DHF7Z[b2]: K20*4.215e-4*I/Brho_booster, &
+}, var = {I}, I = IF7
+
+a1_bump: overlay = { &
+DHA1T[b0]: DHA1T[angle]*-4.215e-4*I/Brho_booster, &
+DHA1T[b1]: K10*-4.215e-4*I/Brho_booster, &
+DHA1T[b2]: K20*-4.215e-4*I/Brho_booster, &
+DHA1Z[b0]: DHA1Z[angle]*-4.215e-4*I/Brho_booster, &
+DHA1Z[b1]: K10*-4.215e-4*I/Brho_booster, &
+DHA1Z[b2]: K20*-4.215e-4*I/Brho_booster, &
+}, var = {I}, I = IA1
