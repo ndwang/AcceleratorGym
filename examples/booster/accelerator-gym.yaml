@@ -1,0 +1,7 @@
+machine:
+  name: BNL Booster Ring
+  description: AGS Booster Ring Bmad model with auto-discovered device tree
+
+backend:
+  type: bmad
+  init_file: tao.init

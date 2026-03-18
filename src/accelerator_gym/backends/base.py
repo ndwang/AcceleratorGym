@@ -44,6 +44,15 @@ class Backend(ABC):
         """
         return f"{device_name}:{attribute}"
 
+    def discover_devices(self) -> dict[str, dict[str, Any]]:
+        """Auto-discover devices from the backend.
+
+        Returns a devices dict in the same format as MachineConfig.devices.
+        Override in backends that can introspect their lattice/hardware.
+        Default returns empty dict (no auto-discovery).
+        """
+        return {}
+
     @abstractmethod
     def reset(self) -> None:
         """Reset to the initial state."""

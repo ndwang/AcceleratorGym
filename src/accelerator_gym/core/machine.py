@@ -22,7 +22,8 @@ class Machine:
     def __init__(self, backend: Backend, config: MachineConfig) -> None:
         self._backend = backend
         self._config = config
-        self._catalog = Catalog(config.devices, backend)
+        devices = config.devices if config.devices else backend.discover_devices()
+        self._catalog = Catalog(devices, backend)
         self._variables = self._catalog.build_variables()
 
     @classmethod

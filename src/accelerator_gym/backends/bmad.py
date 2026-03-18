@@ -7,6 +7,61 @@ from accelerator_gym.backends.base import Backend
 
 logger = logging.getLogger(__name__)
 
+# Attributes read via lat::{attr}[{element}] rather than ele::{element}[{attr}]
+_LATTICE_ATTRIBUTES = frozenset({
+    "orbit.x", "orbit.y",
+    "beta.a", "beta.b", "alpha.a", "alpha.b",
+    "phi.a", "phi.b", "eta.x",
+})
+
+# Default control attributes per Bmad element type.
+# Can be overridden via backend_settings["element_attributes"] in the YAML config.
+_DEFAULT_ELEMENT_ATTRIBUTES: dict[str, list[dict[str, Any]]] = {
+    "Quadrupole": [
+        {"name": "K1", "units": "1/m^2", "write": True},
+    ],
+    "Sbend": [
+        {"name": "ANGLE", "units": "rad", "write": True},
+    ],
+    "Hkicker": [
+        {"name": "kick", "units": "rad", "write": True},
+    ],
+    "Vkicker": [
+        {"name": "kick", "units": "rad", "write": True},
+    ],
+    "Sextupole": [
+        {"name": "K2", "units": "1/m^3", "write": True},
+    ],
+}
+
+# Twiss attributes added to every discovered element (read-only).
+_TWISS_ATTRIBUTES: list[dict[str, Any]] = [
+    {"name": "beta.a", "description": "Horizontal beta function", "units": "m"},
+    {"name": "beta.b", "description": "Vertical beta function", "units": "m"},
+    {"name": "alpha.a", "description": "Horizontal alpha function"},
+    {"name": "alpha.b", "description": "Vertical alpha function"},
+    {"name": "phi.a", "description": "Horizontal betatron phase", "units": "rad/2pi"},
+    {"name": "phi.b", "description": "Vertical betatron phase", "units": "rad/2pi"},
+    {"name": "eta.x", "description": "Horizontal dispersion", "units": "m"},
+]
+
+# Monitor-specific readback attributes (read-only).
+_MONITOR_ATTRIBUTES: list[dict[str, Any]] = [
+    {"name": "orbit.x", "description": "Horizontal orbit", "units": "m"},
+    {"name": "orbit.y", "description": "Vertical orbit", "units": "m"},
+]
+
+# Bmad element types to skip during discovery.
+_SKIP_ELEMENT_TYPES = frozenset({
+    "Drift", "Marker", "Beginning_Ele", "Null_Ele", "Floor_Shift",
+    "Fiducial", "Patch", "Taylor", "Match",
+})
+
+# Bmad element types that map to the "magnets" system.
+_MAGNET_TYPES = frozenset({
+    "Quadrupole", "Sbend", "Hkicker", "Vkicker", "Sextupole",
+})
+
 
 class BmadBackend(Backend):
     """Bmad/Tao backend for lattice simulations.
@@ -23,22 +78,14 @@ class BmadBackend(Backend):
 
     def __init__(self, **kwargs: Any) -> None:
         logger.debug(f"Initializing BmadBackend with settings: {kwargs}")
-        logger.debug("Attempting to import pytao module...")
         try:
             import pytao  # noqa: F401
-            logger.debug("pytao module imported successfully")
         except ImportError as e:
-            logger.error(f"Failed to import pytao: {e}")
             raise ImportError(
                 "BmadBackend requires pytao. Install with: pip install accelerator-gym[bmad]"
             ) from e
-        except Exception as e:
-            logger.exception(f"Unexpected error importing pytao: {e}")
-            raise
-        logger.debug("Storing backend settings...")
         self._settings = kwargs
         self._tao: Any = None
-        logger.debug("BmadBackend initialization complete")
 
     def connect(self) -> None:
         from pathlib import Path
@@ -46,39 +93,31 @@ class BmadBackend(Backend):
 
         init_file = self._settings.get("init_file", "tao.init")
         init_path = Path(init_file)
-        
+
         logger.info(f"Connecting to Tao with init_file: {init_file}")
-        logger.debug(f"Init file path (absolute): {init_path.resolve()}")
-        
+
         if not init_path.exists():
-            error_msg = f"Tao init file not found: {init_path.resolve()}"
-            logger.error(error_msg)
-            raise FileNotFoundError(error_msg)
-        
+            raise FileNotFoundError(
+                f"Tao init file not found: {init_path.resolve()}"
+            )
+
+        import os
+        original_cwd = Path.cwd()
+        init_dir = init_path.parent
+        os.chdir(init_dir)
         try:
-            logger.debug(f"Creating Tao instance with args: -init {init_file} -noplot")
-            # Change to init file's directory so relative paths in init file work correctly
-            original_cwd = Path.cwd()
-            init_dir = init_path.parent
-            logger.debug(f"Changing working directory to: {init_dir}")
-            import os
-            os.chdir(init_dir)
-            try:
-                self._tao = Tao(f"-init {init_path.name} -noplot")
-                logger.info("Tao instance created successfully")
-            finally:
-                os.chdir(original_cwd)
-                logger.debug(f"Restored working directory to: {original_cwd}")
+            self._tao = Tao(f"-init {init_path.name} -noplot")
+            logger.info("Tao instance created successfully")
         except Exception as e:
-            logger.exception(f"Failed to create Tao instance: {e}")
             raise RuntimeError(f"Failed to connect to Tao backend: {e}") from e
+        finally:
+            os.chdir(original_cwd)
 
     def disconnect(self) -> None:
         self._tao = None
 
     def get(self, name: str) -> float:
         result = self._tao.cmd(f"show value {name}")
-        # `show value` may return "   <expr>  =  1.23456" or just "  0.0E+00" (no equals)
         for line in result:
             line = line.strip()
             if not line:
@@ -96,23 +135,16 @@ class BmadBackend(Backend):
     def set(self, name: str, value: Any) -> None:
         if not name.startswith("ele::"):
             raise ValueError(f"Cannot set lattice-level variable: {name}")
-        # ele::QF[K1] -> ele_name="QF", attr="K1"
         ele_name, attr = name[5:].rstrip("]").split("[", 1)
         self._tao.cmd(f"set element {ele_name} {attr} = {value}")
 
     def set_many(self, values: dict[str, Any]) -> None:
-        """Batch set multiple element attributes.
-
-        More efficient than calling set() repeatedly as it validates all
-        variables upfront and can potentially batch commands to Tao.
-        """
-        # Validate all names first
+        """Batch set multiple element attributes."""
         for name in values:
             if not name.startswith("ele::"):
                 raise ValueError(f"Cannot set lattice-level variable: {name}")
 
         self._tao.cmd("set global lattice_calc_on = F")
-        # Execute all set commands
         for name, value in values.items():
             ele_name, attr = name[5:].rstrip("]").split("[", 1)
             self._tao.cmd(f"set element {ele_name} {attr} = {value}")
@@ -123,14 +155,144 @@ class BmadBackend(Backend):
     ) -> str:
         """Map tree coordinates to Tao variable names.
 
-        Monitor devices use ``lat::{attribute}[{device_name}]`` syntax.
-        All other devices use ``ele::{device_name}[{attribute}]`` syntax.
+        Routing is attribute-based:
+        - Lattice-computed attributes (orbit, Twiss) use ``lat::{attr}[{name}]``
+        - Global lattice parameters use ``lat::{attr}[0]``
+        - Element attributes use ``ele::{name}[{attr}]``
         """
-        if device_type == "monitor":
+        if attribute in _LATTICE_ATTRIBUTES:
             return f"lat::{attribute}[{device_name}]"
+        if device_type == "global":
+            return f"lat::{attribute}[0]"
         return f"ele::{device_name}[{attribute}]"
+
+    def discover_devices(self) -> dict[str, dict[str, Any]]:
+        """Auto-discover devices from the Tao lattice.
+
+        Queries pytao for all elements, their types, and s-positions,
+        then builds the device tree with control attributes, Twiss
+        attributes, and global lattice parameters.
+        """
+        if self._tao is None:
+            raise RuntimeError("Backend not connected. Call connect() first.")
+
+        names = self._tao.lat_list("*", "ele.name")
+        keys = self._tao.lat_list("*", "ele.key")
+        s_positions = self._tao.lat_list("*", "ele.s")
+
+        # Merge default element attributes with user overrides
+        element_attributes = dict(_DEFAULT_ELEMENT_ATTRIBUTES)
+        user_attrs = self._settings.get("element_attributes")
+        if user_attrs:
+            element_attributes.update(user_attrs)
+
+        devices: dict[str, dict[str, dict[str, Any]]] = {}
+
+        for name, key, s_pos in zip(names, keys, s_positions):
+            if key in _SKIP_ELEMENT_TYPES:
+                continue
+
+            s_position = float(s_pos)
+
+            if key == "Monitor":
+                system = "diagnostics"
+                device_type = "monitor"
+            elif key in _MAGNET_TYPES:
+                system = "magnets"
+                device_type = key.lower()
+            else:
+                # Unknown element type — skip unless it has configured attributes
+                if key not in element_attributes:
+                    continue
+                system = "magnets"
+                device_type = key.lower()
+
+            # Build attributes dict
+            attrs: dict[str, dict[str, Any]] = {}
+
+            # Control attributes (from mapping)
+            if key in element_attributes:
+                for attr_def in element_attributes[key]:
+                    attrs[attr_def["name"]] = {
+                        "description": attr_def.get("description", ""),
+                        "units": attr_def.get("units"),
+                        "read": True,
+                        "write": attr_def.get("write", False),
+                    }
+                    if "limits" in attr_def:
+                        attrs[attr_def["name"]]["limits"] = attr_def["limits"]
+
+            # Monitor readbacks
+            if key == "Monitor":
+                for attr_def in _MONITOR_ATTRIBUTES:
+                    attrs[attr_def["name"]] = {
+                        "description": attr_def.get("description", ""),
+                        "units": attr_def.get("units"),
+                        "read": True,
+                        "write": False,
+                    }
+
+            # Twiss attributes on every element
+            for attr_def in _TWISS_ATTRIBUTES:
+                attrs[attr_def["name"]] = {
+                    "description": attr_def.get("description", ""),
+                    "units": attr_def.get("units"),
+                    "read": True,
+                    "write": False,
+                }
+
+            # Insert into device tree
+            if system not in devices:
+                devices[system] = {}
+            if device_type not in devices[system]:
+                devices[system][device_type] = {}
+
+            devices[system][device_type][name] = {
+                "s_position": s_position,
+                "attributes": attrs,
+            }
+
+        # Global lattice parameters
+        devices["optics"] = {
+            "global": {
+                "ring": {
+                    "description": "Global lattice parameters",
+                    "attributes": {
+                        "tune.a": {
+                            "description": "Horizontal tune",
+                            "read": True,
+                            "write": False,
+                        },
+                        "tune.b": {
+                            "description": "Vertical tune",
+                            "read": True,
+                            "write": False,
+                        },
+                        "chrom.a": {
+                            "description": "Horizontal chromaticity",
+                            "read": True,
+                            "write": False,
+                        },
+                        "chrom.b": {
+                            "description": "Vertical chromaticity",
+                            "read": True,
+                            "write": False,
+                        },
+                        "e_tot": {
+                            "description": "Total beam energy",
+                            "units": "eV",
+                            "read": True,
+                            "write": False,
+                        },
+                    },
+                }
+            }
+        }
+
+        logger.info(
+            f"Discovered {sum(len(devs) for types in devices.values() for devs in types.values())} devices"
+        )
+        return devices
 
     def reset(self) -> None:
         self._tao.cmd("reinit tao")
-
-
