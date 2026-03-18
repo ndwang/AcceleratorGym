@@ -11,6 +11,7 @@ AcceleratorGym is a unified interface for AI agents to monitor and control parti
 ```bash
 pip install -e ".[test]"           # Install in dev mode with test deps
 pip install -e ".[bmad]"           # Include Bmad/Tao backend
+pip install -e ".[bench]"          # Include benchmark deps (anthropic SDK)
 
 python -m pytest                   # Run all tests
 python -m pytest tests/test_variable.py          # Single test file
@@ -18,6 +19,8 @@ python -m pytest tests/test_variable.py::test_name -v  # Single test
 
 accelerator-gym                    # Start MCP server (needs accelerator-gym.yaml in cwd)
 ag-cli                             # Interactive CLI for manual testing
+accelbench list                    # List benchmark tasks
+accelbench run --config path.yaml  # Run benchmark
 ```
 
 ## Architecture
@@ -30,6 +33,7 @@ The layered architecture enforces a strict flow: **MCP Server → Machine → Ca
 - **Backend** (`backends/base.py`) — Abstract interface (`connect/disconnect/get/set/set_many/reset/discover_devices`). Backends are lazily imported; optional deps (pytao, pyepics) are checked at runtime. Bmad backend auto-discovers elements from the lattice via `tao.lat_list()` when the YAML config has no `devices:` section.
 - **MCP Server** (`server.py`) — Exposes 5 tools to AI agents: `browse_devices`, `query_devices`, `get_variables`, `set_variables`, `reset`.
 - **CLI** (`cli.py`) — Interactive shell with commands: browse, query, get, gets, set, sets, reset.
+- **AccelBench** (`accelbench/`) — Benchmark harness for evaluating AI agents. 27 tasks across 4 tiers, with instrumented tool call counting, budget enforcement, and scored reporting. See `docs/AccelBench.md` for full documentation.
 
 ### Key Design Decisions
 
@@ -39,6 +43,8 @@ The layered architecture enforces a strict flow: **MCP Server → Machine → Ca
 - **Atomic batch writes** — `set_many()` validates all values before applying any.
 - **Read-only SQL** — Catalog queries only allow SELECT; schema is locked via PRAGMA after init.
 - **Logging goes to stderr** so it doesn't interfere with the MCP stdout protocol.
+- **Design vs model values** — `Backend.get_design(name)` reads unperturbed reference values. BmadBackend uses Tao's `|design` suffix. Machine passes through with validation. Used by AccelBench verification functions.
+- **AccelBench is agent-agnostic** — agents implement `AgentAdapter.run(prompt, tools, call_tool) -> str`. `InstrumentedMachine` wraps Machine for tool call counting. One `get_variables(["a","b"])` = 1 call.
 
 ## Git
 

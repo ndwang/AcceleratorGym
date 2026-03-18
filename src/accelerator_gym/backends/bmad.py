@@ -294,5 +294,22 @@ class BmadBackend(Backend):
         )
         return devices
 
+    def get_design(self, name: str) -> float:
+        """Read the design (unperturbed) value via Tao's ``|design`` suffix."""
+        result = self._tao.cmd(f"show value {name}|design")
+        for line in result:
+            line = line.strip()
+            if not line:
+                continue
+            if "=" in line:
+                value_str = line.split("=")[-1].strip()
+            else:
+                value_str = line
+            try:
+                return float(value_str)
+            except ValueError:
+                continue
+        raise ValueError(f"Could not parse Tao design output for '{name}': {result}")
+
     def reset(self) -> None:
         self._tao.cmd("reinit tao")

@@ -53,6 +53,16 @@ class Backend(ABC):
         """
         return {}
 
+    def get_design(self, name: str) -> float:
+        """Read the design (unperturbed) value of a variable.
+
+        Only supported by backends that distinguish model vs design values
+        (e.g., Bmad/Tao). Default raises NotImplementedError.
+        """
+        raise NotImplementedError(
+            f"{type(self).__name__} does not support get_design()"
+        )
+
     @abstractmethod
     def reset(self) -> None:
         """Reset to the initial state."""

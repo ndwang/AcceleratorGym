@@ -117,6 +117,13 @@ class Machine:
         # Apply all using backend's batch operation
         self._backend.set_many(values)
 
+    def get_design(self, name: str) -> float:
+        """Read the design (unperturbed) value of a variable."""
+        if name not in self._variables:
+            raise KeyError(f"Unknown variable: '{name}'")
+        self._variables[name].validate_read()
+        return self._backend.get_design(name)
+
     def reset(self) -> None:
         """Reset the machine to its initial state."""
         self._backend.reset()
