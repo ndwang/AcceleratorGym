@@ -184,9 +184,13 @@ All values are passed as strings. Your constructor should convert types as neede
 
 ## Built-in Adapters
 
-### `accelbench.adapters.litellm.LiteLLMAdapter` (default)
+There are two ways an adapter can interact with the accelerator, depending on whether the agent runs in the same process or as a subprocess.
 
-The default adapter, using [LiteLLM](https://docs.litellm.ai/docs/providers) for provider-agnostic model access. Supports 100+ providers through a single interface — pass any model via `--model`:
+### In-process adapters (default)
+
+The agent runs in the harness process and calls `call_tool()` directly. The `InstrumentedMachine` counts calls, enforces the budget, and records a trace — all transparently. Verification reads machine state directly after the agent finishes.
+
+**`accelbench.adapters.litellm.LiteLLMAdapter`** is the default in-process adapter, using [LiteLLM](https://docs.litellm.ai/docs/providers) for provider-agnostic model access. Supports 100+ providers — pass any model via `--model`:
 
 ```bash
 # OpenAI (default)
@@ -207,9 +211,27 @@ accelbench run --config ... --model ollama/llama3
 
 Requires `pip install -e ".[bench]"` and the appropriate API key env var for your provider.
 
-### `accelbench.adapters.claude_code.ClaudeCodeAdapter`
+### Subprocess adapters (trace replay)
 
-Runs Claude Code CLI against an MCP server subprocess. Starts an `accelerator-gym` MCP server, writes a temporary MCP config, and pipes the prompt to the `claude` CLI via stdin.
+Some agents manage their own server connection and can't use `call_tool()` directly. For these, the adapter launches a `bench_server` subprocess — a standalone MCP server that handles task setup, budget enforcement, and trace recording internally. The agent connects to this server instead.
+
+After the agent finishes, the adapter reads back a trace file containing all tool calls the agent made. The harness replays `set_variables` and `reset` calls from this trace onto its own Machine to reconstruct the post-agent state for verification.
+
+A subprocess adapter exposes a `last_trace` property that returns the trace data. The harness detects this automatically:
+
+```python
+class MySubprocessAdapter:
+    @property
+    def last_trace(self):
+        """Return trace dict with 'call_count' and 'trace' keys, or None."""
+        return self._last_trace
+
+    def set_task_context(self, task_id, seed, budget):
+        """Called by the harness before each run() with task parameters."""
+        ...
+```
+
+**`accelbench.adapters.claude_code.ClaudeCodeAdapter`** is the built-in subprocess adapter. It launches `bench_server` as an MCP server, writes a temporary MCP config, and pipes the prompt to the `claude` CLI:
 
 ```bash
 accelbench run --config examples/booster/accelerator-gym.yaml \
