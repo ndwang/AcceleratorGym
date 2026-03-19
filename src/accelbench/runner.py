@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import concurrent.futures
 import logging
 import time
 from typing import Any, Callable
@@ -47,6 +48,7 @@ def run_task(
     machine: Machine,
     adapter: Any,
     rng: Any,
+    timeout: int = 600,
 ) -> TaskResult:
     """Run a single benchmark task through the full lifecycle.
 
@@ -92,7 +94,9 @@ def run_task(
     # Run agent
     start = time.monotonic()
     try:
-        response = adapter.run(prompt, TOOL_SCHEMAS, call_tool)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+            future = pool.submit(adapter.run, prompt, TOOL_SCHEMAS, call_tool)
+            response = future.result(timeout=timeout)
     except Exception as e:
         elapsed = time.monotonic() - start
         meta = _adapter_meta()

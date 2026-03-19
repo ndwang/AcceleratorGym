@@ -34,7 +34,7 @@ class TaskDef:
     abilities: list[str]
     setup: Callable[[Env], dict[str, Any]]
     verify: Callable[[dict[str, Any], Env, dict[str, Any]], bool]
-    timeout: int = 300
+    timeout: int | None = None
 
 
 @dataclass

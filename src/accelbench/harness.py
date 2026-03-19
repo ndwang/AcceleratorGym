@@ -31,6 +31,7 @@ def run_benchmark(
     task_ids: list[str] | None = None,
     tier: int | None = None,
     output_dir: str | None = None,
+    timeout: int = 600,
 ) -> RunRecord:
     """Run the full benchmark (or a subset) and return results.
 
@@ -41,6 +42,7 @@ def run_benchmark(
         task_ids: If given, only run these task IDs.
         tier: If given, only run tasks from this tier.
         output_dir: If given, save per-task trajectory files here.
+        timeout: Wall-clock timeout in seconds per task (default: 600).
 
     Returns:
         A RunRecord with all results.
@@ -74,7 +76,8 @@ def run_benchmark(
             adapter.set_task_context(task.id, seed, task.budget)
 
         try:
-            result = run_task(task, machine, adapter, rng)
+            task_timeout = task.timeout if task.timeout is not None else timeout
+            result = run_task(task, machine, adapter, rng, timeout=task_timeout)
             record.results.append(result)
 
             status = "PASS" if result.passed else "FAIL"

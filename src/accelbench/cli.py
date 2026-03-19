@@ -51,6 +51,10 @@ def main():
         "--output-dir", default=None, help="Directory for report and per-task trajectory files"
     )
     run_parser.add_argument(
+        "--timeout", type=int, default=600,
+        help="Wall-clock timeout in seconds per task (default: 600)",
+    )
+    run_parser.add_argument(
         "--debug", action="store_true", help="Enable debug logging"
     )
 
@@ -116,6 +120,7 @@ def _cmd_run(args):
         task_ids=task_ids,
         tier=args.tier,
         output_dir=args.output_dir,
+        timeout=args.timeout,
     )
 
     report = generate_report(record)
