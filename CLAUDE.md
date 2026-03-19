@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AcceleratorGym is a unified interface for AI agents to monitor and control particle accelerators. It exposes a device tree via an MCP (Model Context Protocol) server, with pluggable backends for simulation (Bmad/Tao) and control systems (EPICS).
+AcceleratorGym is a unified interface for AI agents to monitor and control particle accelerators. It exposes a device tree via an MCP (Model Context Protocol) server, with a pluggable backend for simulation (Bmad/Tao).
 
 ## Build & Run
 
@@ -30,7 +30,7 @@ The layered architecture enforces a strict flow: **MCP Server → Machine → Ca
 - **Machine** (`core/machine.py`) — Central orchestrator. Owns the variable registry, routes reads/writes to the backend, and enforces all validation (types, permissions, limits). Never bypass this layer.
 - **Catalog** (`core/catalog.py`) — Builds an in-memory SQLite database from the YAML device tree. Provides tree browsing (filesystem-like paths: `/system/type/device/attribute`) and read-only SQL queries against device metadata.
 - **Variable** (`core/variable.py`) — Dataclass for a single named parameter with metadata (units, limits, read/write permissions). Validation rejects booleans, enforces inclusive limit bounds, and checks permissions.
-- **Backend** (`backends/base.py`) — Abstract interface (`connect/disconnect/get/set/set_many/reset/discover_devices`). Backends are lazily imported; optional deps (pytao, pyepics) are checked at runtime. Bmad backend auto-discovers elements from the lattice via `tao.lat_list()` when the YAML config has no `devices:` section.
+- **Backend** (`backends/base.py`) — Abstract interface (`connect/disconnect/get/set/set_many/reset/discover_devices`). Backends are lazily imported; optional deps (pytao) are checked at runtime. Bmad backend auto-discovers elements from the lattice via `tao.lat_list()` when the YAML config has no `devices:` section.
 - **MCP Server** (`server.py`) — Exposes 5 tools to AI agents: `browse_devices`, `query_devices`, `get_variables`, `set_variables`, `reset`.
 - **CLI** (`cli.py`) — Interactive shell with commands: browse, query, get, gets, set, sets, reset.
 - **AccelBench** (`accelbench/`) — Benchmark harness for evaluating AI agents. 27 tasks across 4 tiers, with instrumented tool call counting, budget enforcement, and scored reporting. See `docs/AccelBench.md` for full documentation.
