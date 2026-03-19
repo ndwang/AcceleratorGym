@@ -346,16 +346,6 @@ Tasks use two verification strategies:
 
 Ground truth is computed from the Bmad backend directly. Tolerances are generous — the benchmark tests reasoning ability, not numerical precision.
 
-## Design Values
-
-Some verification functions need reference (unperturbed) values. The `Env.get_design(name)` method reads design values from Tao using the `|design` suffix, without needing a separate machine instance.
-
-```python
-# In a verify function:
-design_k1 = env.get_design("ele::QF[K1]")  # Unperturbed value
-current_k1 = env.machine.get("QF:K1")       # Current (possibly perturbed) value
-```
-
 ## Tool Call Counting
 
 - All calls count, including failed or redundant calls
@@ -389,3 +379,13 @@ TIER_TASKS.append(TaskDef(
 ```
 
 The task is automatically picked up by `ALL_TASKS` via the tier module imports.
+
+### Design Values
+
+Some verification functions need reference (unperturbed) values. The `Env.get_design(name)` method reads design values from Tao using the `|design` suffix, without needing a separate machine instance.
+
+```python
+# In a verify function:
+design_k1 = env.get_design("ele::QF[K1]")  # Unperturbed value
+current_k1 = env.machine.get("QF:K1")       # Current (possibly perturbed) value
+```
