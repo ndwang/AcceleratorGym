@@ -6,6 +6,7 @@ import argparse
 import importlib
 import logging
 import sys
+from typing import Any
 
 
 def main():
@@ -27,6 +28,13 @@ def main():
         "--adapter",
         default=None,
         help="Fully qualified adapter class name (default: LiteLLMAdapter)",
+    )
+    run_parser.add_argument(
+        "--adapter-arg",
+        action="append",
+        default=[],
+        metavar="KEY=VALUE",
+        help="Extra keyword arguments for the adapter constructor (repeatable)",
     )
     run_parser.add_argument(
         "--model",
@@ -89,7 +97,8 @@ def _cmd_run(args):
 
     # Import adapter class
     if args.adapter:
-        adapter = _load_adapter(args.adapter)
+        adapter_kwargs = _parse_adapter_args(args.adapter_arg)
+        adapter = _load_adapter(args.adapter, **adapter_kwargs)
     else:
         from accelbench.adapters.litellm import LiteLLMAdapter
         adapter = LiteLLMAdapter(model=args.model)
@@ -118,12 +127,23 @@ def _cmd_run(args):
         save_report(report, os.path.join(args.output_dir, "report.json"))
 
 
-def _load_adapter(fqn: str):
+def _parse_adapter_args(raw: list[str]) -> dict[str, str]:
+    """Parse KEY=VALUE strings into a dict."""
+    result = {}
+    for item in raw:
+        if "=" not in item:
+            raise SystemExit(f"Invalid --adapter-arg (expected KEY=VALUE): {item}")
+        key, value = item.split("=", 1)
+        result[key] = value
+    return result
+
+
+def _load_adapter(fqn: str, **kwargs: Any):
     """Import and instantiate an adapter from a fully qualified class name."""
     module_path, class_name = fqn.rsplit(".", 1)
     module = importlib.import_module(module_path)
     cls = getattr(module, class_name)
-    return cls()
+    return cls(**kwargs)
 
 
 if __name__ == "__main__":

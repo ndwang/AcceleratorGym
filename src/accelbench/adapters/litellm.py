@@ -102,6 +102,7 @@ class LiteLLMAdapter:
                 return message.content or ""
 
             # Execute each tool call and feed results back
+            budget_exceeded = False
             for tc in tool_calls:
                 fn = tc.function
                 try:
@@ -112,8 +113,30 @@ class LiteLLMAdapter:
                 logger.debug(f"Tool call: {fn.name}({arguments})")
                 result = call_tool(fn.name, arguments)
 
+                if "budget exceeded" in result:
+                    budget_exceeded = True
+
                 messages.append({
                     "role": "tool",
                     "tool_call_id": tc.id,
                     "content": result,
                 })
+
+            if budget_exceeded:
+                # One final turn to let the model produce an answer
+                kwargs_final: dict[str, Any] = {
+                    "model": self._model,
+                    "messages": messages,
+                    "max_tokens": self._max_tokens,
+                    **self._extra_kwargs,
+                }
+                if self._api_base:
+                    kwargs_final["api_base"] = self._api_base
+
+                response = litellm.completion(**kwargs_final)
+                if response.usage:
+                    self._last_usage["prompt_tokens"] += response.usage.prompt_tokens or 0
+                    self._last_usage["completion_tokens"] += response.usage.completion_tokens or 0
+                    self._last_usage["total_tokens"] += response.usage.total_tokens or 0
+
+                return response.choices[0].message.content or ""
