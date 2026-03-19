@@ -150,7 +150,10 @@ TIER2_TASKS: list[TaskDef] = [
         id="2.1",
         name="Orbit RMS",
         tier=2,
-        prompt_template="Measure the horizontal orbit at all BPMs and report the RMS.",
+        prompt_template=(
+            "Measure the horizontal orbit at all BPMs and report the RMS.\n"
+            'Answer: {{"rms": <number in meters>}}'
+        ),
         budget=5,
         abilities=["io", "analysis"],
         setup=_setup_2_1,
@@ -162,7 +165,9 @@ TIER2_TASKS: list[TaskDef] = [
         tier=2,
         prompt_template=(
             "Measure the horizontal orbit response to corrector {corrector}. "
-            "Apply a kick of 0.1 mrad, record the orbit change at all BPMs, then restore the corrector."
+            "Apply a kick of 0.1 mrad, record the orbit change at all BPMs, "
+            "then restore the corrector.\n"
+            'Answer: {{"response": [<orbit change at each BPM in meters, ordered by s-position>]}}'
         ),
         budget=10,
         abilities=["measurement"],
@@ -173,7 +178,11 @@ TIER2_TASKS: list[TaskDef] = [
         id="2.3",
         name="Maximum Beta Function",
         tier=2,
-        prompt_template="What is the maximum horizontal beta function in the ring and where does it occur?",
+        prompt_template=(
+            "What is the maximum horizontal beta function in the ring and "
+            "where does it occur?\n"
+            'Answer: {{"element": "<device_id>", "value": <number in meters>}}'
+        ),
         budget=8,
         abilities=["io", "analysis"],
         setup=_setup_2_3,
@@ -183,7 +192,10 @@ TIER2_TASKS: list[TaskDef] = [
         id="2.4",
         name="Phase Advance Between Two Points",
         tier=2,
-        prompt_template="What is the horizontal phase advance between {bpm1} and {bpm2}?",
+        prompt_template=(
+            "What is the horizontal phase advance between {bpm1} and {bpm2}?\n"
+            'Answer: {{"value": <number in radians>}}'
+        ),
         budget=5,
         abilities=["analysis"],
         setup=_setup_2_4,
@@ -195,7 +207,8 @@ TIER2_TASKS: list[TaskDef] = [
         tier=2,
         prompt_template=(
             "What is the total bending angle from all dipoles? "
-            "Is it consistent with a full ring (2\u03c0)?"
+            "Is it consistent with a full ring (2\u03c0)?\n"
+            'Answer: {{"total_angle": <number in radians>, "consistent": <true/false>}}'
         ),
         budget=10,
         abilities=["discovery", "analysis"],
@@ -208,7 +221,8 @@ TIER2_TASKS: list[TaskDef] = [
         tier=2,
         prompt_template=(
             "Measure the horizontal dispersion at all BPMs by changing the beam energy "
-            "by \u00b10.01% and observing the orbit shift."
+            "by \u00b10.01% and observing the orbit shift.\n"
+            'Answer: {{"dispersion": [<dispersion at each BPM in meters, ordered by s-position>]}}'
         ),
         budget=12,
         abilities=["measurement"],
@@ -221,7 +235,8 @@ TIER2_TASKS: list[TaskDef] = [
         tier=2,
         prompt_template=(
             "Measure the horizontal chromaticity by shifting the beam energy "
-            "by \u00b10.01% and observing the tune change."
+            "by \u00b10.01% and observing the tune change.\n"
+            'Answer: {{"chromaticity": <number>}}'
         ),
         budget=10,
         abilities=["measurement"],

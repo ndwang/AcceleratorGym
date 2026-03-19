@@ -93,7 +93,10 @@ TIER1_TASKS: list[TaskDef] = [
         id="1.1",
         name="Read a Parameter",
         tier=1,
-        prompt_template="What is K1 of {element}?",
+        prompt_template=(
+            "What is K1 of {element}?\n"
+            'Answer: {{"value": <number>}}'
+        ),
         budget=3,
         abilities=["io"],
         setup=_setup_1_1,
@@ -103,7 +106,10 @@ TIER1_TASKS: list[TaskDef] = [
         id="1.2",
         name="Set a Parameter",
         tier=1,
-        prompt_template="Set K1 of {element} to {target}.",
+        prompt_template=(
+            "Set K1 of {element} to {target}.\n"
+            'Answer: {{"status": "done"}}'
+        ),
         budget=3,
         abilities=["io"],
         setup=_setup_1_2,
@@ -113,7 +119,10 @@ TIER1_TASKS: list[TaskDef] = [
         id="1.3",
         name="Read a BPM",
         tier=1,
-        prompt_template="What is the vertical orbit at {element}?",
+        prompt_template=(
+            "What is the vertical orbit at {element}?\n"
+            'Answer: {{"value": <number>}}'
+        ),
         budget=3,
         abilities=["io"],
         setup=_setup_1_3,
@@ -123,7 +132,10 @@ TIER1_TASKS: list[TaskDef] = [
         id="1.4",
         name="Count Elements by Type",
         tier=1,
-        prompt_template="How many quadrupoles are in the ring?",
+        prompt_template=(
+            "How many quadrupoles are in the ring?\n"
+            'Answer: {{"count": <integer>}}'
+        ),
         budget=3,
         abilities=["discovery"],
         setup=_setup_1_4,
@@ -133,7 +145,10 @@ TIER1_TASKS: list[TaskDef] = [
         id="1.5",
         name="Read a Global Parameter",
         tier=1,
-        prompt_template="What is the horizontal tune?",
+        prompt_template=(
+            "What is the horizontal tune?\n"
+            'Answer: {{"value": <number>}}'
+        ),
         budget=3,
         abilities=["analysis"],
         setup=_setup_1_5,
@@ -143,7 +158,10 @@ TIER1_TASKS: list[TaskDef] = [
         id="1.6",
         name="Identify an Element",
         tier=1,
-        prompt_template="What type of element is {element}?",
+        prompt_template=(
+            "What type of element is {element}?\n"
+            'Answer: {{"type": "<device_type>"}}'
+        ),
         budget=3,
         abilities=["discovery"],
         setup=_setup_1_6,

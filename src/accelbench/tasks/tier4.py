@@ -203,7 +203,11 @@ TIER4_TASKS: list[TaskDef] = [
         name="Full ORM Measurement",
         tier=4,
         prompt_template=(
-            "Measure the full horizontal orbit response matrix and report its dimensions."
+            "Measure the full horizontal orbit response matrix. "
+            "For each corrector, apply a small kick, record the orbit change at all BPMs, "
+            "then restore the corrector.\n"
+            'Answer: {{"rows": <n_bpms>, "cols": <n_correctors>, '
+            '"matrix": [[<row for BPM 1>], [<row for BPM 2>], ...]}}'
         ),
         budget=80,
         abilities=["discovery", "measurement", "analysis"],
@@ -214,7 +218,10 @@ TIER4_TASKS: list[TaskDef] = [
         id="4.2",
         name="Global Orbit Correction",
         tier=4,
-        prompt_template="Correct the horizontal orbit to minimize the RMS across all BPMs.",
+        prompt_template=(
+            "Correct the horizontal orbit to minimize the RMS across all BPMs.\n"
+            'Answer: {{"status": "done"}}'
+        ),
         budget=100,
         abilities=["measurement", "physics", "optimization"],
         setup=_setup_4_2,
@@ -226,7 +233,8 @@ TIER4_TASKS: list[TaskDef] = [
         tier=4,
         prompt_template=(
             "Correct the horizontal orbit to below 1.0 mm RMS. "
-            "One of the correctors appears to be stuck \u2014 find it and work around it."
+            "One of the correctors appears to be stuck \u2014 find it and work around it.\n"
+            'Answer: {{"status": "done"}}'
         ),
         budget=120,
         abilities=["diagnosis", "optimization"],
@@ -239,7 +247,8 @@ TIER4_TASKS: list[TaskDef] = [
         tier=4,
         prompt_template=(
             "Get the horizontal orbit below 0.5 mm RMS and the horizontal tune to "
-            "4.82 \u00b1 0.01 without changing the vertical tune by more than 0.01."
+            "4.82 \u00b1 0.01 without changing the vertical tune by more than 0.01.\n"
+            'Answer: {{"status": "done"}}'
         ),
         budget=150,
         abilities=["physics", "optimization"],
@@ -252,7 +261,8 @@ TIER4_TASKS: list[TaskDef] = [
         tier=4,
         prompt_template=(
             "Create a closed orbit bump producing +3 mm horizontal displacement at the "
-            "BPM closest to s = 30 m, closing within 0.2 mm at all other BPMs."
+            "BPM closest to s = 30 m, closing within 0.2 mm at all other BPMs.\n"
+            'Answer: {{"status": "done"}}'
         ),
         budget=100,
         abilities=["physics", "measurement", "optimization"],
@@ -264,7 +274,9 @@ TIER4_TASKS: list[TaskDef] = [
         name="End-to-End Diagnosis and Correction",
         tier=4,
         prompt_template=(
-            "The beam orbit is distorted and the tune is wrong. Diagnose the problem and fix it."
+            "The beam orbit is distorted and the tune is wrong. "
+            "Diagnose the problem and fix it.\n"
+            'Answer: {{"faulty_element": "<device_id>"}}'
         ),
         budget=200,
         abilities=["diagnosis", "physics", "optimization"],

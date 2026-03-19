@@ -194,7 +194,10 @@ TIER3_TASKS: list[TaskDef] = [
         id="3.1",
         name="Find Most Effective Corrector",
         tier=3,
-        prompt_template="Which horizontal corrector has the largest effect on the orbit near s = 45 m?",
+        prompt_template=(
+            "Which horizontal corrector has the largest effect on the orbit near s = 45 m?\n"
+            'Answer: {{"corrector": "<device_id>"}}'
+        ),
         budget=30,
         abilities=["discovery", "analysis"],
         setup=_setup_3_1,
@@ -205,7 +208,9 @@ TIER3_TASKS: list[TaskDef] = [
         name="Find a Nonzero Corrector",
         tier=3,
         prompt_template=(
-            "Something is applying a horizontal kick somewhere in the ring. Find the source."
+            "Something is applying a horizontal kick somewhere in the ring. "
+            "Find the source.\n"
+            'Answer: {{"corrector": "<device_id>", "kick": <value in radians>}}'
         ),
         budget=25,
         abilities=["discovery", "io"],
@@ -216,7 +221,10 @@ TIER3_TASKS: list[TaskDef] = [
         id="3.3",
         name="Gradient Error Detection",
         tier=3,
-        prompt_template="One of the focusing quadrupoles has an anomalous gradient. Which one?",
+        prompt_template=(
+            "One of the focusing quadrupoles has an anomalous gradient. Which one?\n"
+            'Answer: {{"element": "<device_id>"}}'
+        ),
         budget=40,
         abilities=["discovery", "diagnosis"],
         setup=_setup_3_3,
@@ -226,7 +234,11 @@ TIER3_TASKS: list[TaskDef] = [
         id="3.4",
         name="Beta Function Outlier",
         tier=3,
-        prompt_template="Find any BPM where the horizontal beta function is more than 50% above average.",
+        prompt_template=(
+            "Find any BPM where the horizontal beta function is more than "
+            "50% above average.\n"
+            'Answer: {{"bpm": "<device_id>"}}'
+        ),
         budget=15,
         abilities=["analysis", "diagnosis"],
         setup=_setup_3_4,
@@ -236,7 +248,10 @@ TIER3_TASKS: list[TaskDef] = [
         id="3.5",
         name="Tune Adjustment",
         tier=3,
-        prompt_template="Adjust the horizontal tune to 4.82 \u00b1 0.005.",
+        prompt_template=(
+            "Adjust the horizontal tune to 4.82 \u00b1 0.005.\n"
+            'Answer: {{"status": "done"}}'
+        ),
         budget=30,
         abilities=["physics", "optimization"],
         setup=_setup_3_5,
@@ -246,7 +261,10 @@ TIER3_TASKS: list[TaskDef] = [
         id="3.6",
         name="Chromaticity Adjustment",
         tier=3,
-        prompt_template="Adjust the horizontal chromaticity to +1.0 \u00b1 0.3.",
+        prompt_template=(
+            "Adjust the horizontal chromaticity to +1.0 \u00b1 0.3.\n"
+            'Answer: {{"status": "done"}}'
+        ),
         budget=30,
         abilities=["physics", "optimization"],
         setup=_setup_3_6,
@@ -257,7 +275,9 @@ TIER3_TASKS: list[TaskDef] = [
         name="Single-BPM Orbit Correction",
         tier=3,
         prompt_template=(
-            "Correct the horizontal orbit at the BPM with the worst reading to within 0.1 mm."
+            "Correct the horizontal orbit at the BPM with the worst reading "
+            "to within 0.1 mm.\n"
+            'Answer: {{"status": "done"}}'
         ),
         budget=25,
         abilities=["discovery", "optimization"],
@@ -270,7 +290,8 @@ TIER3_TASKS: list[TaskDef] = [
         tier=3,
         prompt_template=(
             "Create a +2 mm horizontal orbit bump near s = 30 m that doesn't affect "
-            "BPMs more than 5 m away by more than 0.1 mm."
+            "BPMs more than 5 m away by more than 0.1 mm.\n"
+            'Answer: {{"status": "done"}}'
         ),
         budget=40,
         abilities=["measurement", "physics"],
