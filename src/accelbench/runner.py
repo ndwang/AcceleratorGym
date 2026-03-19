@@ -20,6 +20,28 @@ _ANSWER_INSTRUCTION = (
 )
 
 
+def _replay_trace(machine: Machine, trace: list[dict[str, Any]]) -> None:
+    """Replay set_variables and reset calls from a trace onto a machine.
+
+    This reconstructs the post-agent machine state so that verification
+    functions can read the same values the agent left behind.
+    """
+    for entry in trace:
+        tool = entry["tool"]
+        if tool == "set_variables":
+            args = entry["arguments"]
+            # Skip replaying calls that failed (budget exceeded or validation error)
+            result = entry.get("result", "")
+            if isinstance(result, str) and result.startswith("Error"):
+                continue
+            machine.set_many(args["values"])
+        elif tool == "reset":
+            result = entry.get("result", "")
+            if isinstance(result, str) and result.startswith("Error"):
+                continue
+            machine.reset()
+
+
 def run_task(
     task: TaskDef,
     machine: Machine,
@@ -33,8 +55,9 @@ def run_task(
     3. Format prompt, build call_tool closure
     4. Call adapter.run with timeout
     5. Extract JSON answer
-    6. Call task.verify
-    7. Return TaskResult
+    6. If adapter provides trace (e.g. ClaudeCodeAdapter), replay mutations
+    7. Call task.verify
+    8. Return TaskResult
     """
     instrumented = InstrumentedMachine(machine, task.budget)
     env = Env(machine=machine, rng=rng)
@@ -59,9 +82,6 @@ def run_task(
 
     # Build tool interface
     call_tool = make_call_tool(instrumented)
-
-    def _trace_dicts() -> list[dict]:
-        return [tc.to_dict() for tc in instrumented.trace]
 
     def _adapter_meta() -> dict[str, Any]:
         """Extract model and usage from adapter if available."""
@@ -88,11 +108,22 @@ def run_task(
             setup_data=setup_data,
             prompt=prompt,
             response="",
-            trace=_trace_dicts(),
+            trace=[],
             **meta,
         )
     elapsed = time.monotonic() - start
     meta = _adapter_meta()
+
+    # Resolve trace source: adapter-provided (ClaudeCode) or local instrumented
+    adapter_trace = getattr(adapter, "last_trace", None)
+    if adapter_trace is not None:
+        tool_calls = adapter_trace["call_count"]
+        trace_dicts = adapter_trace["trace"]
+        # Replay agent mutations onto the harness machine for verification
+        _replay_trace(machine, trace_dicts)
+    else:
+        tool_calls = instrumented.call_count
+        trace_dicts = [tc.to_dict() for tc in instrumented.trace]
 
     # Extract answer
     answer = extract_json_answer(response) if response else None
@@ -102,7 +133,7 @@ def run_task(
         return TaskResult(
             task_id=task.id,
             passed=False,
-            tool_calls=instrumented.call_count,
+            tool_calls=tool_calls,
             budget=task.budget,
             wall_time=elapsed,
             extracted_answer=None,
@@ -110,7 +141,7 @@ def run_task(
             setup_data=setup_data,
             prompt=prompt,
             response=response or "",
-            trace=_trace_dicts(),
+            trace=trace_dicts,
             **meta,
         )
 
@@ -123,13 +154,13 @@ def run_task(
     return TaskResult(
         task_id=task.id,
         passed=passed,
-        tool_calls=instrumented.call_count,
+        tool_calls=tool_calls,
         budget=task.budget,
         wall_time=elapsed,
         extracted_answer=answer,
         setup_data=setup_data,
         prompt=prompt,
         response=response or "",
-        trace=_trace_dicts(),
+        trace=trace_dicts,
         **meta,
     )

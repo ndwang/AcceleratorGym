@@ -1,8 +1,8 @@
-"""Claude Code adapter (MCP server mode).
+"""Claude Code adapter — launches bench_server as an instrumented MCP server.
 
-Launches an instrumented MCP server as a subprocess and connects
-Claude Code to it via --mcp-config. Tool call counting is handled
-by the instrumented server.
+Claude CLI connects to the bench_server subprocess, which handles task setup,
+budget enforcement, and trace recording. After Claude CLI exits, the adapter
+reads back the trace file for the runner to use in replay-based verification.
 """
 
 from __future__ import annotations
@@ -19,15 +19,15 @@ logger = logging.getLogger(__name__)
 
 
 class ClaudeCodeAdapter:
-    """Adapter that runs Claude Code CLI against an MCP server.
+    """Adapter that runs Claude Code CLI against a bench_server.
 
-    This adapter starts an instrumented accelerator-gym MCP server,
-    writes a temporary MCP config, then invokes the `claude` CLI
-    with the prompt piped via stdin.
+    The bench_server subprocess creates its own Machine, runs task setup
+    with a deterministic seed, wraps it in InstrumentedMachine, and serves
+    the 5 accelerator-gym tools. After Claude CLI disconnects, the server
+    dumps its trace to a file which this adapter reads back.
 
-    Note: Tool call counting is done via the InstrumentedMachine in
-    the runner, not by this adapter. The MCP server subprocess uses
-    the same Machine instance's state.
+    The runner replays the agent's set_variables/reset calls from the trace
+    onto its own Machine for verification.
     """
 
     def __init__(
@@ -35,10 +35,34 @@ class ClaudeCodeAdapter:
         config_path: str,
         claude_cmd: str = "claude",
         model: str | None = None,
+        timeout: int = 300,
     ) -> None:
         self._config_path = config_path
         self._claude_cmd = claude_cmd
         self._model = model
+        self._timeout = timeout
+
+        # Set per-task by the harness before each run()
+        self._task_id: str = ""
+        self._seed: int = 0
+        self._budget: int = 0
+
+        # Populated after run() completes
+        self._last_trace: dict[str, Any] | None = None
+
+    @property
+    def model(self) -> str:
+        return self._model or ""
+
+    @property
+    def last_trace(self) -> dict[str, Any] | None:
+        return self._last_trace
+
+    def set_task_context(self, task_id: str, seed: int, budget: int) -> None:
+        """Set task-specific parameters before calling run()."""
+        self._task_id = task_id
+        self._seed = seed
+        self._budget = budget
 
     def run(
         self,
@@ -46,21 +70,41 @@ class ClaudeCodeAdapter:
         tools: list[dict[str, Any]],
         call_tool: Callable[[str, dict[str, Any]], str],
     ) -> str:
-        # Write a temporary MCP config pointing to the accelerator-gym server
+        if not self._task_id:
+            raise RuntimeError("set_task_context() must be called before run()")
+
+        self._last_trace = None
+
+        # Create temp file for trace output
+        trace_fd = tempfile.NamedTemporaryFile(
+            mode="w", suffix=".json", delete=False, prefix="accelbench_trace_"
+        )
+        trace_path = trace_fd.name
+        trace_fd.close()
+
+        # Write MCP config pointing to bench_server
         mcp_config = {
             "mcpServers": {
                 "accelerator-gym": {
                     "command": sys.executable,
-                    "args": ["-m", "accelerator_gym.server", "--config", self._config_path],
+                    "args": [
+                        "-m", "accelbench.bench_server",
+                        "--config", self._config_path,
+                        "--task-id", self._task_id,
+                        "--seed", str(self._seed),
+                        "--budget", str(self._budget),
+                        "--trace-file", trace_path,
+                    ],
                 }
             }
         }
 
-        with tempfile.NamedTemporaryFile(
+        mcp_config_fd = tempfile.NamedTemporaryFile(
             mode="w", suffix=".json", delete=False, prefix="accelbench_mcp_"
-        ) as f:
-            json.dump(mcp_config, f)
-            mcp_config_path = f.name
+        )
+        json.dump(mcp_config, mcp_config_fd)
+        mcp_config_path = mcp_config_fd.name
+        mcp_config_fd.close()
 
         try:
             cmd = [self._claude_cmd, "--print", "--mcp-config", mcp_config_path]
@@ -74,14 +118,24 @@ class ClaudeCodeAdapter:
                 input=prompt,
                 capture_output=True,
                 text=True,
-                timeout=300,
+                timeout=self._timeout,
             )
 
             if result.returncode != 0:
                 logger.error(f"Claude Code stderr: {result.stderr}")
-                return result.stdout or f"Error: Claude Code exited with code {result.returncode}"
 
-            return result.stdout
+            # Read trace file written by bench_server on exit
+            try:
+                with open(trace_path) as f:
+                    self._last_trace = json.load(f)
+                logger.info(
+                    f"Trace loaded: {self._last_trace['call_count']} tool calls"
+                )
+            except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
+                logger.error(f"Failed to read trace file: {e}")
+
+            return result.stdout or f"Error: Claude Code exited with code {result.returncode}"
 
         finally:
             Path(mcp_config_path).unlink(missing_ok=True)
+            Path(trace_path).unlink(missing_ok=True)

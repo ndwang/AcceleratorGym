@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 from pathlib import Path
@@ -15,6 +16,12 @@ from accelbench.tasks import ALL_TASKS, TASKS_BY_ID
 from accelbench.types import RunRecord, TaskDef, TaskResult
 
 logger = logging.getLogger(__name__)
+
+
+def task_seed(seed: int, task_id: str) -> int:
+    """Deterministic per-task seed derivation (stable across processes)."""
+    h = hashlib.sha256(task_id.encode()).hexdigest()
+    return seed + int(h, 16) % (2**31)
 
 
 def run_benchmark(
@@ -60,7 +67,11 @@ def run_benchmark(
 
         # Create fresh machine for each task
         machine = Machine.from_config(config_path)
-        rng = np.random.default_rng(seed + hash(task.id))
+        rng = np.random.default_rng(task_seed(seed, task.id))
+
+        # Set task context for adapters that manage their own server
+        if hasattr(adapter, "set_task_context"):
+            adapter.set_task_context(task.id, seed, task.budget)
 
         try:
             result = run_task(task, machine, adapter, rng)
