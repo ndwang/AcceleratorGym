@@ -137,7 +137,7 @@ def _setup_2_7(env: Env) -> dict[str, Any]:
 
 
 def _verify_2_7(result: dict, env: Env, setup: dict) -> bool:
-    truth = env.machine.get("ring:chrom.a")
+    truth = env.machine.get("params:chrom.a")
     if abs(truth) < 1e-10:
         return abs(result["chromaticity"]) < 1e-6
     return abs(result["chromaticity"] - truth) / abs(truth) < 0.05

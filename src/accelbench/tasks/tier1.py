@@ -69,7 +69,7 @@ def _setup_1_5(env: Env) -> dict[str, Any]:
 
 
 def _verify_1_5(result: dict, env: Env, setup: dict) -> bool:
-    truth = env.machine.get("ring:tune.a")
+    truth = env.machine.get("params:tune.a")
     return abs(result["value"] - truth) < 1e-4
 
 

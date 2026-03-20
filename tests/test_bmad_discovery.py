@@ -113,7 +113,7 @@ class TestDiscoverDevices:
 
     def test_global_lattice_parameters(self, bmad_backend):
         devices = bmad_backend.discover_devices()
-        ring = devices["optics"]["global"]["ring"]
+        ring = devices["global"]["lattice"]["params"]
         attrs = ring["attributes"]
         assert "tune.a" in attrs
         assert "tune.b" in attrs
@@ -165,7 +165,7 @@ class TestResolveVariableName:
 
     def test_global_attribute(self, bmad_backend):
         result = bmad_backend.resolve_variable_name(
-            "optics", "global", "ring", "tune.a"
+            "global", "lattice", "params", "tune.a"
         )
         assert result == "lat::tune.a[0]"
 

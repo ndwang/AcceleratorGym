@@ -162,7 +162,7 @@ class BmadBackend(Backend):
         """
         if attribute in _LATTICE_ATTRIBUTES:
             return f"lat::{attribute}[{device_name}]"
-        if device_type == "global":
+        if system == "global":
             return f"lat::{attribute}[0]"
         return f"ele::{device_name}[{attribute}]"
 
@@ -253,9 +253,9 @@ class BmadBackend(Backend):
             }
 
         # Global lattice parameters
-        devices["optics"] = {
-            "global": {
-                "ring": {
+        devices["global"] = {
+            "lattice": {
+                "params": {
                     "description": "Global lattice parameters",
                     "attributes": {
                         "tune.a": {

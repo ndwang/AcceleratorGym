@@ -97,7 +97,7 @@ def _verify_4_3(result: dict, env: Env, setup: dict) -> bool:
 
 def _setup_4_4(env: Env) -> dict[str, Any]:
     # Record initial vertical tune
-    initial_tune_b = env.machine.get("ring:tune.b")
+    initial_tune_b = env.machine.get("params:tune.b")
 
     # Distort orbit
     cor_vars = get_corrector_vars(env, "h")
@@ -122,8 +122,8 @@ def _verify_4_4(result: dict, env: Env, setup: dict) -> bool:
     bpm_vars = get_bpm_vars(env, "orbit.x")
     values = env.machine.get_many(bpm_vars)
     rms = np.sqrt(np.mean([v**2 for v in values.values()]))
-    tune_a = env.machine.get("ring:tune.a")
-    tune_b = env.machine.get("ring:tune.b")
+    tune_a = env.machine.get("params:tune.a")
+    tune_b = env.machine.get("params:tune.b")
     return (
         rms < 0.5e-3
         and abs(tune_a - 4.82) < 0.01
@@ -160,7 +160,7 @@ def _verify_4_5(result: dict, env: Env, setup: dict) -> bool:
 # --- 4.6: End-to-End Diagnosis and Correction ---
 
 def _setup_4_6(env: Env) -> dict[str, Any]:
-    design_tune = env.machine.get("ring:tune.a")
+    design_tune = env.machine.get("params:tune.a")
 
     # Perturb a quadrupole
     quad_vars = get_quad_vars(env)
@@ -185,7 +185,7 @@ def _setup_4_6(env: Env) -> dict[str, Any]:
 
 
 def _verify_4_6(result: dict, env: Env, setup: dict) -> bool:
-    tune = env.machine.get("ring:tune.a")
+    tune = env.machine.get("params:tune.a")
     bpm_vars = get_bpm_vars(env, "orbit.x")
     values = env.machine.get_many(bpm_vars)
     rms = np.sqrt(np.mean([v**2 for v in values.values()]))

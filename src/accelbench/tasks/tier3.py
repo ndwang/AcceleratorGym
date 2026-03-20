@@ -126,7 +126,7 @@ def _setup_3_5(env: Env) -> dict[str, Any]:
 
 
 def _verify_3_5(result: dict, env: Env, setup: dict) -> bool:
-    tune = env.machine.get("ring:tune.a")
+    tune = env.machine.get("params:tune.a")
     return abs(tune - 4.82) < 0.005
 
 
@@ -138,7 +138,7 @@ def _setup_3_6(env: Env) -> dict[str, Any]:
 
 
 def _verify_3_6(result: dict, env: Env, setup: dict) -> bool:
-    chrom = env.machine.get("ring:chrom.a")
+    chrom = env.machine.get("params:chrom.a")
     return abs(chrom - 1.0) < 0.3
 
 
