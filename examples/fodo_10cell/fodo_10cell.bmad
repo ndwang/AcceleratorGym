@@ -14,8 +14,10 @@ D3:  drift,      L = 1.0
 BPM: monitor,   L = 0.0
 HK:  hkicker,   L = 0.0, kick = 0
 VK:  vkicker,   L = 0.0, kick = 0
+SF:  sextupole, L = 0.1, K2 = 0
+SD:  sextupole, L = 0.1, K2 = 0
 
-FODO: line = (D1, QF, HK, D2, QD, VK, D3, BPM)
+FODO: line = (D1, QF, SF, HK, D2, QD, SD, VK, D3, BPM)
 
 RING: line = (10*FODO)
 
