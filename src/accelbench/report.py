@@ -32,24 +32,6 @@ def generate_report(record: RunRecord) -> dict[str, Any]:
         else:
             tier_stats[tier]["failed"] += 1
 
-    # Per-ability pass rates
-    ability_stats: dict[str, dict[str, int]] = defaultdict(
-        lambda: {"total": 0, "passed": 0}
-    )
-    for r in record.results:
-        task = TASKS_BY_ID.get(r.task_id)
-        if not task:
-            continue
-        for ability in task.abilities:
-            ability_stats[ability]["total"] += 1
-            if r.passed:
-                ability_stats[ability]["passed"] += 1
-
-    ability_rates = {
-        ability: stats["passed"] / stats["total"] if stats["total"] > 0 else 0.0
-        for ability, stats in sorted(ability_stats.items())
-    }
-
     # Aggregate token usage
     total_usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
     for r in record.results:
@@ -90,7 +72,6 @@ def generate_report(record: RunRecord) -> dict[str, Any]:
             str(tier): dict(stats)
             for tier, stats in sorted(tier_stats.items())
         },
-        "per_ability": ability_rates,
         "tasks": task_details,
         "metadata": {
             "seed": record.seed,
@@ -118,10 +99,6 @@ def print_report(report: dict[str, Any]) -> None:
         t = int(tier)
         label = {1: "Direct", 2: "Procedural", 3: "Adaptive", 4: "Complex"}.get(t, f"Tier {t}")
         print(f"  Tier {t} ({label}): {stats['passed']}/{stats['total']}")
-
-    print("\nAbility Pass Rates:")
-    for ability, rate in report["per_ability"].items():
-        print(f"  {ability:15s}: {rate:.0%}")
 
     print("\nTask Details:")
     for t in report["tasks"]:

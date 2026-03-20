@@ -31,7 +31,6 @@ class TaskDef:
     tier: int
     prompt_template: str
     budget: int
-    abilities: list[str]
     setup: Callable[[Env], dict[str, Any]]
     verify: Callable[[dict[str, Any], Env, dict[str, Any]], bool]
     timeout: int | None = None

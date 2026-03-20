@@ -83,12 +83,10 @@ def _cmd_list(args):
     if args.tier is not None:
         tasks = [t for t in tasks if t.tier == args.tier]
 
-    print(f"{'ID':6s} {'Name':45s} {'Tier':5s} {'Budget':7s} Abilities")
-    print("-" * 90)
+    print(f"{'ID':6s} {'Name':45s} {'Tier':5s} {'Budget':7s}")
+    print("-" * 70)
     for t in tasks:
-        print(
-            f"{t.id:6s} {t.name:45s} {t.tier:5d} {t.budget:7d} {', '.join(t.abilities)}"
-        )
+        print(f"{t.id:6s} {t.name:45s} {t.tier:5d} {t.budget:7d}")
     print(f"\nTotal: {len(tasks)} tasks")
 
 

@@ -238,7 +238,7 @@ accelbench list                    # All tasks
 accelbench list --tier 2           # Only Tier 2
 ```
 
-Output columns: ID, Name, Tier, Budget, Abilities.
+Output columns: ID, Name, Tier, Budget.
 
 ### `accelbench run`
 
@@ -272,7 +272,7 @@ results/
 
 ### `report.json` — Aggregate Scores
 
-Contains summary stats, per-tier breakdown, per-ability pass rates, and per-task score lines (no traces — kept lean for quick comparison).
+Contains summary stats, per-tier breakdown, and per-task score lines (no traces — kept lean for quick comparison).
 
 ### `traces/task_X_Y.json` — Per-Task Trajectories
 
@@ -283,7 +283,6 @@ Full record of a single task run:
   "task_id": "1.1",
   "task_name": "Read a Parameter",
   "tier": 1,
-  "abilities": ["io"],
   "passed": true,
   "tool_calls": 2,
   "budget": 3,
@@ -310,11 +309,6 @@ AccelBench Results: 6/6 passed (100%)
 
 Per-Tier Breakdown:
   Tier 1 (Direct): 6/6
-
-Ability Pass Rates:
-  analysis       : 100%
-  discovery      : 100%
-  io             : 100%
 
 Task Details:
   1.1   Read a Parameter                          PASS  tools:   2/  3  time:    3.2s
@@ -363,7 +357,6 @@ TIER_TASKS.append(TaskDef(
     tier=X,
     prompt_template="Set K1 of {element} to {target}.",
     budget=5,
-    abilities=["io"],
     setup=_setup_X_Y,
     verify=_verify_X_Y,
 ))

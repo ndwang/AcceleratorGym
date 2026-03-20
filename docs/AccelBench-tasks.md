@@ -135,8 +135,6 @@ so the agent doesn't need to guess or discover the naming convention.
 
 - All prompts give exact variable names, device IDs, paths, and type strings.
   No discovery or name construction required.
-- All abilities are labeled **io** (get/set/reset) or **discovery**
-  (query/browse).
 - The single-read task (1.1) randomizes across variable categories (magnet
   setting, diagnostic, global parameter) so one task covers the variety that
   previously required three separate tasks (old 1.1, 1.3, 1.5).

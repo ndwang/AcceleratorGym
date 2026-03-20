@@ -117,7 +117,6 @@ def _save_trajectory(
         "task_id": result.task_id,
         "task_name": task.name,
         "tier": task.tier,
-        "abilities": task.abilities,
         "passed": result.passed,
         "tool_calls": result.tool_calls,
         "budget": result.budget,
