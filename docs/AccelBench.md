@@ -33,22 +33,7 @@ The harness is agent-agnostic. Any agent can be benchmarked by implementing a th
 
 ## Tasks
 
-27 tasks across 4 tiers, testing 7 abilities:
-
-| Tier | Name | Tasks | Budget | What it tests |
-|------|------|-------|--------|---------------|
-| 1 | Direct | 1.1–1.6 | 3 | Basic interface competence — read, write, browse, query |
-| 2 | Procedural | 2.1–2.7 | 5–12 | Known multi-step procedures with deterministic sequencing |
-| 3 | Adaptive | 3.1–3.8 | 15–40 | Next action depends on observations; requires discovery and iteration |
-| 4 | Complex | 4.1–4.6 | 80–200 | Multi-procedure compositions with competing objectives |
-
-Each task defines:
-
-- **Prompt template** with placeholders filled at runtime from randomized setup
-- **Setup function** that configures the machine state (perturbations, etc.)
-- **Verify function** that checks the agent's answer and/or machine state
-- **Budget** — maximum tool calls before automatic failure
-- **Abilities** — tagged capabilities tested (io, discovery, analysis, measurement, physics, optimization, diagnosis)
+See [AccelBench-tasks.md](AccelBench-tasks.md) for the full task spec — tool interface, device tree structure, verification protocol, and per-task details.
 
 ## Implementing a Custom Adapter
 
@@ -352,6 +337,12 @@ Ground truth is computed from the Bmad backend directly. Tolerances are generous
 - Exceeding the budget is an automatic failure
 - Efficiency score: `max(0, 1 - calls_used / budget)` — a bonus metric, not pass/fail
 - Budget enforcement returns `"Error: tool call budget exceeded"` for any call beyond the limit
+
+## No Built-in Code Execution
+
+AccelBench provides only 5 domain-specific tools: `browse_devices`, `query_devices`, `get_variables`, `set_variables`, and `reset`. It does **not** provide a code execution environment (Python interpreter, shell, etc.).
+
+Higher-tier tasks may involve data volumes or calculations that are infeasible to perform manually — orbit response matrices with hundreds of BPMs, high-dimensional optimization, numerical physics calculations. Agents with code execution capabilities (e.g., Claude Code with bash, Codex with its sandbox) will have an advantage on these tasks, and **that is by design**. Code execution is an intrinsic harness capability, and we want to measure the agent's ability to leverage it.
 
 ## Adding New Tasks
 
