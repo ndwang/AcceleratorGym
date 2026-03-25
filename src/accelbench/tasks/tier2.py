@@ -13,7 +13,15 @@ from ._helpers import query_variables, global_variable, close
 
 
 def _setup_2_1(env: Env) -> dict[str, Any]:
-    return {}
+    all_beta = env.machine.catalog.query(
+        "SELECT d.device_id, a.variable "
+        "FROM attributes a JOIN devices d ON a.device_id = d.device_id "
+        "WHERE a.attribute_name = 'beta.a'"
+    )
+    if not all_beta:
+        raise ValueError("No elements with beta.a found")
+    variables = [r["variable"] for r in all_beta]
+    return {"variables": ", ".join(f"`{v}`" for v in variables)}
 
 
 def _verify_2_1(result: dict, env: Env, setup_data: dict) -> bool:
@@ -40,7 +48,11 @@ def _setup_2_2(env: Env) -> dict[str, Any]:
     if hkickers:
         kicks = {r["variable"]: float(rng.normal(0, 1e-4)) for r in hkickers}
         env.machine.set_many(kicks)
-    return {}
+    bpms = query_variables(env, "monitor", "orbit.x")
+    if not bpms:
+        raise ValueError("No BPMs found in lattice")
+    bpm_vars = [r["variable"] for r in bpms]
+    return {"bpm_variables": ", ".join(f"`{v}`" for v in bpm_vars)}
 
 
 def _verify_2_2(result: dict, env: Env, setup_data: dict) -> bool:
@@ -62,7 +74,15 @@ def _setup_2_3(env: Env) -> dict[str, Any]:
     if not hkickers:
         raise ValueError("No horizontal correctors found in lattice")
     pick = hkickers[int(rng.integers(len(hkickers)))]
-    return {"corrector_var": pick["variable"], "kick": 1e-4}
+    bpms = query_variables(env, "monitor", "orbit.x")
+    if not bpms:
+        raise ValueError("No BPMs found in lattice")
+    bpm_vars = [r["variable"] for r in bpms]
+    return {
+        "corrector_var": pick["variable"],
+        "kick": 1e-4,
+        "bpm_variables": ", ".join(f"`{v}`" for v in bpm_vars),
+    }
 
 
 def _verify_2_3(result: dict, env: Env, setup_data: dict) -> bool:
@@ -105,7 +125,8 @@ def _setup_2_4(env: Env) -> dict[str, Any]:
     rng = env.rng
     quads = query_variables(env, "quadrupole", "K1")
     pick = quads[int(rng.integers(len(quads)))]
-    return {"quad_var": pick["variable"]}
+    tune_var = global_variable(env, "tune.a")
+    return {"quad_var": pick["variable"], "tune_var": tune_var}
 
 
 def _verify_2_4(result: dict, env: Env, setup_data: dict) -> bool:
@@ -165,10 +186,19 @@ def _verify_2_5(result: dict, env: Env, setup_data: dict) -> bool:
 def _setup_2_6(env: Env) -> dict[str, Any]:
     rng = env.rng
     hkickers = query_variables(env, "hkicker", "kick")
-    if hkickers:
-        kicks = {r["variable"]: float(rng.normal(0, 1e-4)) for r in hkickers}
-        env.machine.set_many(kicks)
-    return {}
+    if not hkickers:
+        raise ValueError("No horizontal correctors found in lattice")
+    kicks = {r["variable"]: float(rng.normal(0, 1e-4)) for r in hkickers}
+    env.machine.set_many(kicks)
+    corr_vars = [r["variable"] for r in hkickers]
+    bpms = query_variables(env, "monitor", "orbit.x")
+    if not bpms:
+        raise ValueError("No BPMs found in lattice")
+    bpm_vars = [r["variable"] for r in bpms]
+    return {
+        "corrector_variables": ", ".join(f"`{v}`" for v in corr_vars),
+        "bpm_variables": ", ".join(f"`{v}`" for v in bpm_vars),
+    }
 
 
 def _verify_2_6(result: dict, env: Env, setup_data: dict) -> bool:
@@ -264,8 +294,9 @@ TIER2_TASKS = [
         tier=2,
         budget=5,
         prompt_template=(
-            "Read the horizontal beta function at all elements and report the "
-            "maximum value and where it occurs.\n\n"
+            "Read the horizontal beta function at the following elements: "
+            "{variables}. Report the maximum value and which element it occurs at."
+            "\n\n"
             'Return `{{"max_beta": <number>, "element": "<device_id>"}}`.'
         ),
         setup=_setup_2_1,
@@ -277,7 +308,8 @@ TIER2_TASKS = [
         tier=2,
         budget=5,
         prompt_template=(
-            "Read the horizontal orbit at all BPMs and report the RMS value.\n\n"
+            "Read the horizontal orbit at the following BPMs: {bpm_variables}. "
+            "Report the RMS value.\n\n"
             'Return `{{"rms": <number_in_meters>}}`.'
         ),
         setup=_setup_2_2,
@@ -290,8 +322,9 @@ TIER2_TASKS = [
         budget=8,
         prompt_template=(
             "Apply a kick of {kick} rad to `{corrector_var}`, read the horizontal "
-            "orbit at all BPMs, then restore the corrector to its original value. "
-            "Report the orbit change at each BPM.\n\n"
+            "orbit at the following BPMs: {bpm_variables}, then restore the "
+            "corrector to its original value. Report the orbit change at each BPM."
+            "\n\n"
             'Return `{{"orbit_change": {{"<bpm_name>": <change_in_meters>, ...}}}}`.'
         ),
         setup=_setup_2_3,
@@ -303,8 +336,8 @@ TIER2_TASKS = [
         tier=2,
         budget=7,
         prompt_template=(
-            "Change `{quad_var}` by +1%, read the horizontal tune, then restore "
-            "the quadrupole. Report the tune change.\n\n"
+            "Change `{quad_var}` by +1%, read the horizontal tune (`{tune_var}`), "
+            "then restore the quadrupole. Report the tune change.\n\n"
             'Return `{{"tune_change": <number>}}`.'
         ),
         setup=_setup_2_4,
@@ -329,8 +362,8 @@ TIER2_TASKS = [
         tier=2,
         budget=8,
         prompt_template=(
-            "Set all horizontal correctors to zero, then read the horizontal "
-            "orbit at all BPMs.\n\n"
+            "Set the following horizontal correctors to zero: {corrector_variables}. "
+            "Then read the horizontal orbit at these BPMs: {bpm_variables}.\n\n"
             'Return `{{"orbit": {{"<bpm_name>": <orbit_in_meters>, ...}}}}`.'
         ),
         setup=_setup_2_6,

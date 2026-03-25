@@ -122,12 +122,12 @@ so the agent doesn't need to guess or discover the naming convention.
 |------|-------------------|----------------|----------------------------------------------------------------|-------|
 | 1.1  | Read a Variable   | get_variables  | "What is the value of `{variable}`?"                           | Randomize across magnet settings, diagnostics, and global parameters. |
 | 1.2  | Batch Read        | get_variables  | "Read the values of `{var1}`, `{var2}`, and `{var3}`."         | Pick variables from different categories. |
-| 1.3  | Set a Variable    | set_variables  | "Set `{variable}` to {target}."                                | Single write. |
-| 1.4  | Batch Set         | set_variables  | "Set `{var1}` to {val1} and `{var2}` to {val2}."              | Batch write in a single call. |
+| 1.3  | Set a Variable    | set_variables  | "Set `{variable}` to `{target}`."                                | Single write. |
+| 1.4  | Batch Set         | set_variables  | "Set `{var1}` to `{val1}` and `{var2}` to `{val2}`."              | Batch write in a single call. |
 | 1.5  | Reset Machine     | reset          | "Reset the machine to its default state."                      | Verify perturbed variable returns to design value. |
 | 1.6  | Count Aggregation | query_devices  | "How many devices of type `{device_type}` are in the ring?"    | COUNT + WHERE. Returns a single number. |
 | 1.7  | Attribute Lookup  | query_devices  | "What is the s-position of device `{device_id}`?"              | WHERE on primary key. Returns a single value. |
-| 1.8  | Range Filter      | query_devices  | "List all devices with s-position between {lo} and {hi} meters." | Range condition. Returns a result set. |
+| 1.8  | Range Filter      | query_devices  | "List all devices with s-position between `{lo}` and `{hi}` meters." | Range condition. Returns a result set. |
 | 1.9  | Browse Root       | browse_devices | "What are the top-level categories in the device tree?"        | Root-level tree navigation. |
 | 1.10 | Browse Leaf       | browse_devices | "What attributes are available for the device at `{path}`?"    | Leaf-level inspection. Prompt gives exact tree path. |
 
@@ -155,14 +155,14 @@ Five distinct procedural patterns, with physics variety:
 
 | ID  | Name                           | Pattern              | Prompt (template)                                              | Notes |
 |-----|--------------------------------|----------------------|----------------------------------------------------------------|-------|
-| 2.1 | Maximum Beta Function          | Batch read + compute | "Read the horizontal beta function at all elements and report the maximum value and where it occurs." | Argmax. Tests optics knowledge. |
-| 2.2 | Orbit RMS                      | Batch read + compute | "Read the horizontal orbit at all BPMs and report the RMS."   | RMS. Requires calculator for many values. |
-| 2.3 | Corrector Orbit Response       | Set-read-restore     | "Apply a kick of 0.1 mrad to `{corrector_var}`, read the horizontal orbit at all BPMs, then restore the corrector. Report the orbit change." | Tests corrector → orbit relationship. |
-| 2.4 | Quad Tune Shift                | Set-read-restore     | "Change `{quad_var}` by +1%, read the horizontal tune, then restore. Report the tune change." | Tests quad → tune relationship. |
-| 2.5 | Increase Magnet Strength       | Read-then-set        | "Read the current value of `{variable}`, increase it by {pct}%, and set the new value." | Read informs the write. |
-| 2.6 | Zero Correctors and Read Orbit | Batch set + batch read | "Set all horizontal correctors to zero, then read the horizontal orbit at all BPMs." | Coordinate many writes then observe. |
-| 2.7 | Corrector Scan                 | Predetermined scan   | "Scan `{corrector_var}` from 0 to {max_kick} mrad in {n} steps. At each step, read the horizontal orbit at `{bpm_var}`. Report the list of (kick, orbit) pairs. Restore the corrector when done." | Longest Tier 2 task. |
-| 2.8 | Find and Zero a Corrector      | Query + set          | "One of the horizontal correctors has a nonzero kick. Find it using `query_devices` and set it to zero." | Discovery via SQL, then act. Moved from old Tier 3. |
+| 2.1 | Maximum Beta Function          | Batch read + compute | "Read the horizontal beta function at the following elements: `{variables}`. Report the maximum value and which element it occurs at." | Argmax. All variable names provided. |
+| 2.2 | Orbit RMS                      | Batch read + compute | "Read the horizontal orbit at the following BPMs: `{bpm_variables}`. Report the RMS value." | RMS. All BPM variable names provided. |
+| 2.3 | Corrector Orbit Response       | Set-read-restore     | "Apply a kick of `{kick}` rad to `{corrector_var}`, read the horizontal orbit at the following BPMs: `{bpm_variables}`, then restore the corrector. Report the orbit change." | Corrector and BPM names provided. |
+| 2.4 | Quad Tune Shift                | Set-read-restore     | "Change `{quad_var}` by +1%, read the horizontal tune (`{tune_var}`), then restore. Report the tune change." | Quad and tune variable names provided. |
+| 2.5 | Increase Magnet Strength       | Read-then-set        | "Read the current value of `{variable}`, increase it by `{pct}%`, and set the new value." | Read informs the write. |
+| 2.6 | Zero Correctors and Read Orbit | Batch set + batch read | "Set the following horizontal correctors to zero: `{corrector_variables}`. Then read the horizontal orbit at these BPMs: `{bpm_variables}`." | All variable names provided. |
+| 2.7 | Corrector Scan                 | Predetermined scan   | "Scan `{corrector_var}` from 0 to `{max_kick}` mrad in `{n}` steps. At each step, read the horizontal orbit at `{bpm_var}`. Report the list of (kick, orbit) pairs. Restore the corrector when done." | Longest Tier 2 task. |
+| 2.8 | Find and Zero a Corrector      | Query + set          | "One of the horizontal correctors has a nonzero kick. Find it using `query_devices` and set it to zero." | Discovery via SQL, then act. |
 
 ### Notes
 
