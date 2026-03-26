@@ -167,7 +167,7 @@ class TestResolveVariableName:
         result = bmad_backend.resolve_variable_name(
             "global", "lattice", "params", "tune.a"
         )
-        assert result == "lat::tune.a[0]"
+        assert result == "lat::tune.a"
 
 
 class TestMachineAutoDiscovery:

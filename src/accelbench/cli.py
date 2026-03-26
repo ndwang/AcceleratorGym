@@ -55,6 +55,10 @@ def main():
         help="Wall-clock timeout in seconds per task (default: 600)",
     )
     run_parser.add_argument(
+        "--workers", type=int, default=1,
+        help="Number of tasks to run in parallel (default: 1)",
+    )
+    run_parser.add_argument(
         "--debug", action="store_true", help="Enable debug logging"
     )
 
@@ -119,6 +123,7 @@ def _cmd_run(args):
         tier=args.tier,
         output_dir=args.output_dir,
         timeout=args.timeout,
+        max_workers=args.workers,
     )
 
     report = generate_report(record)

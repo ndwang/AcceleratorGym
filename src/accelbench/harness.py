@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import copy
+import concurrent.futures
 import hashlib
 import json
 import logging
@@ -24,6 +26,58 @@ def task_seed(seed: int, task_id: str) -> int:
     return seed + int(h, 16) % (2**31)
 
 
+def _run_single_task(
+    task: TaskDef,
+    config_path: str,
+    adapter: Any,
+    seed: int,
+    timeout: int,
+    traces_dir: Path | None,
+) -> TaskResult:
+    """Run a single task end-to-end with its own machine and adapter copy."""
+    logger.info(f"Running task {task.id}: {task.name}")
+
+    machine = Machine.from_config(config_path)
+    rng = np.random.default_rng(task_seed(seed, task.id))
+
+    # Deep-copy adapter so each task has isolated mutable state
+    task_adapter = copy.deepcopy(adapter)
+
+    if hasattr(task_adapter, "set_task_context"):
+        task_adapter.set_task_context(task.id, seed, task.budget)
+
+    try:
+        task_timeout = task.timeout if task.timeout is not None else timeout
+        result = run_task(task, machine, task_adapter, rng, timeout=task_timeout)
+
+        status = "PASS" if result.passed else "FAIL"
+        logger.info(
+            f"Task {task.id}: {status} "
+            f"(tools: {result.tool_calls}/{task.budget}, "
+            f"time: {result.wall_time:.1f}s)"
+        )
+        if result.error:
+            logger.warning(f"Task {task.id} error: {result.error}")
+    except Exception as e:
+        logger.exception(f"Task {task.id} crashed")
+        result = TaskResult(
+            task_id=task.id,
+            passed=False,
+            tool_calls=0,
+            budget=task.budget,
+            wall_time=0.0,
+            extracted_answer=None,
+            error=f"Crash: {e}",
+        )
+    finally:
+        machine.close()
+
+    if traces_dir:
+        _save_trajectory(result, task, traces_dir)
+
+    return result
+
+
 def run_benchmark(
     config_path: str,
     adapter: Any,
@@ -32,6 +86,7 @@ def run_benchmark(
     tier: int | None = None,
     output_dir: str | None = None,
     timeout: int = 600,
+    max_workers: int = 1,
 ) -> RunRecord:
     """Run the full benchmark (or a subset) and return results.
 
@@ -43,14 +98,13 @@ def run_benchmark(
         tier: If given, only run tasks from this tier.
         output_dir: If given, save per-task trajectory files here.
         timeout: Wall-clock timeout in seconds per task (default: 600).
+        max_workers: Number of tasks to run in parallel (default: 1).
 
     Returns:
         A RunRecord with all results.
     """
-    # Select tasks
     tasks = _select_tasks(task_ids, tier)
 
-    # Prepare output directory
     traces_dir = None
     if output_dir:
         traces_dir = Path(output_dir) / "traces"
@@ -64,47 +118,29 @@ def run_benchmark(
         model=model,
     )
 
-    for task in tasks:
-        logger.info(f"Running task {task.id}: {task.name}")
-
-        # Create fresh machine for each task
-        machine = Machine.from_config(config_path)
-        rng = np.random.default_rng(task_seed(seed, task.id))
-
-        # Set task context for adapters that manage their own server
-        if hasattr(adapter, "set_task_context"):
-            adapter.set_task_context(task.id, seed, task.budget)
-
-        try:
-            task_timeout = task.timeout if task.timeout is not None else timeout
-            result = run_task(task, machine, adapter, rng, timeout=task_timeout)
-            record.results.append(result)
-
-            status = "PASS" if result.passed else "FAIL"
-            logger.info(
-                f"Task {task.id}: {status} "
-                f"(tools: {result.tool_calls}/{task.budget}, "
-                f"time: {result.wall_time:.1f}s)"
+    if max_workers <= 1:
+        # Serial execution (original behavior)
+        for task in tasks:
+            result = _run_single_task(
+                task, config_path, adapter, seed, timeout, traces_dir
             )
-            if result.error:
-                logger.warning(f"Task {task.id} error: {result.error}")
-        except Exception as e:
-            logger.exception(f"Task {task.id} crashed")
-            record.results.append(TaskResult(
-                task_id=task.id,
-                passed=False,
-                tool_calls=0,
-                budget=task.budget,
-                wall_time=0.0,
-                extracted_answer=None,
-                error=f"Crash: {e}",
-            ))
-        finally:
-            machine.close()
-
-        # Save trajectory file
-        if traces_dir:
-            _save_trajectory(record.results[-1], task, traces_dir)
+            record.results.append(result)
+    else:
+        # Parallel execution
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as pool:
+            futures = {
+                pool.submit(
+                    _run_single_task,
+                    task, config_path, adapter, seed, timeout, traces_dir,
+                ): task
+                for task in tasks
+            }
+            # Collect results in submission order
+            task_to_future = {task.id: f for f, task in futures.items()}
+            for task in tasks:
+                future = task_to_future[task.id]
+                result = future.result()
+                record.results.append(result)
 
     return record
 

@@ -16,6 +16,7 @@ accelbench run --config ... --model gemini/gemini-2.5-pro
 accelbench run --config ... --tasks 1.1,1.2,1.3
 accelbench run --config ... --tier 1
 accelbench run --config ... --output-dir results/
+accelbench run --config ... --workers 8          # Run tasks in parallel (non-Bmad backends only)
 ```
 
 ## Architecture
@@ -255,7 +256,18 @@ Run benchmark tasks and produce a scored report.
 | `--tier` | all | Run only tasks from this tier |
 | `--output-dir` | none | Directory for report and per-task trajectory files |
 | `--timeout` | 600 | Wall-clock timeout in seconds per task |
+| `--workers` | 1 | Number of tasks to run in parallel |
 | `--debug` | off | Enable debug logging on stderr |
+
+### Parallel execution
+
+Use `--workers N` to run N tasks concurrently via threads:
+
+```bash
+accelbench run --config ... --workers 8
+```
+
+**Limitation:** The Bmad backend uses pytao, which does not support multiple Tao instances in the same process. Since the harness creates a Machine (and thus a Tao instance) per task for setup and verification, `--workers` > 1 will crash with Bmad. Use `--workers 1` (the default) for Bmad-backed configs. Other backends that support concurrent instances work fine with parallel execution.
 
 ## Output Format
 

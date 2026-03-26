@@ -38,7 +38,7 @@ The layered architecture enforces a strict flow: **MCP Server → Machine → Ca
 ### Key Design Decisions
 
 - **Variable names are flat** (e.g., `QF:K1`) even though the tree is hierarchical. Backend `resolve_variable_name()` maps to backend-native names.
-- **Bmad variable routing is attribute-based** — lattice-computed attributes (`orbit.x`, `beta.a`, `phi.a`, etc.) route to `lat::{attr}[{element}]`, global parameters route to `lat::{attr}[0]`, element control attributes route to `ele::{element}[{attr}]`. Twiss attributes are added directly to each element, not in a separate optics subtree.
+- **Bmad variable routing is attribute-based** — lattice-computed attributes (`orbit.x`, `beta.a`, `phi.a`, etc.) route to `lat::{attr}[{element}]`, global parameters route to `lat::{attr}`, element control attributes route to `ele::{element}[{attr}]`. Twiss attributes are added directly to each element, not in a separate optics subtree.
 - **Bmad element attributes are configurable** — defaults cover common knobs (K1 for quads, kick for correctors, etc.). Override via `element_attributes` in backend settings for lattice-specific attributes.
 - **Atomic batch writes** — `set_many()` validates all values before applying any.
 - **Read-only SQL** — Catalog queries only allow SELECT; schema is locked via PRAGMA after init.
