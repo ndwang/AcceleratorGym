@@ -167,6 +167,7 @@ All values are passed as strings. Your constructor should convert types as neede
 - **Return a JSON answer** in a fenced code block tagged `json`. If the benchmark can't extract JSON from your response, the task fails.
 - **Don't cache or share state between tasks.** Each `run()` call is independent. The benchmark creates a fresh machine for each task.
 - **Budget-exceeded errors are returned as strings.** When the budget is exhausted, `call_tool` returns `"Error: tool call budget exceeded"`. Your agent should produce a final answer when it sees this.
+- **Implement `stop()` for clean timeouts.** The harness runs `adapter.run()` in a thread with a wall-clock timeout (`--timeout`). When the timeout fires, the harness calls `adapter.stop()` if it exists. Use this to terminate subprocesses, set a flag to break an agent loop, or release resources. If your adapter has no `stop()`, the thread runs until `run()` returns naturally.
 
 ## Built-in Adapters
 

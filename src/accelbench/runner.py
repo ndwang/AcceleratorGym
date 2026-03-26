@@ -134,18 +134,34 @@ def run_task(
 
     # Run agent
     start = time.monotonic()
+    pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+    future = pool.submit(adapter.run, prompt, TOOL_SCHEMAS, call_tool)
+    # Shut down the pool without waiting so it won't block if the
+    # thread is still running after a timeout.
+    pool.shutdown(wait=False)
     try:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-            future = pool.submit(adapter.run, prompt, TOOL_SCHEMAS, call_tool)
-            response = future.result(timeout=timeout)
+        response = future.result(timeout=timeout)
     except concurrent.futures.TimeoutError:
         elapsed = time.monotonic() - start
-        meta = _adapter_meta()
         logger.error(f"Task {task.id} timed out after {timeout}s")
+
+        # Kill the subprocess and recover the trace
+        stop = getattr(adapter, "stop", None)
+        if stop:
+            stop()
+
+        meta = _adapter_meta()
+        adapter_trace = getattr(adapter, "last_trace", None)
+        if adapter_trace is not None:
+            trace_dicts = adapter_trace["trace"]
+            tool_calls = adapter_trace["call_count"]
+        else:
+            trace_dicts = [tc.to_dict() for tc in instrumented.trace]
+            tool_calls = instrumented.call_count
         return TaskResult(
             task_id=task.id,
             passed=False,
-            tool_calls=instrumented.call_count,
+            tool_calls=tool_calls,
             budget=task.budget,
             wall_time=elapsed,
             extracted_answer=None,
@@ -154,7 +170,7 @@ def run_task(
             setup_data=setup_data,
             prompt=prompt,
             response="",
-            trace=[],
+            trace=trace_dicts,
             **meta,
         )
     except Exception as e:

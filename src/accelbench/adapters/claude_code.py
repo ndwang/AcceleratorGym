@@ -41,12 +41,10 @@ class ClaudeCodeAdapter:
         config_path: str,
         claude_cmd: str = "claude",
         model: str | None = None,
-        timeout: int = 300,
     ) -> None:
         self._config_path = str(Path(config_path).resolve())
         self._claude_cmd = claude_cmd
         self._model = model
-        self._timeout = int(timeout)
 
         # Set per-task by the harness before each run()
         self._task_id: str = ""
@@ -55,6 +53,10 @@ class ClaudeCodeAdapter:
 
         # Populated after run() completes
         self._last_trace: dict[str, Any] | None = None
+
+        # Set during run() so the runner can kill on timeout
+        self._proc: subprocess.Popen | None = None
+        self._trace_path: str | None = None
 
     @property
     def model(self) -> str:
@@ -128,7 +130,7 @@ class ClaudeCodeAdapter:
 
             logger.info(f"Launching Claude Code: {' '.join(cmd)}")
 
-            proc = subprocess.Popen(
+            self._proc = subprocess.Popen(
                 cmd,
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
@@ -136,27 +138,10 @@ class ClaudeCodeAdapter:
                 text=True,
                 cwd=sandbox_dir,
             )
+            self._trace_path = trace_path
 
-            timed_out = False
-            try:
-                stdout, stderr = proc.communicate(
-                    input=prompt, timeout=self._timeout
-                )
-            except subprocess.TimeoutExpired:
-                timed_out = True
-                logger.error(
-                    f"Claude Code timed out after {self._timeout}s "
-                    f"for task {self._task_id}"
-                )
-                # SIGTERM first to allow bench_server to write trace in its
-                # finally block, then SIGKILL after a grace period.
-                proc.terminate()
-                try:
-                    stdout, stderr = proc.communicate(timeout=10)
-                except subprocess.TimeoutExpired:
-                    logger.warning("Graceful shutdown failed, sending SIGKILL")
-                    proc.kill()
-                    stdout, stderr = proc.communicate()
+            # No timeout here — the runner handles the timeout externally.
+            stdout, stderr = self._proc.communicate(input=prompt)
 
             if stderr:
                 logger.info(f"Claude Code stderr:\n{stderr[:2000]}")
@@ -164,39 +149,16 @@ class ClaudeCodeAdapter:
             # Parse stream-json output for response and reasoning
             response, reasoning = _parse_stream_json(stdout or "")
 
-            if not response and not timed_out:
-                # Fallback: if parsing found no result event
+            if not response:
                 logger.warning("No result event in stream-json output")
                 response = ""
 
-            if proc.returncode != 0 and not timed_out:
-                logger.error(f"Claude Code failed (rc={proc.returncode})")
+            if self._proc.returncode != 0:
+                logger.error(f"Claude Code failed (rc={self._proc.returncode})")
                 logger.error(f"  stdout lines: {len((stdout or '').splitlines())}")
                 logger.error(f"  stderr: {stderr[:500] if stderr else '(empty)'}")
 
-            # Read trace file written by bench_server on exit
-            trace_size = 0
-            try:
-                trace_size = os.path.getsize(trace_path)
-            except OSError:
-                pass
-            logger.info(f"Trace file size: {trace_size} bytes")
-
-            if trace_size == 0:
-                logger.error(
-                    "Trace file is empty — bench_server likely did not "
-                    "start or was killed before writing trace"
-                )
-                self._last_trace = None
-            else:
-                try:
-                    with open(trace_path) as f:
-                        self._last_trace = json.load(f)
-                    logger.info(
-                        f"Trace loaded: {self._last_trace['call_count']} tool calls"
-                    )
-                except (json.JSONDecodeError, KeyError) as e:
-                    logger.error(f"Failed to parse trace file: {e}")
+            self._load_trace(trace_path)
 
             # Merge reasoning into the tool call trace
             if self._last_trace and reasoning:
@@ -204,23 +166,61 @@ class ClaudeCodeAdapter:
                     self._last_trace["trace"], reasoning
                 )
 
-            if timed_out:
-                call_count = (
-                    self._last_trace["call_count"]
-                    if self._last_trace
-                    else "unknown"
-                )
-                return (
-                    f"Error: Claude Code timed out after {self._timeout}s "
-                    f"(tool calls: {call_count})"
-                )
-
-            return response or f"Error: Claude Code exited with code {proc.returncode}"
+            return response or f"Error: Claude Code exited with code {self._proc.returncode}"
 
         finally:
+            self._proc = None
+            self._trace_path = None
             Path(mcp_config_path).unlink(missing_ok=True)
             Path(trace_path).unlink(missing_ok=True)
             shutil.rmtree(sandbox_dir, ignore_errors=True)
+
+    def _load_trace(self, trace_path: str) -> None:
+        """Read the bench_server trace file."""
+        trace_size = 0
+        try:
+            trace_size = os.path.getsize(trace_path)
+        except OSError:
+            pass
+        logger.info(f"Trace file size: {trace_size} bytes")
+
+        if trace_size == 0:
+            logger.error(
+                "Trace file is empty — bench_server likely did not "
+                "start or was killed before writing trace"
+            )
+            self._last_trace = None
+        else:
+            try:
+                with open(trace_path) as f:
+                    self._last_trace = json.load(f)
+                logger.info(
+                    f"Trace loaded: {self._last_trace['call_count']} tool calls"
+                )
+            except (json.JSONDecodeError, KeyError) as e:
+                logger.error(f"Failed to parse trace file: {e}")
+
+    def stop(self) -> None:
+        """Kill the subprocess and load whatever trace was written.
+
+        Called by the runner on timeout.
+        """
+        proc = self._proc
+        trace_path = self._trace_path
+        if proc is None:
+            return
+
+        logger.info(f"Stopping Claude Code for task {self._task_id}")
+        proc.terminate()
+        try:
+            proc.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            logger.warning("Graceful shutdown failed, sending SIGKILL")
+            proc.kill()
+            proc.wait()
+
+        if trace_path:
+            self._load_trace(trace_path)
 
 
 def _parse_stream_json(raw: str) -> tuple[str, list[dict[str, Any]]]:

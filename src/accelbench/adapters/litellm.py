@@ -42,6 +42,7 @@ class LiteLLMAdapter:
         # Each entry: {"content": str, "tool_call_index": int}
         # tool_call_index is the index of the first tool call that follows this reasoning
         self._reasoning_trace: list[dict[str, Any]] = []
+        self._stopped = False
 
     @property
     def model(self) -> str:
@@ -57,6 +58,10 @@ class LiteLLMAdapter:
         """Interleaved reasoning and tool call entries from the last run."""
         return list(self._reasoning_trace)
 
+    def stop(self) -> None:
+        """Signal the agent loop to stop after the current API call."""
+        self._stopped = True
+
     def run(
         self,
         prompt: str,
@@ -67,6 +72,7 @@ class LiteLLMAdapter:
 
         self._last_usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
         self._reasoning_trace = []
+        self._stopped = False
         tool_call_counter = 0  # tracks position in the flat tool call list
 
         messages: list[dict[str, Any]] = [
@@ -74,7 +80,7 @@ class LiteLLMAdapter:
             {"role": "user", "content": prompt},
         ]
 
-        while True:
+        while not self._stopped:
             kwargs: dict[str, Any] = {
                 "model": self._model,
                 "messages": messages,
@@ -159,3 +165,6 @@ class LiteLLMAdapter:
                         "content": final_content,
                     })
                 return final_content
+
+        # Stopped by runner timeout
+        return ""
