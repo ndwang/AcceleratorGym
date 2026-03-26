@@ -14,6 +14,14 @@ from accelbench.types import Env, TaskDef, TaskResult
 
 from accelerator_gym.core.machine import Machine
 
+# Failure reason constants
+REASON_SETUP_ERROR = "setup_error"
+REASON_TIMEOUT = "timeout"
+REASON_CRASH = "crash"
+REASON_NO_ANSWER = "no_answer"
+REASON_BUDGET_EXCEEDED = "budget_exceeded"
+REASON_WRONG_ANSWER = "wrong_answer"
+
 logger = logging.getLogger(__name__)
 
 
@@ -73,6 +81,7 @@ def run_task(
             wall_time=0.0,
             extracted_answer=None,
             error=f"Setup failed: {e}",
+            failure_reason=REASON_SETUP_ERROR,
         )
 
     # Format prompt
@@ -93,6 +102,25 @@ def run_task(
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
             future = pool.submit(adapter.run, prompt, TOOL_SCHEMAS, call_tool)
             response = future.result(timeout=timeout)
+    except concurrent.futures.TimeoutError:
+        elapsed = time.monotonic() - start
+        meta = _adapter_meta()
+        logger.error(f"Task {task.id} timed out after {timeout}s")
+        return TaskResult(
+            task_id=task.id,
+            passed=False,
+            tool_calls=instrumented.call_count,
+            budget=task.budget,
+            wall_time=elapsed,
+            extracted_answer=None,
+            error=f"Agent timed out after {timeout}s",
+            failure_reason=REASON_TIMEOUT,
+            setup_data=setup_data,
+            prompt=prompt,
+            response="",
+            trace=[],
+            **meta,
+        )
     except Exception as e:
         elapsed = time.monotonic() - start
         meta = _adapter_meta()
@@ -105,6 +133,7 @@ def run_task(
             wall_time=elapsed,
             extracted_answer=None,
             error=f"Agent error: {e}",
+            failure_reason=REASON_CRASH,
             setup_data=setup_data,
             prompt=prompt,
             response="",
@@ -138,6 +167,7 @@ def run_task(
             wall_time=elapsed,
             extracted_answer=None,
             error="No JSON answer extracted from response",
+            failure_reason=REASON_NO_ANSWER,
             setup_data=setup_data,
             prompt=prompt,
             response=response or "",
@@ -151,6 +181,14 @@ def run_task(
         logger.exception(f"Task {task.id} verification failed")
         passed = False
 
+    # Determine failure reason
+    failure_reason: str | None = None
+    if not passed:
+        if tool_calls >= task.budget:
+            failure_reason = REASON_BUDGET_EXCEEDED
+        else:
+            failure_reason = REASON_WRONG_ANSWER
+
     return TaskResult(
         task_id=task.id,
         passed=passed,
@@ -158,6 +196,7 @@ def run_task(
         budget=task.budget,
         wall_time=elapsed,
         extracted_answer=answer,
+        failure_reason=failure_reason,
         setup_data=setup_data,
         prompt=prompt,
         response=response or "",

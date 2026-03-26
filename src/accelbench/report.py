@@ -32,6 +32,12 @@ def generate_report(record: RunRecord) -> dict[str, Any]:
         else:
             tier_stats[tier]["failed"] += 1
 
+    # Failure reason breakdown
+    failure_reasons: dict[str, int] = defaultdict(int)
+    for r in record.results:
+        if r.failure_reason:
+            failure_reasons[r.failure_reason] += 1
+
     # Aggregate token usage
     total_usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
     for r in record.results:
@@ -55,6 +61,8 @@ def generate_report(record: RunRecord) -> dict[str, Any]:
         }
         if r.error:
             detail["error"] = r.error
+        if r.failure_reason:
+            detail["failure_reason"] = r.failure_reason
         task_details.append(detail)
 
     return {
@@ -64,6 +72,7 @@ def generate_report(record: RunRecord) -> dict[str, Any]:
             "failed": failed,
             "errors": errors,
             "pass_rate": round(passed / total, 3) if total > 0 else 0.0,
+            "failure_reasons": dict(failure_reasons),
             "total_tokens": total_usage["total_tokens"],
             "prompt_tokens": total_usage["prompt_tokens"],
             "completion_tokens": total_usage["completion_tokens"],
@@ -103,11 +112,11 @@ def print_report(report: dict[str, Any]) -> None:
     print("\nTask Details:")
     for t in report["tasks"]:
         status = "PASS" if t["passed"] else "FAIL"
-        err = f" [{t['error'][:40]}...]" if t.get("error") else ""
+        reason = f" ({t['failure_reason']})" if t.get("failure_reason") else ""
         print(
             f"  {t['task_id']:5s} {t['name']:40s} {status:4s}  "
             f"tools: {t['tool_calls']:3d}/{t['budget']:3d}  "
-            f"time: {t['wall_time']:6.1f}s{err}"
+            f"time: {t['wall_time']:6.1f}s{reason}"
         )
 
     print()

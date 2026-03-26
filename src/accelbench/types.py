@@ -47,6 +47,7 @@ class TaskResult:
     wall_time: float
     extracted_answer: dict[str, Any] | None
     error: str | None = None
+    failure_reason: str | None = None
     setup_data: dict[str, Any] | None = None
     prompt: str = ""
     response: str = ""
