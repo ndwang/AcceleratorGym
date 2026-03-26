@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import logging
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -106,8 +107,15 @@ class ClaudeCodeAdapter:
         mcp_config_path = mcp_config_fd.name
         mcp_config_fd.close()
 
+        # Run from a temp directory so Claude Code can't read the repo
+        sandbox_dir = tempfile.mkdtemp(prefix="accelbench_sandbox_")
+
         try:
-            cmd = [self._claude_cmd, "--print", "--mcp-config", mcp_config_path]
+            cmd = [
+                self._claude_cmd, "--print",
+                "--mcp-config", mcp_config_path,
+                "--allowedTools", "mcp__accelerator-gym__*",
+            ]
             if self._model:
                 cmd.extend(["--model", self._model])
 
@@ -119,6 +127,7 @@ class ClaudeCodeAdapter:
                 capture_output=True,
                 text=True,
                 timeout=self._timeout,
+                cwd=sandbox_dir,
             )
 
             if result.returncode != 0:
@@ -139,3 +148,4 @@ class ClaudeCodeAdapter:
         finally:
             Path(mcp_config_path).unlink(missing_ok=True)
             Path(trace_path).unlink(missing_ok=True)
+            shutil.rmtree(sandbox_dir, ignore_errors=True)

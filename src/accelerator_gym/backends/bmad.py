@@ -14,6 +14,10 @@ _LATTICE_ATTRIBUTES = frozenset({
     "phi.a", "phi.b", "eta.x",
 })
 
+# Global params that are element attributes (read from BEGINNING element)
+# rather than Tao datums.
+_GLOBAL_ELEMENT_ATTRIBUTES = frozenset({"e_tot"})
+
 # Default control attributes per Bmad element type.
 # Can be overridden via backend_settings["element_attributes"] in the YAML config.
 _DEFAULT_ELEMENT_ATTRIBUTES: dict[str, list[dict[str, Any]]] = {
@@ -163,7 +167,9 @@ class BmadBackend(Backend):
         if attribute in _LATTICE_ATTRIBUTES:
             return f"lat::{attribute}[{device_name}]"
         if system == "global":
-            return f"lat::{attribute}[0]"
+            if attribute in _GLOBAL_ELEMENT_ATTRIBUTES:
+                return f"ele::beginning[{attribute}]"
+            return f"lat::{attribute}"
         return f"ele::{device_name}[{attribute}]"
 
     def discover_devices(self) -> dict[str, dict[str, Any]]:

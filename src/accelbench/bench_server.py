@@ -78,11 +78,11 @@ def _write_csv(path: str, rows: list[dict[str, Any]]) -> None:
 
 @mcp.tool()
 def get_variables(names: list[str], output_file: str | None = None) -> str:
-    """Read one or more variables. Each name must be a variable name (e.g. "QF:K1").
+    """Read one or more variables by their variable names.
 
-    Variable names are flat strings like "QF:K1", "BPM1:X". Get them from browse_devices
-    (see the "variable" field when you browse to an attribute) or by querying the
-    metadata database.
+    Variable names come from browse_devices (the "variable" field when you browse to an
+    attribute) or from querying the metadata database. Use the variable name exactly as
+    returned — do not modify the format.
 
     If output_file is provided, results are written as CSV to that path instead of
     being returned inline. This saves tokens when reading many variables. The CSV has
@@ -111,7 +111,8 @@ def get_variables(names: list[str], output_file: str | None = None) -> str:
 
 @mcp.tool()
 def set_variables(values: dict[str, float]) -> str:
-    """Write one or more variables atomically. Keys must be variable names (e.g. "QF:K1").
+    """Write one or more variables atomically. Keys must be variable names as returned
+    by browse_devices or query_devices. Use the variable name exactly as returned.
     All-or-nothing: if any value violates limits, none are applied.
     """
     return _get().set_variables(values)

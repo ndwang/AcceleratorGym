@@ -115,7 +115,7 @@ class InstrumentedMachine:
             self._machine.set_many(values)
             lines = [f"{name} set to {v}" for name, v in values.items()]
             out = "\n".join(lines)
-        except (KeyError, ValueError, TypeError) as e:
+        except Exception as e:
             out = f"Error: {e}"
         self._log("set_variables", args, out)
         return out
@@ -230,9 +230,10 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
         "function": {
             "name": "get_variables",
             "description": (
-                "Read one or more variables. Each name must be a variable name (e.g. \"QF:K1\").\n\n"
-                "Variable names are flat strings like \"QF:K1\", \"BPM1:X\". Get them from browse_devices "
-                "(see the \"variable\" field when you browse to an attribute) or by querying the metadata database."
+                "Read one or more variables by their variable names.\n\n"
+                "Variable names come from browse_devices (the \"variable\" field when you browse to an "
+                "attribute) or from querying the metadata database. Use the variable name exactly as "
+                "returned — do not modify the format."
             ),
             "parameters": {
                 "type": "object",
@@ -252,7 +253,8 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
         "function": {
             "name": "set_variables",
             "description": (
-                "Write one or more variables atomically. Keys must be variable names (e.g. \"QF:K1\"). "
+                "Write one or more variables atomically. Keys must be variable names as returned "
+                "by browse_devices or query_devices. Use the variable name exactly as returned. "
                 "All-or-nothing: if any value violates limits, none are applied."
             ),
             "parameters": {
