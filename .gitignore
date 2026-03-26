@@ -58,4 +58,3 @@ examples/**
 !examples/**/accelerator-gym.yaml
 !examples/**/*.bmad
 !examples/**/tao.init
-!examples/**/.mcp.json
