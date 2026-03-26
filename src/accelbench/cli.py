@@ -68,6 +68,16 @@ def main():
         "--tier", type=int, default=None, help="Filter by tier"
     )
 
+    # View command
+    view_parser = sub.add_parser("view", help="View trace files from a benchmark run")
+    view_parser.add_argument(
+        "path", help="Path to a trace JSON file or a run output directory"
+    )
+    view_parser.add_argument(
+        "--max-lines", type=int, default=20,
+        help="Max lines to show for long outputs (default: 20)",
+    )
+
     args = parser.parse_args()
 
     if args.command is None:
@@ -78,6 +88,13 @@ def main():
         _cmd_list(args)
     elif args.command == "run":
         _cmd_run(args)
+    elif args.command == "view":
+        _cmd_view(args)
+
+
+def _cmd_view(args):
+    from accelbench.viewer import view
+    view(args.path, max_lines=args.max_lines)
 
 
 def _cmd_list(args):
