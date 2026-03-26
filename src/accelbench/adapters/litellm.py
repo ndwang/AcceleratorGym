@@ -39,6 +39,9 @@ class LiteLLMAdapter:
         self._extra_kwargs = kwargs
         # Reset per run
         self._last_usage: dict[str, int] = {}
+        # Each entry: {"content": str, "tool_call_index": int}
+        # tool_call_index is the index of the first tool call that follows this reasoning
+        self._reasoning_trace: list[dict[str, Any]] = []
 
     @property
     def model(self) -> str:
@@ -49,6 +52,11 @@ class LiteLLMAdapter:
         """Token usage from the most recent run() call."""
         return dict(self._last_usage)
 
+    @property
+    def reasoning_trace(self) -> list[dict[str, Any]]:
+        """Interleaved reasoning and tool call entries from the last run."""
+        return list(self._reasoning_trace)
+
     def run(
         self,
         prompt: str,
@@ -58,6 +66,8 @@ class LiteLLMAdapter:
         import litellm
 
         self._last_usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+        self._reasoning_trace = []
+        tool_call_counter = 0  # tracks position in the flat tool call list
 
         messages: list[dict[str, Any]] = [
             {"role": "system", "content": SYSTEM_PROMPT},
@@ -89,6 +99,14 @@ class LiteLLMAdapter:
             # Append assistant message to history
             messages.append(message.model_dump(exclude_none=True))
 
+            # Capture any assistant reasoning text before/alongside tool calls
+            if message.content:
+                self._reasoning_trace.append({
+                    "role": "assistant",
+                    "content": message.content,
+                    "tool_call_index": tool_call_counter,
+                })
+
             # Check for tool calls
             tool_calls = message.tool_calls
             if not tool_calls:
@@ -106,6 +124,7 @@ class LiteLLMAdapter:
 
                 logger.debug(f"Tool call: {fn.name}({arguments})")
                 result = call_tool(fn.name, arguments)
+                tool_call_counter += 1
 
                 if "budget exceeded" in result:
                     budget_exceeded = True
@@ -133,4 +152,10 @@ class LiteLLMAdapter:
                     self._last_usage["completion_tokens"] += response.usage.completion_tokens or 0
                     self._last_usage["total_tokens"] += response.usage.total_tokens or 0
 
-                return response.choices[0].message.content or ""
+                final_content = response.choices[0].message.content or ""
+                if final_content:
+                    self._reasoning_trace.append({
+                        "role": "assistant",
+                        "content": final_content,
+                    })
+                return final_content

@@ -3,12 +3,17 @@
 Claude CLI connects to the bench_server subprocess, which handles task setup,
 budget enforcement, and trace recording. After Claude CLI exits, the adapter
 reads back the trace file for the runner to use in replay-based verification.
+
+The adapter uses ``--output-format stream-json --verbose`` so that Claude's
+intermediate reasoning (assistant text between tool calls) is captured and
+merged into the trace alongside the tool call entries from bench_server.
 """
 
 from __future__ import annotations
 
 import json
 import logging
+import os
 import shutil
 import subprocess
 import sys
@@ -41,7 +46,7 @@ class ClaudeCodeAdapter:
         self._config_path = str(Path(config_path).resolve())
         self._claude_cmd = claude_cmd
         self._model = model
-        self._timeout = timeout
+        self._timeout = int(timeout)
 
         # Set per-task by the harness before each run()
         self._task_id: str = ""
@@ -113,6 +118,8 @@ class ClaudeCodeAdapter:
         try:
             cmd = [
                 self._claude_cmd, "--print",
+                "--output-format", "stream-json",
+                "--verbose",
                 "--mcp-config", mcp_config_path,
                 "--allowedTools", "mcp__accelerator-gym__*",
             ]
@@ -141,30 +148,61 @@ class ClaudeCodeAdapter:
                     f"Claude Code timed out after {self._timeout}s "
                     f"for task {self._task_id}"
                 )
-                proc.kill()
-                stdout, stderr = proc.communicate()
+                # SIGTERM first to allow bench_server to write trace in its
+                # finally block, then SIGKILL after a grace period.
+                proc.terminate()
+                try:
+                    stdout, stderr = proc.communicate(timeout=10)
+                except subprocess.TimeoutExpired:
+                    logger.warning("Graceful shutdown failed, sending SIGKILL")
+                    proc.kill()
+                    stdout, stderr = proc.communicate()
 
             if stderr:
                 logger.info(f"Claude Code stderr:\n{stderr[:2000]}")
 
-            # Claude Code --print may write to stdout or stderr depending
-            # on version/environment.  Prefer stdout, fall back to stderr.
-            response = stdout or stderr or ""
+            # Parse stream-json output for response and reasoning
+            response, reasoning = _parse_stream_json(stdout or "")
+
+            if not response and not timed_out:
+                # Fallback: if parsing found no result event
+                logger.warning("No result event in stream-json output")
+                response = ""
 
             if proc.returncode != 0 and not timed_out:
                 logger.error(f"Claude Code failed (rc={proc.returncode})")
-                logger.error(f"  stdout: {stdout[:500] if stdout else '(empty)'}")
+                logger.error(f"  stdout lines: {len((stdout or '').splitlines())}")
                 logger.error(f"  stderr: {stderr[:500] if stderr else '(empty)'}")
 
             # Read trace file written by bench_server on exit
+            trace_size = 0
             try:
-                with open(trace_path) as f:
-                    self._last_trace = json.load(f)
-                logger.info(
-                    f"Trace loaded: {self._last_trace['call_count']} tool calls"
+                trace_size = os.path.getsize(trace_path)
+            except OSError:
+                pass
+            logger.info(f"Trace file size: {trace_size} bytes")
+
+            if trace_size == 0:
+                logger.error(
+                    "Trace file is empty — bench_server likely did not "
+                    "start or was killed before writing trace"
                 )
-            except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
-                logger.error(f"Failed to read trace file: {e}")
+                self._last_trace = None
+            else:
+                try:
+                    with open(trace_path) as f:
+                        self._last_trace = json.load(f)
+                    logger.info(
+                        f"Trace loaded: {self._last_trace['call_count']} tool calls"
+                    )
+                except (json.JSONDecodeError, KeyError) as e:
+                    logger.error(f"Failed to parse trace file: {e}")
+
+            # Merge reasoning into the tool call trace
+            if self._last_trace and reasoning:
+                self._last_trace["trace"] = _merge_reasoning(
+                    self._last_trace["trace"], reasoning
+                )
 
             if timed_out:
                 call_count = (
@@ -183,3 +221,82 @@ class ClaudeCodeAdapter:
             Path(mcp_config_path).unlink(missing_ok=True)
             Path(trace_path).unlink(missing_ok=True)
             shutil.rmtree(sandbox_dir, ignore_errors=True)
+
+
+def _parse_stream_json(raw: str) -> tuple[str, list[dict[str, Any]]]:
+    """Parse stream-json NDJSON output into (response, reasoning_entries).
+
+    Returns:
+        response: The final text response from the ``result`` event.
+        reasoning_entries: List of ``{"role": "assistant", "content": str,
+            "tool_call_index": int}`` dicts — one per assistant turn that
+            contained text alongside tool calls.
+    """
+    reasoning: list[dict[str, Any]] = []
+    response = ""
+    tool_call_index = 0
+
+    for line in raw.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+
+        etype = event.get("type")
+
+        if etype == "assistant":
+            message = event.get("message", {})
+            content_blocks = message.get("content", [])
+
+            text_parts = []
+            num_tool_uses = 0
+            for block in content_blocks:
+                if block.get("type") == "text":
+                    text_parts.append(block["text"])
+                elif block.get("type") == "tool_use":
+                    num_tool_uses += 1
+
+            text = "\n".join(text_parts)
+            if text:
+                reasoning.append({
+                    "role": "assistant",
+                    "content": text,
+                    "tool_call_index": tool_call_index,
+                })
+            tool_call_index += num_tool_uses
+
+        elif etype == "result":
+            response = event.get("result", "")
+
+    return response, reasoning
+
+
+def _merge_reasoning(
+    tool_trace: list[dict[str, Any]],
+    reasoning: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Insert reasoning entries into the tool call trace at the right positions.
+
+    Each reasoning entry has a ``tool_call_index`` indicating which tool call
+    it preceded.  Reasoning entries are inserted just before that index.
+    """
+    before: dict[int, list[dict[str, Any]]] = {}
+    trailing: list[dict[str, Any]] = []
+    for r in reasoning:
+        idx = r.get("tool_call_index")
+        entry = {"role": "assistant", "content": r["content"]}
+        if idx is not None and idx < len(tool_trace):
+            before.setdefault(idx, []).append(entry)
+        else:
+            trailing.append(entry)
+
+    merged: list[dict[str, Any]] = []
+    for i, tool_entry in enumerate(tool_trace):
+        for r_entry in before.get(i, []):
+            merged.append(r_entry)
+        merged.append(tool_entry)
+    merged.extend(trailing)
+    return merged

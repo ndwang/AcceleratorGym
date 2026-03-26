@@ -32,7 +32,9 @@ def _replay_trace(machine: Machine, trace: list[dict[str, Any]]) -> None:
     functions can read the same values the agent left behind.
     """
     for entry in trace:
-        tool = entry["tool"]
+        tool = entry.get("tool")
+        if not tool:
+            continue  # skip reasoning entries
         if tool == "set_variables":
             args = entry["arguments"]
             # Skip replaying calls that failed (budget exceeded or validation error)
@@ -45,6 +47,40 @@ def _replay_trace(machine: Machine, trace: list[dict[str, Any]]) -> None:
             if isinstance(result, str) and result.startswith("Error"):
                 continue
             machine.reset()
+
+
+def _merge_reasoning_trace(
+    tool_trace: list[dict[str, Any]],
+    reasoning_trace: list[dict[str, Any]] | None,
+) -> list[dict[str, Any]]:
+    """Interleave reasoning entries into the tool call trace.
+
+    Each reasoning entry has a ``tool_call_index`` indicating which tool call
+    it preceded.  This function inserts each reasoning entry just before the
+    tool call at that index, preserving correct ordering even when one
+    assistant turn triggers multiple parallel tool calls.
+    """
+    if not reasoning_trace:
+        return tool_trace
+
+    # Build a map: tool_call_index -> list of reasoning entries before it
+    before: dict[int, list[dict[str, Any]]] = {}
+    trailing: list[dict[str, Any]] = []
+    for r in reasoning_trace:
+        idx = r.get("tool_call_index")
+        entry = {"role": "assistant", "content": r["content"]}
+        if idx is not None and idx < len(tool_trace):
+            before.setdefault(idx, []).append(entry)
+        else:
+            trailing.append(entry)
+
+    merged: list[dict[str, Any]] = []
+    for i, tool_entry in enumerate(tool_trace):
+        for r_entry in before.get(i, []):
+            merged.append(r_entry)
+        merged.append(tool_entry)
+    merged.extend(trailing)
+    return merged
 
 
 def run_task(
@@ -152,7 +188,10 @@ def run_task(
         _replay_trace(machine, trace_dicts)
     else:
         tool_calls = instrumented.call_count
-        trace_dicts = [tc.to_dict() for tc in instrumented.trace]
+        trace_dicts = _merge_reasoning_trace(
+            [tc.to_dict() for tc in instrumented.trace],
+            getattr(adapter, "reasoning_trace", None),
+        )
 
     # Extract answer
     answer = extract_json_answer(response) if response else None
