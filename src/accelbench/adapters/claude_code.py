@@ -38,7 +38,7 @@ class ClaudeCodeAdapter:
         model: str | None = None,
         timeout: int = 300,
     ) -> None:
-        self._config_path = config_path
+        self._config_path = str(Path(config_path).resolve())
         self._claude_cmd = claude_cmd
         self._model = model
         self._timeout = timeout
@@ -130,8 +130,14 @@ class ClaudeCodeAdapter:
                 cwd=sandbox_dir,
             )
 
+            # Claude Code --print may write to stdout or stderr depending
+            # on version/environment.  Prefer stdout, fall back to stderr.
+            response = result.stdout or result.stderr or ""
+
             if result.returncode != 0:
-                logger.error(f"Claude Code stderr: {result.stderr}")
+                logger.error(f"Claude Code failed (rc={result.returncode})")
+                logger.error(f"  stdout: {result.stdout[:500] if result.stdout else '(empty)'}")
+                logger.error(f"  stderr: {result.stderr[:500] if result.stderr else '(empty)'}")
 
             # Read trace file written by bench_server on exit
             try:
@@ -143,7 +149,7 @@ class ClaudeCodeAdapter:
             except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
                 logger.error(f"Failed to read trace file: {e}")
 
-            return result.stdout or f"Error: Claude Code exited with code {result.returncode}"
+            return response or f"Error: Claude Code exited with code {result.returncode}"
 
         finally:
             Path(mcp_config_path).unlink(missing_ok=True)

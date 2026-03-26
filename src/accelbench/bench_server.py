@@ -39,8 +39,8 @@ def _get() -> "InstrumentedMachine":
 
 @mcp.tool()
 def browse_devices(path: str = "/", depth: int = 1) -> str:
-    """Browse the device tree to discover devices using filesystem-like paths.
-    Use this to discover what you can read/write. The catalog is tree-shaped.
+    """Browse the device tree to progressively discover how devices are organized.
+    The catalog is tree-shaped with filesystem-like paths.
 
     Path levels: "/" -> systems, "/system" -> device types,
     "/system/type" -> devices, "/system/type/device" -> attributes,
@@ -55,7 +55,10 @@ def browse_devices(path: str = "/", depth: int = 1) -> str:
 
 @mcp.tool()
 def query_devices(sql: str) -> str:
-    """Run a read-only SQL query against the device metadata database.
+    """Search, filter, or aggregate devices by their properties using SQL.
+
+    Use this to find devices matching specific criteria (e.g. by type, s-position
+    range, or attribute limits) or to count/aggregate device metadata.
 
     Tables: devices(device_id, system, device_type, s_position, tree_path),
     attributes(device_id, attribute_name, value, unit, readable, writable,

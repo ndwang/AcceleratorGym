@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 from typing import Any
 
 from accelerator_gym.backends.base import Backend
@@ -92,23 +93,23 @@ class BmadBackend(Backend):
         self._tao: Any = None
 
     def connect(self) -> None:
-        from pathlib import Path
         from pytao import Tao
 
         init_file = self._settings.get("init_file", "tao.init")
-        init_path = Path(init_file)
+        init_path = Path(init_file).resolve()
 
-        logger.info(f"Connecting to Tao with init_file: {init_file}")
+        logger.info(f"Connecting to Tao with init_file: {init_path}")
 
         if not init_path.exists():
             raise FileNotFoundError(
-                f"Tao init file not found: {init_path.resolve()}"
+                f"Tao init file not found: {init_path}"
             )
+
+        self._init_dir = init_path.parent
 
         import os
         original_cwd = Path.cwd()
-        init_dir = init_path.parent
-        os.chdir(init_dir)
+        os.chdir(self._init_dir)
         try:
             self._tao = Tao(f"-init {init_path.name} -noplot")
             logger.info("Tao instance created successfully")
@@ -152,7 +153,10 @@ class BmadBackend(Backend):
         for name, value in values.items():
             ele_name, attr = name[5:].rstrip("]").split("[", 1)
             self._tao.cmd(f"set element {ele_name} {attr} = {value}")
-        self._tao.cmd("set global lattice_calc_on = T")
+        result = self._tao.cmd("set global lattice_calc_on = T", raises=False)
+        for line in result:
+            if "[ERROR" in line or "[FATAL" in line:
+                logger.warning("Lattice recomputation warning: %s", line)
 
     def resolve_variable_name(
         self, system: str, device_type: str, device_name: str, attribute: str
@@ -318,4 +322,10 @@ class BmadBackend(Backend):
         raise ValueError(f"Could not parse Tao design output for '{name}': {result}")
 
     def reset(self) -> None:
-        self._tao.cmd("reinit tao")
+        import os
+        original_cwd = Path.cwd()
+        os.chdir(self._init_dir)
+        try:
+            self._tao.cmd("reinit tao")
+        finally:
+            os.chdir(original_cwd)
