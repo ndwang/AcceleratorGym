@@ -18,6 +18,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 from typing import Any, Callable
 
@@ -158,7 +159,15 @@ class ClaudeCodeAdapter:
                 logger.error(f"  stdout lines: {len((stdout or '').splitlines())}")
                 logger.error(f"  stderr: {stderr[:500] if stderr else '(empty)'}")
 
-            self._load_trace(trace_path)
+            # stop() may have already loaded the trace — don't overwrite.
+            if self._last_trace is None:
+                logger.info("No trace loaded yet, loading from run()")
+                self._load_trace(trace_path)
+            else:
+                logger.info(
+                    f"Trace already loaded by stop() "
+                    f"({self._last_trace['call_count']} calls), skipping"
+                )
 
             # Merge reasoning into the tool call trace
             if self._last_trace and reasoning:
@@ -176,7 +185,16 @@ class ClaudeCodeAdapter:
             shutil.rmtree(sandbox_dir, ignore_errors=True)
 
     def _load_trace(self, trace_path: str) -> None:
-        """Read the bench_server trace file."""
+        """Read the bench_server trace file.
+
+        Never overwrites a previously loaded trace — this prevents a race
+        where ``stop()`` and ``run()`` both try to load, and one sees the
+        file after the other has already deleted it.
+        """
+        if self._last_trace is not None:
+            logger.info("Trace already loaded, skipping")
+            return
+
         trace_size = 0
         try:
             trace_size = os.path.getsize(trace_path)
@@ -189,7 +207,6 @@ class ClaudeCodeAdapter:
                 "Trace file is empty — bench_server likely did not "
                 "start or was killed before writing trace"
             )
-            self._last_trace = None
         else:
             try:
                 with open(trace_path) as f:
@@ -203,7 +220,11 @@ class ClaudeCodeAdapter:
     def stop(self) -> None:
         """Kill the subprocess and load whatever trace was written.
 
-        Called by the runner on timeout.
+        Called by the runner on timeout.  The bench_server is a grandchild
+        process (launched by Claude Code as an MCP server).  After we kill
+        Claude Code, the bench_server detects the broken pipe and writes
+        the trace in its ``finally`` block — but this takes a moment, so
+        we poll until the trace file has content before reading it.
         """
         proc = self._proc
         trace_path = self._trace_path
@@ -220,6 +241,17 @@ class ClaudeCodeAdapter:
             proc.wait()
 
         if trace_path:
+            # Wait for the bench_server (grandchild) to write the trace.
+            # The run() thread may also load it — check _last_trace too.
+            deadline = time.monotonic() + 30
+            while time.monotonic() < deadline and self._last_trace is None:
+                try:
+                    if os.path.getsize(trace_path) > 0:
+                        break
+                except OSError:
+                    pass
+                time.sleep(0.5)
+
             self._load_trace(trace_path)
 
 
