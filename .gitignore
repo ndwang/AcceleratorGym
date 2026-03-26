@@ -39,3 +39,23 @@ Thumbs.db
 *.local
 
 .claude/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Bmad digested files
+*.digested*
+
+# Results
+results/
+
+# MCP config (local)
+.mcp.json
+
+# Agent-generated outputs in examples (allow only config/lattice files)
+examples/**
+!examples/*/
+!examples/**/accelerator-gym.yaml
+!examples/**/*.bmad
+!examples/**/tao.init
+!examples/**/.mcp.json
