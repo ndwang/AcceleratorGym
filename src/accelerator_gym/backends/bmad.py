@@ -28,10 +28,10 @@ _DEFAULT_ELEMENT_ATTRIBUTES: dict[str, list[dict[str, Any]]] = {
     "Sbend": [
         {"name": "ANGLE", "units": "rad", "write": True},
     ],
-    "Hkicker": [
+    "HKicker": [
         {"name": "kick", "units": "rad", "write": True},
     ],
-    "Vkicker": [
+    "VKicker": [
         {"name": "kick", "units": "rad", "write": True},
     ],
     "Sextupole": [
@@ -64,7 +64,7 @@ _SKIP_ELEMENT_TYPES = frozenset({
 
 # Bmad element types that map to the "magnets" system.
 _MAGNET_TYPES = frozenset({
-    "Quadrupole", "Sbend", "Hkicker", "Vkicker", "Sextupole",
+    "Quadrupole", "Sbend", "HKicker", "VKicker", "Sextupole",
 })
 
 

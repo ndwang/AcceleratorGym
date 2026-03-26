@@ -121,23 +121,40 @@ class ClaudeCodeAdapter:
 
             logger.info(f"Launching Claude Code: {' '.join(cmd)}")
 
-            result = subprocess.run(
+            proc = subprocess.Popen(
                 cmd,
-                input=prompt,
-                capture_output=True,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
                 text=True,
-                timeout=self._timeout,
                 cwd=sandbox_dir,
             )
 
+            timed_out = False
+            try:
+                stdout, stderr = proc.communicate(
+                    input=prompt, timeout=self._timeout
+                )
+            except subprocess.TimeoutExpired:
+                timed_out = True
+                logger.error(
+                    f"Claude Code timed out after {self._timeout}s "
+                    f"for task {self._task_id}"
+                )
+                proc.kill()
+                stdout, stderr = proc.communicate()
+
+            if stderr:
+                logger.info(f"Claude Code stderr:\n{stderr[:2000]}")
+
             # Claude Code --print may write to stdout or stderr depending
             # on version/environment.  Prefer stdout, fall back to stderr.
-            response = result.stdout or result.stderr or ""
+            response = stdout or stderr or ""
 
-            if result.returncode != 0:
-                logger.error(f"Claude Code failed (rc={result.returncode})")
-                logger.error(f"  stdout: {result.stdout[:500] if result.stdout else '(empty)'}")
-                logger.error(f"  stderr: {result.stderr[:500] if result.stderr else '(empty)'}")
+            if proc.returncode != 0 and not timed_out:
+                logger.error(f"Claude Code failed (rc={proc.returncode})")
+                logger.error(f"  stdout: {stdout[:500] if stdout else '(empty)'}")
+                logger.error(f"  stderr: {stderr[:500] if stderr else '(empty)'}")
 
             # Read trace file written by bench_server on exit
             try:
@@ -149,7 +166,18 @@ class ClaudeCodeAdapter:
             except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
                 logger.error(f"Failed to read trace file: {e}")
 
-            return response or f"Error: Claude Code exited with code {result.returncode}"
+            if timed_out:
+                call_count = (
+                    self._last_trace["call_count"]
+                    if self._last_trace
+                    else "unknown"
+                )
+                return (
+                    f"Error: Claude Code timed out after {self._timeout}s "
+                    f"(tool calls: {call_count})"
+                )
+
+            return response or f"Error: Claude Code exited with code {proc.returncode}"
 
         finally:
             Path(mcp_config_path).unlink(missing_ok=True)

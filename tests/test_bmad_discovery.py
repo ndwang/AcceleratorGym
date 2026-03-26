@@ -16,7 +16,7 @@ def mock_tao():
     names = ["D1", "QF", "D2", "BH1", "D3", "QD", "D4", "HC1", "BPM1", "SF1"]
     keys = [
         "Drift", "Quadrupole", "Drift", "Sbend", "Drift",
-        "Quadrupole", "Drift", "Hkicker", "Monitor", "Sextupole",
+        "Quadrupole", "Drift", "HKicker", "Monitor", "Sextupole",
     ]
     s_positions = ["0.5", "1.5", "2.0", "4.0", "4.5", "5.5", "6.0", "6.5", "7.0", "7.5"]
 
