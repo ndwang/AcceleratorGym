@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from accelbench.prompts import TASK_PROMPTS
 from accelbench.types import TaskDef, Env
 from ._helpers import query_variables, close
 
@@ -100,15 +101,7 @@ TIER4_TASKS = [
         name="Full ORM Measurement",
         tier=4,
         budget=80,
-        prompt_template=(
-            "Measure the full horizontal orbit response matrix. For each "
-            "horizontal corrector, apply a kick of {kick} rad, record the orbit "
-            "change at all BPMs, then restore the corrector. Report the "
-            "normalized response (orbit change / kick, in m/rad) as a matrix "
-            "with one row per corrector and one column per BPM.\n\n"
-            'Return `{{"orm": [[<number>, ...], ...], '
-            '"correctors": ["<name>", ...], "bpms": ["<name>", ...]}}`.'
-        ),
+        prompt_template=TASK_PROMPTS["4.1"],
         setup=_setup_4_1,
         verify=_verify_4_1,
     ),
@@ -117,12 +110,7 @@ TIER4_TASKS = [
         name="Local Closed Bump",
         tier=4,
         budget=200,
-        prompt_template=(
-            "Create a closed orbit bump producing +{target_mm} mm horizontal "
-            "displacement at `{bpm}`, closing within {closure_mm} mm at all "
-            "other BPMs.\n\n"
-            'Return `{{"status": "done"}}`.'
-        ),
+        prompt_template=TASK_PROMPTS["4.2"],
         setup=_setup_4_2,
         verify=_verify_4_2,
     ),

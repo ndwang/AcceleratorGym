@@ -27,3 +27,7 @@ test = ["pytest>=7.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"accelerator_gym.tools" = ["*.md"]
+"accelbench.prompts" = ["*.md", "tasks/*.md"]

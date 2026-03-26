@@ -20,6 +20,8 @@ from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
+from accelerator_gym.tools import TOOL_DESCRIPTIONS
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -37,36 +39,13 @@ def _get() -> "InstrumentedMachine":
     return _inst
 
 
-@mcp.tool()
+@mcp.tool(description=TOOL_DESCRIPTIONS["browse_devices"])
 def browse_devices(path: str = "/", depth: int = 1) -> str:
-    """Browse the device tree to progressively discover how devices are organized.
-    The catalog is tree-shaped with filesystem-like paths.
-
-    Path levels: "/" -> systems, "/system" -> device types,
-    "/system/type" -> devices, "/system/type/device" -> attributes,
-    "/system/type/device/attr" -> attribute metadata.
-
-    When you browse to an attribute (or use depth so attributes are included), each
-    attribute has a "variable" field: that is the exact string to pass to get_variables
-    and set_variables. Use depth > 1 to see multiple levels at once.
-    """
     return _get().browse_devices(path, depth)
 
 
-@mcp.tool()
+@mcp.tool(description=TOOL_DESCRIPTIONS["query_devices"])
 def query_devices(sql: str) -> str:
-    """Search, filter, or aggregate devices by their properties using SQL.
-
-    Use this to find devices matching specific criteria (e.g. by type, s-position
-    range, or attribute limits) or to count/aggregate device metadata.
-
-    Tables: devices(device_id, system, device_type, s_position, tree_path),
-    attributes(device_id, attribute_name, value, unit, readable, writable,
-    lower_limit, upper_limit, variable).
-    JOIN attributes with devices on device_id to filter by system/device_type.
-    Example: SELECT a.variable, a.unit FROM attributes a JOIN devices d
-    ON a.device_id = d.device_id WHERE d.system = 'magnets';
-    """
     return _get().query_devices(sql)
 
 
@@ -79,18 +58,8 @@ def _write_csv(path: str, rows: list[dict[str, Any]]) -> None:
         writer.writerows(rows)
 
 
-@mcp.tool()
+@mcp.tool(description=TOOL_DESCRIPTIONS["get_variables"])
 def get_variables(names: list[str], output_file: str | None = None) -> str:
-    """Read one or more variables by their variable names.
-
-    Variable names come from browse_devices (the "variable" field when you browse to an
-    attribute) or from querying the metadata database. Use the variable name exactly as
-    returned — do not modify the format.
-
-    If output_file is provided, results are written as CSV to that path instead of
-    being returned inline. This saves tokens when reading many variables. The CSV has
-    columns: name, value, units.
-    """
     inst = _get()
     if output_file is not None:
         # Still count as one tool call via the instrumented get
@@ -112,18 +81,13 @@ def get_variables(names: list[str], output_file: str | None = None) -> str:
     return inst.get_variables(names)
 
 
-@mcp.tool()
+@mcp.tool(description=TOOL_DESCRIPTIONS["set_variables"])
 def set_variables(values: dict[str, float]) -> str:
-    """Write one or more variables atomically. Keys must be variable names as returned
-    by browse_devices or query_devices. Use the variable name exactly as returned.
-    All-or-nothing: if any value violates limits, none are applied.
-    """
     return _get().set_variables(values)
 
 
-@mcp.tool()
+@mcp.tool(description=TOOL_DESCRIPTIONS["reset"])
 def reset() -> str:
-    """Reset the machine to its initial state."""
     return _get().reset()
 
 

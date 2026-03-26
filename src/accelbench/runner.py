@@ -9,16 +9,12 @@ from typing import Any, Callable
 
 from accelbench.extract import extract_json_answer
 from accelbench.instrument import InstrumentedMachine, TOOL_SCHEMAS, make_call_tool
+from accelbench.prompts import ANSWER_INSTRUCTION
 from accelbench.types import Env, TaskDef, TaskResult
 
 from accelerator_gym.core.machine import Machine
 
 logger = logging.getLogger(__name__)
-
-_ANSWER_INSTRUCTION = (
-    "\n\nIMPORTANT: When you have your final answer, output it as a JSON object "
-    "inside a ```json fenced code block."
-)
 
 
 def _replay_trace(machine: Machine, trace: list[dict[str, Any]]) -> None:
@@ -80,7 +76,7 @@ def run_task(
         )
 
     # Format prompt
-    prompt = task.prompt_template.format(**setup_data) + _ANSWER_INSTRUCTION
+    prompt = task.prompt_template.format(**setup_data) + "\n\n" + ANSWER_INSTRUCTION
 
     # Build tool interface
     call_tool = make_call_tool(instrumented)

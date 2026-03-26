@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from accelbench.prompts import TASK_PROMPTS
 from accelbench.types import TaskDef, Env
 from ._helpers import query_variables, close
 
@@ -287,10 +288,7 @@ TIER1_TASKS = [
         name="Read a Variable",
         tier=1,
         budget=3,
-        prompt_template=(
-            "What is the value of `{variable}`?\n\n"
-            'Return your answer as `{{"value": <number>}}`.'
-        ),
+        prompt_template=TASK_PROMPTS["1.1"],
         setup=_setup_1_1,
         verify=_verify_1_1,
     ),
@@ -299,10 +297,7 @@ TIER1_TASKS = [
         name="Batch Read",
         tier=1,
         budget=3,
-        prompt_template=(
-            "Read the values of `{var1}`, `{var2}`, and `{var3}`.\n\n"
-            'Return `{{"values": {{"<variable_name>": <number>, ...}}}}`.'
-        ),
+        prompt_template=TASK_PROMPTS["1.2"],
         setup=_setup_1_2,
         verify=_verify_1_2,
     ),
@@ -311,10 +306,7 @@ TIER1_TASKS = [
         name="Set a Variable",
         tier=1,
         budget=3,
-        prompt_template=(
-            "Set `{variable}` to {target}.\n\n"
-            'Return `{{"status": "done"}}`.'
-        ),
+        prompt_template=TASK_PROMPTS["1.3"],
         setup=_setup_1_3,
         verify=_verify_1_3,
     ),
@@ -323,10 +315,7 @@ TIER1_TASKS = [
         name="Batch Set",
         tier=1,
         budget=3,
-        prompt_template=(
-            "Set `{var1}` to {val1} and `{var2}` to {val2}.\n\n"
-            'Return `{{"status": "done"}}`.'
-        ),
+        prompt_template=TASK_PROMPTS["1.4"],
         setup=_setup_1_4,
         verify=_verify_1_4,
     ),
@@ -335,10 +324,7 @@ TIER1_TASKS = [
         name="Reset Machine",
         tier=1,
         budget=3,
-        prompt_template=(
-            "Reset the machine to its default state.\n\n"
-            'Return `{{"status": "done"}}`.'
-        ),
+        prompt_template=TASK_PROMPTS["1.5"],
         setup=_setup_1_5,
         verify=_verify_1_5,
     ),
@@ -347,10 +333,7 @@ TIER1_TASKS = [
         name="Count Aggregation",
         tier=1,
         budget=3,
-        prompt_template=(
-            "How many devices of type `{device_type}` are in the ring?\n\n"
-            'Return `{{"count": <integer>}}`.'
-        ),
+        prompt_template=TASK_PROMPTS["1.6"],
         setup=_setup_1_6,
         verify=_verify_1_6,
     ),
@@ -359,10 +342,7 @@ TIER1_TASKS = [
         name="Attribute Lookup",
         tier=1,
         budget=3,
-        prompt_template=(
-            "What is the s-position of device `{device_id}`?\n\n"
-            'Return `{{"value": <number>}}`.'
-        ),
+        prompt_template=TASK_PROMPTS["1.7"],
         setup=_setup_1_7,
         verify=_verify_1_7,
     ),
@@ -371,10 +351,7 @@ TIER1_TASKS = [
         name="Range Filter",
         tier=1,
         budget=3,
-        prompt_template=(
-            "List all devices with s-position between {lo} and {hi} meters.\n\n"
-            'Return `{{"devices": ["<device_id>", ...]}}`.'
-        ),
+        prompt_template=TASK_PROMPTS["1.8"],
         setup=_setup_1_8,
         verify=_verify_1_8,
     ),
@@ -383,10 +360,7 @@ TIER1_TASKS = [
         name="Browse Root",
         tier=1,
         budget=3,
-        prompt_template=(
-            "What are the top-level categories in the device tree?\n\n"
-            'Return `{{"categories": ["<name>", ...]}}`.'
-        ),
+        prompt_template=TASK_PROMPTS["1.9"],
         setup=_setup_1_9,
         verify=_verify_1_9,
     ),
@@ -395,10 +369,7 @@ TIER1_TASKS = [
         name="Browse Leaf",
         tier=1,
         budget=3,
-        prompt_template=(
-            "What attributes are available for the device at `{path}`?\n\n"
-            'Return `{{"attributes": ["<name>", ...]}}`.'
-        ),
+        prompt_template=TASK_PROMPTS["1.10"],
         setup=_setup_1_10,
         verify=_verify_1_10,
     ),

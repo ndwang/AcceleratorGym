@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from accelbench.prompts import TASK_PROMPTS
 from accelbench.types import TaskDef, Env
 from ._helpers import query_variables, global_variable, close
 
@@ -227,10 +228,7 @@ TIER3_TASKS = [
         name="Find the Tune",
         tier=3,
         budget=15,
-        prompt_template=(
-            "What is the horizontal tune of the ring?\n\n"
-            'Return `{{"tune": <number>}}`.'
-        ),
+        prompt_template=TASK_PROMPTS["3.1"],
         setup=_setup_3_1,
         verify=_verify_3_1,
     ),
@@ -239,10 +237,7 @@ TIER3_TASKS = [
         name="List Elements and Settings",
         tier=3,
         budget=15,
-        prompt_template=(
-            "List all horizontal correctors and their current kick values.\n\n"
-            'Return `{{"correctors": {{"<name>": <kick_value>, ...}}}}`.'
-        ),
+        prompt_template=TASK_PROMPTS["3.2"],
         setup=_setup_3_2,
         verify=_verify_3_2,
     ),
@@ -251,10 +246,7 @@ TIER3_TASKS = [
         name="Nearest Quad to BPM",
         tier=3,
         budget=15,
-        prompt_template=(
-            "Which quadrupole is closest to `{bpm}`?\n\n"
-            'Return `{{"quadrupole": "<device_id>"}}`.'
-        ),
+        prompt_template=TASK_PROMPTS["3.3"],
         setup=_setup_3_3,
         verify=_verify_3_3,
     ),
@@ -263,10 +255,7 @@ TIER3_TASKS = [
         name="Elements in a Range",
         tier=3,
         budget=15,
-        prompt_template=(
-            "What magnets are between `{bpm1}` and `{bpm2}`?\n\n"
-            'Return `{{"magnets": ["<device_id>", ...]}}`.'
-        ),
+        prompt_template=TASK_PROMPTS["3.4"],
         setup=_setup_3_4,
         verify=_verify_3_4,
     ),
@@ -275,12 +264,7 @@ TIER3_TASKS = [
         name="Tune Adjustment",
         tier=3,
         budget=40,
-        prompt_template=(
-            "Adjust the horizontal tune to {target} ± {tol} using `{qf_var}` "
-            "(focusing quad) and `{qd_var}` (defocusing quad). Keep their K1 "
-            "changes equal and opposite.\n\n"
-            'Return `{{"status": "done"}}`.'
-        ),
+        prompt_template=TASK_PROMPTS["3.5"],
         setup=_setup_3_5,
         verify=_verify_3_5,
     ),
@@ -289,11 +273,7 @@ TIER3_TASKS = [
         name="Chromaticity Adjustment",
         tier=3,
         budget=40,
-        prompt_template=(
-            "Adjust the horizontal chromaticity to {target} ± {tol} by changing "
-            "all focusing sextupoles (SF family) by the same ΔK2.\n\n"
-            'Return `{{"status": "done"}}`.'
-        ),
+        prompt_template=TASK_PROMPTS["3.6"],
         setup=_setup_3_6,
         verify=_verify_3_6,
     ),
@@ -302,11 +282,7 @@ TIER3_TASKS = [
         name="Local Orbit Correction",
         tier=3,
         budget=25,
-        prompt_template=(
-            "Reduce the horizontal orbit at `{bpm}` to below {threshold_mm} mm "
-            "using the nearest horizontal corrector.\n\n"
-            'Return `{{"status": "done"}}`.'
-        ),
+        prompt_template=TASK_PROMPTS["3.7"],
         setup=_setup_3_7,
         verify=_verify_3_7,
     ),

@@ -6,15 +6,9 @@ import json
 import logging
 from typing import Any, Callable
 
+from accelbench.prompts import SYSTEM_PROMPT
+
 logger = logging.getLogger(__name__)
-
-_SYSTEM_PROMPT = """\
-You are an accelerator operations agent. You have access to tools for monitoring \
-and controlling a particle accelerator. Use the tools to complete the task.
-
-IMPORTANT: When you have your final answer, output it as a JSON object inside a \
-```json fenced code block. Include all requested values with the exact keys \
-specified in the task prompt."""
 
 
 class LiteLLMAdapter:
@@ -66,7 +60,7 @@ class LiteLLMAdapter:
         self._last_usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
 
         messages: list[dict[str, Any]] = [
-            {"role": "system", "content": _SYSTEM_PROMPT},
+            {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": prompt},
         ]
 

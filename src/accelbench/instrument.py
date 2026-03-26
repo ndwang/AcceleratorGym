@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from accelerator_gym.core.machine import Machine
+from accelerator_gym.tools import TOOL_DESCRIPTIONS
 
 
 class ToolCall:
@@ -173,16 +174,7 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "browse_devices",
-            "description": (
-                "Browse the device tree to progressively discover how devices are organized. "
-                "The catalog is tree-shaped with filesystem-like paths.\n\n"
-                "Path levels: \"/\" -> systems, \"/system\" -> device types, "
-                "\"/system/type\" -> devices, \"/system/type/device\" -> attributes, "
-                "\"/system/type/device/attr\" -> attribute metadata.\n\n"
-                "When you browse to an attribute (or use depth so attributes are included), each "
-                "attribute has a \"variable\" field: that is the exact string to pass to get_variables "
-                "and set_variables. Use depth > 1 to see multiple levels at once."
-            ),
+            "description": TOOL_DESCRIPTIONS["browse_devices"],
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -204,17 +196,7 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "query_devices",
-            "description": (
-                "Search, filter, or aggregate devices by their properties using SQL.\n\n"
-                "Use this to find devices matching specific criteria (e.g. by type, s-position "
-                "range, or attribute limits) or to count/aggregate device metadata.\n\n"
-                "Tables: devices(device_id, system, device_type, s_position, tree_path), "
-                "attributes(device_id, attribute_name, description, value, unit, readable, writable, "
-                "lower_limit, upper_limit, variable).\n"
-                "JOIN attributes with devices on device_id to filter by system/device_type.\n"
-                "Example: SELECT a.variable, a.unit FROM attributes a JOIN devices d "
-                "ON a.device_id = d.device_id WHERE d.system = 'magnets';"
-            ),
+            "description": TOOL_DESCRIPTIONS["query_devices"],
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -231,12 +213,7 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "get_variables",
-            "description": (
-                "Read one or more variables by their variable names.\n\n"
-                "Variable names come from browse_devices (the \"variable\" field when you browse to an "
-                "attribute) or from querying the metadata database. Use the variable name exactly as "
-                "returned — do not modify the format."
-            ),
+            "description": TOOL_DESCRIPTIONS["get_variables"],
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -254,11 +231,7 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "set_variables",
-            "description": (
-                "Write one or more variables atomically. Keys must be variable names as returned "
-                "by browse_devices or query_devices. Use the variable name exactly as returned. "
-                "All-or-nothing: if any value violates limits, none are applied."
-            ),
+            "description": TOOL_DESCRIPTIONS["set_variables"],
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -276,7 +249,7 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "reset",
-            "description": "Reset the machine to its initial state.",
+            "description": TOOL_DESCRIPTIONS["reset"],
             "parameters": {
                 "type": "object",
                 "properties": {},

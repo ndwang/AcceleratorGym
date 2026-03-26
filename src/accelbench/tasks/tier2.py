@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
+from accelbench.prompts import TASK_PROMPTS
 from accelbench.types import TaskDef, Env
 from ._helpers import query_variables, global_variable, close
 
@@ -293,12 +294,7 @@ TIER2_TASKS = [
         name="Maximum Beta Function",
         tier=2,
         budget=5,
-        prompt_template=(
-            "Read the horizontal beta function at the following elements: "
-            "{variables}. Report the maximum value and which element it occurs at."
-            "\n\n"
-            'Return `{{"max_beta": <number>, "element": "<device_id>"}}`.'
-        ),
+        prompt_template=TASK_PROMPTS["2.1"],
         setup=_setup_2_1,
         verify=_verify_2_1,
     ),
@@ -307,11 +303,7 @@ TIER2_TASKS = [
         name="Orbit RMS",
         tier=2,
         budget=5,
-        prompt_template=(
-            "Read the horizontal orbit at the following BPMs: {bpm_variables}. "
-            "Report the RMS value.\n\n"
-            'Return `{{"rms": <number_in_meters>}}`.'
-        ),
+        prompt_template=TASK_PROMPTS["2.2"],
         setup=_setup_2_2,
         verify=_verify_2_2,
     ),
@@ -320,13 +312,7 @@ TIER2_TASKS = [
         name="Corrector Orbit Response",
         tier=2,
         budget=8,
-        prompt_template=(
-            "Apply a kick of {kick} rad to `{corrector_var}`, read the horizontal "
-            "orbit at the following BPMs: {bpm_variables}, then restore the "
-            "corrector to its original value. Report the orbit change at each BPM."
-            "\n\n"
-            'Return `{{"orbit_change": {{"<bpm_name>": <change_in_meters>, ...}}}}`.'
-        ),
+        prompt_template=TASK_PROMPTS["2.3"],
         setup=_setup_2_3,
         verify=_verify_2_3,
     ),
@@ -335,11 +321,7 @@ TIER2_TASKS = [
         name="Quad Tune Shift",
         tier=2,
         budget=7,
-        prompt_template=(
-            "Change `{quad_var}` by +1%, read the horizontal tune (`{tune_var}`), "
-            "then restore the quadrupole. Report the tune change.\n\n"
-            'Return `{{"tune_change": <number>}}`.'
-        ),
+        prompt_template=TASK_PROMPTS["2.4"],
         setup=_setup_2_4,
         verify=_verify_2_4,
     ),
@@ -348,11 +330,7 @@ TIER2_TASKS = [
         name="Increase Magnet Strength",
         tier=2,
         budget=5,
-        prompt_template=(
-            "Read the current value of `{variable}`, increase it by {pct}%, "
-            "and set the new value.\n\n"
-            'Return `{{"status": "done"}}`.'
-        ),
+        prompt_template=TASK_PROMPTS["2.5"],
         setup=_setup_2_5,
         verify=_verify_2_5,
     ),
@@ -361,11 +339,7 @@ TIER2_TASKS = [
         name="Zero Correctors and Read Orbit",
         tier=2,
         budget=8,
-        prompt_template=(
-            "Set the following horizontal correctors to zero: {corrector_variables}. "
-            "Then read the horizontal orbit at these BPMs: {bpm_variables}.\n\n"
-            'Return `{{"orbit": {{"<bpm_name>": <orbit_in_meters>, ...}}}}`.'
-        ),
+        prompt_template=TASK_PROMPTS["2.6"],
         setup=_setup_2_6,
         verify=_verify_2_6,
     ),
@@ -374,12 +348,7 @@ TIER2_TASKS = [
         name="Corrector Scan",
         tier=2,
         budget=12,
-        prompt_template=(
-            "Scan `{corrector_var}` through {n} evenly spaced values from 0 to "
-            "{max_kick} rad. At each step, read the horizontal orbit at "
-            "`{bpm_var}`. Restore the corrector when done.\n\n"
-            'Return `{{"data": [[<kick>, <orbit>], ...]}}`.'
-        ),
+        prompt_template=TASK_PROMPTS["2.7"],
         setup=_setup_2_7,
         verify=_verify_2_7,
     ),
@@ -388,11 +357,7 @@ TIER2_TASKS = [
         name="Find and Zero a Corrector",
         tier=2,
         budget=5,
-        prompt_template=(
-            "One of the horizontal correctors has a nonzero kick. Find it and "
-            "set it to zero.\n\n"
-            'Return `{{"status": "done", "corrector": "<variable_name>"}}`.'
-        ),
+        prompt_template=TASK_PROMPTS["2.8"],
         setup=_setup_2_8,
         verify=_verify_2_8,
     ),
