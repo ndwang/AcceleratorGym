@@ -60,6 +60,7 @@ _MONITOR_ATTRIBUTES: list[dict[str, Any]] = [
 _SKIP_ELEMENT_TYPES = frozenset({
     "Drift", "Marker", "Beginning_Ele", "Null_Ele", "Floor_Shift",
     "Fiducial", "Patch", "Taylor", "Match",
+    "Ramper", "Girder", "Group",
 })
 
 # Bmad element types that map to the "magnets" system.
@@ -111,7 +112,11 @@ class BmadBackend(Backend):
         original_cwd = Path.cwd()
         os.chdir(self._init_dir)
         try:
-            self._tao = Tao(f"-init {init_path.name} -noplot")
+            tao_kwargs: dict[str, Any] = {}
+            startup_file = self._settings.get("startup_file")
+            if startup_file:
+                tao_kwargs["startup_file"] = str(startup_file)
+            self._tao = Tao(f"-init {init_path.name} -noplot", **tao_kwargs)
             logger.info("Tao instance created successfully")
         except Exception as e:
             raise RuntimeError(f"Failed to connect to Tao backend: {e}") from e
@@ -175,6 +180,51 @@ class BmadBackend(Backend):
                 return f"ele::beginning[{attribute}]"
             return f"lat::{attribute}"
         return f"ele::{device_name}[{attribute}]"
+
+    def _discover_overlay_vars(self, name: str) -> list[str]:
+        """Return the control variable names for an overlay element."""
+        try:
+            cv = self._tao.ele_control_var(name)
+        except Exception:
+            logger.debug("ele_control_var failed for %s, trying pipe fallback", name)
+            return self._discover_overlay_vars_fallback(name)
+
+        # pytao may return a dict keyed by variable name, or a list of dicts
+        if isinstance(cv, dict):
+            # Check for "name" column in a table-style dict
+            if "name" in cv:
+                names = cv["name"]
+                if isinstance(names, str):
+                    return [names]
+                return list(names)
+            return list(cv.keys())
+        if isinstance(cv, (list, tuple)):
+            out = []
+            for item in cv:
+                if isinstance(item, dict):
+                    n = item.get("name") or item.get("var_name")
+                    if n:
+                        out.append(str(n))
+                elif isinstance(item, str):
+                    out.append(item)
+            return out
+        return []
+
+    def _discover_overlay_vars_fallback(self, name: str) -> list[str]:
+        """Fallback: parse raw pipe output for overlay control variables."""
+        try:
+            lines = self._tao.cmd(f"python ele:control_var {name}")
+        except Exception:
+            return []
+        var_names = []
+        for line in lines:
+            line = line.strip()
+            if not line or line.startswith("!"):
+                continue
+            var_name = line.split(";")[0].strip()
+            if var_name:
+                var_names.append(var_name)
+        return var_names
 
     def discover_devices(self) -> dict[str, dict[str, Any]]:
         """Auto-discover devices from the Tao lattice.
@@ -261,6 +311,30 @@ class BmadBackend(Backend):
                 "s_position": s_position,
                 "attributes": attrs,
             }
+
+        # Overlay elements (lord elements, queried separately)
+        try:
+            overlay_names = self._tao.lat_list("overlay::*", "ele.name")
+        except Exception:
+            overlay_names = []
+
+        if overlay_names is not None and len(overlay_names) > 0:
+            devices.setdefault("controls", {}).setdefault("overlay", {})
+            for ol_name in overlay_names:
+                ol_vars = self._discover_overlay_vars(ol_name)
+                if not ol_vars:
+                    continue
+                attrs: dict[str, dict[str, Any]] = {}
+                for var_name in ol_vars:
+                    attrs[var_name] = {
+                        "description": "Overlay control variable",
+                        "read": True,
+                        "write": True,
+                    }
+                devices["controls"]["overlay"][ol_name] = {
+                    "s_position": 0.0,
+                    "attributes": attrs,
+                }
 
         # Global lattice parameters
         devices["global"] = {
