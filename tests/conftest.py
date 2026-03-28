@@ -35,6 +35,11 @@ class MockBackend(Backend):
     def reset(self) -> None:
         self._state = dict(self._initial_state)
 
+    def get_design(self, name: str) -> float:
+        if name not in self._initial_state:
+            raise KeyError(f"Backend has no design value for '{name}'")
+        return self._initial_state[name]
+
     @property
     def connected(self) -> bool:
         return self._connected
